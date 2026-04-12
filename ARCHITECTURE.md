@@ -161,3 +161,20 @@ External Sources (APIs, PDFs, web)
 | Cloud SQL / Vector DB | Metadata store, vector embeddings | `infra/` (TBD for vector DB) |
 | IAM | Service accounts with least-privilege roles | `infra/modules/iam/` |
 | VPC | Private networking, firewall rules | `infra/modules/network/` |
+
+## Environments
+
+Two GCP projects, both in `australia-southeast2`:
+
+| | Test | Prod |
+|---|---|---|
+| **Project ID** | `big-lake-test-490405` | `big-lake-prod` |
+| **Region / Zone** | `australia-southeast2` / `-b` | `australia-southeast2` / `-a` |
+| **Data bucket** | `big-lake-test-490405-analytics-data` | `big-lake-prod-analytics-data` |
+| **TF state bucket** | `biglake-tf-state-test` | `biglake-tf-state-prod` |
+| **Deploy SA** | `terraform-deploy@big-lake-test-490405.iam.gserviceaccount.com` | `terraform-deploy@big-lake-prod.iam.gserviceaccount.com` |
+| **Storage force_destroy** | `true` | `false` |
+
+- **Environment variable:** `ENV` (`test` or `prod`) — used by all application repos
+- **Terraform:** Applied exclusively via GitHub Actions using Workload Identity Federation (no local runs)
+- **WIF pool:** `github-pool` per project, with per-repo OIDC providers (`github-etl-provider`, `github-catalog-provider`, `github-infra-provider`)

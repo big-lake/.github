@@ -1,714 +1,606 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BigLake Platform Architecture</title>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --border: #30363d;
-      --text: #e6edf3;
-      --text-muted: #8b949e;
-      --accent: #58a6ff;
-      --green: #3fb950;
-      --purple: #bc8cff;
-      --orange: #d29922;
-      --red: #f85149;
-      --cyan: #39d2c0;
-      --pink: #f778ba;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BigLake Architecture</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-alt: #f5f5f5;
+    --border: #e0e0e0;
+    --border-strong: #bdbdbd;
+    --text: #1a1a1a;
+    --text-secondary: #616161;
+    --text-tertiary: #9e9e9e;
+    --highlight: #333333;
+    --node-hover: #f0f0f0;
+  }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
 
-    header {
-      text-align: center;
-      padding: 3rem 1rem 1rem;
-    }
-    header h1 {
-      font-size: 2.4rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    header p {
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      max-width: 600px;
-      margin: 0 auto;
-    }
+  .header {
+    padding: 4rem 2rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+  .header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 520px;
+    margin: 0 auto;
+  }
 
-    /* Tabs */
-    .tabs {
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 1.5rem 1rem 0.5rem;
-      flex-wrap: wrap;
-    }
-    .tab-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 0.5rem 1.2rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-    }
-    .tab-btn:hover { border-color: var(--accent); color: var(--text); }
-    .tab-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+  .main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
 
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin: 3rem 0 1.5rem;
+  }
 
-    /* Architecture Diagram */
-    .diagram-container {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
+  /* ===== DIAGRAM ===== */
+  .diagram-wrap {
+    position: relative;
+    padding: 2rem 0;
+  }
+  .diagram {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .diagram-row {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    position: relative;
+    z-index: 2;
+  }
+  .diagram-node {
+    width: 160px;
+    padding: 1rem;
+    text-align: center;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .diagram-node:hover {
+    background: var(--node-hover);
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .diagram-node.active {
+    border-color: var(--highlight);
+    box-shadow: 0 0 0 1px var(--highlight);
+  }
+  .diagram-node.storage {
+    border-style: dashed;
+    background: var(--surface-alt);
+  }
+  .diagram-node .name {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .diagram-node .desc {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    margin-top: 0.2rem;
+  }
+  .connector-row {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    height: 40px;
+    z-index: 1;
+  }
+  .connector-spacer {
+    width: 160px;
+    display: flex;
+    justify-content: center;
+  }
+  .connector-line {
+    width: 1.5px;
+    height: 100%;
+    background: var(--border-strong);
+    position: relative;
+  }
+  .connector-line::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--border-strong);
+  }
+  .hint {
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-tertiary);
+    margin-bottom: 0.5rem;
+  }
 
-    svg { width: 100%; height: auto; }
+  /* ===== DRAWER ===== */
+  .drawer {
+    margin-top: 1.5rem;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    max-height: 0;
+    opacity: 0;
+  }
+  .drawer.open {
+    max-height: 500px;
+    opacity: 1;
+  }
+  .drawer-inner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .drawer-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+  }
+  .drawer-header h3 { font-size: 1.1rem; font-weight: 600; }
+  .drawer-header .tech { font-size: 0.75rem; color: var(--text-tertiary); }
+  .drawer-close {
+    background: none; border: none; font-size: 1.2rem;
+    color: var(--text-tertiary); cursor: pointer; padding: 0 0.25rem; line-height: 1;
+  }
+  .drawer-close:hover { color: var(--text); }
+  .drawer-col h4 {
+    font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-tertiary); margin-bottom: 0.5rem;
+  }
+  .drawer-col ul { list-style: none; padding: 0; }
+  .drawer-col li {
+    font-size: 0.85rem; color: var(--text-secondary);
+    padding: 0.2rem 0 0.2rem 0.8rem; position: relative;
+  }
+  .drawer-col li::before {
+    content: ''; position: absolute; left: 0; top: 0.6rem;
+    width: 4px; height: 4px; border-radius: 50%; background: var(--border-strong);
+  }
+  .drawer-principle {
+    grid-column: 1 / -1; font-size: 0.8rem; color: var(--text-tertiary);
+    font-style: italic; border-top: 1px solid var(--border); padding-top: 0.75rem;
+  }
 
-    .node {
-      cursor: pointer;
-      transition: filter 0.2s;
-    }
-    .node:hover { filter: brightness(1.2); }
-    .node.selected rect,
-    .node.selected circle { stroke-width: 3; stroke: var(--accent); }
+  /* ===== PRINCIPLES ===== */
+  .principles-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
+  }
+  .principle-cell { background: var(--surface); padding: 1.25rem; }
+  .principle-cell .num {
+    font-size: 0.65rem; font-weight: 600; color: var(--text-tertiary);
+    letter-spacing: 0.05em; margin-bottom: 0.35rem;
+  }
+  .principle-cell h3 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .principle-cell p { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45; }
 
-    .flow-line {
-      stroke: var(--border);
-      stroke-width: 2;
-      fill: none;
-      marker-end: url(#arrowhead);
-    }
-    .flow-line.data { stroke: var(--green); stroke-dasharray: 6 3; }
-    .flow-line.api-call { stroke: var(--accent); }
-    .flow-line.knowledge { stroke: var(--purple); stroke-dasharray: 6 3; }
+  /* ===== ENVIRONMENTS ===== */
+  .env-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background: var(--border); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
+  }
+  .env-col { background: var(--surface); padding: 1.5rem; }
+  .env-col .env-label {
+    font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 1rem;
+  }
+  .env-row {
+    display: flex; justify-content: space-between; padding: 0.35rem 0;
+    font-size: 0.8rem; border-bottom: 1px solid var(--surface-alt);
+  }
+  .env-row:last-child { border-bottom: none; }
+  .env-row .label { color: var(--text-secondary); }
+  .env-row .value {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.75rem; color: var(--text);
+  }
+  .env-note {
+    margin-top: 1rem; font-size: 0.78rem; color: var(--text-tertiary);
+    text-align: center; padding: 0.75rem;
+  }
 
-    /* Detail Panel */
-    .detail-panel {
-      max-width: 1000px;
-      margin: 0 auto 2rem;
-      padding: 0 1rem;
-    }
-    .detail-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2rem;
-      display: none;
-    }
-    .detail-card.visible { display: block; }
-    .detail-card h2 {
-      font-size: 1.5rem;
-      margin-bottom: 0.25rem;
-    }
-    .detail-card .role {
-      color: var(--text-muted);
-      font-size: 1rem;
-      margin-bottom: 1rem;
-    }
-    .detail-card .tech-badge {
-      display: inline-block;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 0.2rem 0.7rem;
-      font-size: 0.8rem;
-      color: var(--accent);
-      margin: 0.15rem 0.2rem;
-    }
-    .detail-card ul {
-      margin: 1rem 0 0 1.2rem;
-      color: var(--text);
-    }
-    .detail-card li { margin-bottom: 0.4rem; }
-    .detail-card .principle {
-      margin-top: 1rem;
-      padding: 0.75rem 1rem;
-      background: var(--bg);
-      border-left: 3px solid var(--accent);
-      border-radius: 0 6px 6px 0;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
-    .detail-card .connections {
-      margin-top: 1rem;
-    }
-    .detail-card .connections h4 {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.5rem;
-    }
-    .conn-tag {
-      display: inline-block;
-      padding: 0.2rem 0.6rem;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      margin: 0.15rem;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .conn-tag:hover { opacity: 0.8; }
-    .conn-tag.sends { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
-    .conn-tag.receives { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+  /* ===== INFRA ===== */
+  .infra-list {
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+  .infra-row {
+    display: grid; grid-template-columns: 140px 1fr 200px; gap: 1rem;
+    padding: 0.75rem 1.25rem; font-size: 0.82rem;
+    border-bottom: 1px solid var(--border); background: var(--surface);
+  }
+  .infra-row:last-child { border-bottom: none; }
+  .infra-row:nth-child(even) { background: var(--surface-alt); }
+  .infra-row .svc { font-weight: 600; }
+  .infra-row .purpose { color: var(--text-secondary); }
+  .infra-row .prov {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.72rem; color: var(--text-tertiary); text-align: right;
+  }
 
-    /* Principles Section */
-    .principles {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-    .principles h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-    .principles-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-    }
-    .principle-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.2rem;
-    }
-    .principle-card .num {
-      display: inline-block;
-      width: 24px;
-      height: 24px;
-      line-height: 24px;
-      text-align: center;
-      background: var(--accent);
-      color: var(--bg);
-      border-radius: 50%;
-      font-size: 0.75rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    .principle-card h3 { font-size: 1rem; margin-bottom: 0.4rem; }
-    .principle-card p { font-size: 0.85rem; color: var(--text-muted); }
+  footer {
+    text-align: center; padding: 3rem 1rem;
+    font-size: 0.7rem; color: var(--text-tertiary);
+  }
 
-    /* Infra Table */
-    .infra-section {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-    .infra-section h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--surface);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 0.75rem 1rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-    th { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    td { font-size: 0.9rem; }
-    tr:last-child td { border-bottom: none; }
-    td code {
-      background: var(--bg);
-      padding: 0.15rem 0.4rem;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      color: var(--accent);
-    }
-
-    /* Legend */
-    .legend {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      padding: 0.5rem;
-      flex-wrap: wrap;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-    .legend-line {
-      width: 30px;
-      height: 2px;
-    }
-
-    .hint {
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      padding: 0.5rem;
-    }
-
-    footer {
-      text-align: center;
-      padding: 2rem 1rem;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-    }
-  </style>
+  @media (max-width: 700px) {
+    .principles-grid { grid-template-columns: 1fr; }
+    .env-grid { grid-template-columns: 1fr; }
+    .drawer-inner { grid-template-columns: 1fr; }
+    .diagram-row { gap: 1rem; }
+    .diagram-node { width: 120px; padding: 0.75rem; }
+    .diagram-node .name { font-size: 0.8rem; }
+    .infra-row { grid-template-columns: 1fr; gap: 0.25rem; }
+    .infra-row .prov { text-align: left; }
+  }
+</style>
 </head>
 <body>
 
-<header>
-  <h1>BigLake Platform</h1>
-  <p>A GCP-hosted data platform for Australian government datasets — ingestion, transformation, cataloguing, AI knowledge, and serving.</p>
-</header>
-
-<div class="tabs">
-  <button class="tab-btn active" data-tab="diagram">Architecture</button>
-  <button class="tab-btn" data-tab="principles">Design Principles</button>
-  <button class="tab-btn" data-tab="infrastructure">Infrastructure</button>
+<div class="header">
+  <h1>BigLake</h1>
+  <p>A GCP data platform for Australian government datasets. Ingest, transform, catalogue, and serve.</p>
 </div>
 
-<!-- ==================== ARCHITECTURE TAB ==================== -->
-<div id="tab-diagram" class="tab-content active">
-  <div class="diagram-container">
-    <div class="legend">
-      <div class="legend-item"><div class="legend-line" style="background: var(--green);"></div> Structured data</div>
-      <div class="legend-item"><div class="legend-line" style="background: var(--purple);"></div> Knowledge / embeddings</div>
-      <div class="legend-item"><div class="legend-line" style="background: var(--accent);"></div> API call</div>
-      <div class="legend-item"><div class="legend-line" style="background: var(--border);"></div> Dependency</div>
-    </div>
-    <p class="hint">Click a component to see details</p>
+<div class="main">
 
-    <svg viewBox="0 0 800 680" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-          <polygon points="0 0, 8 3, 0 6" fill="var(--border)" />
-        </marker>
-        <marker id="arrowhead-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-          <polygon points="0 0, 8 3, 0 6" fill="var(--green)" />
-        </marker>
-        <marker id="arrowhead-purple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-          <polygon points="0 0, 8 3, 0 6" fill="var(--purple)" />
-        </marker>
-        <marker id="arrowhead-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-          <polygon points="0 0, 8 3, 0 6" fill="var(--accent)" />
-        </marker>
-      </defs>
+  <div class="section-label">Data Flow</div>
+  <p class="hint">Click any component to explore</p>
+  <div class="diagram-wrap">
+    <div class="diagram">
 
-      <!-- External Sources -->
-      <g class="node" data-repo="sources">
-        <rect x="250" y="20" width="300" height="44" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
-        <text x="400" y="47" text-anchor="middle" fill="var(--text)" font-size="14">External Sources</text>
-        <text x="400" y="17" text-anchor="middle" fill="var(--text-muted)" font-size="10">APIs, PDFs, web scraping</text>
-      </g>
+      <!-- Sources -->
+      <div class="diagram-row">
+        <div class="diagram-node" data-id="sources" onclick="toggle('sources')">
+          <div class="name">Sources</div>
+          <div class="desc">APIs, PDFs, web</div>
+        </div>
+      </div>
 
-      <!-- Flow from sources -->
-      <line x1="320" y1="64" x2="220" y2="120" class="flow-line data" marker-end="url(#arrowhead-green)"/>
-      <line x1="480" y1="64" x2="580" y2="120" class="flow-line knowledge" marker-end="url(#arrowhead-purple)"/>
+      <!-- Split connector -->
+      <div style="height:40px; display:flex; justify-content:center;">
+        <svg width="350" height="40" viewBox="0 0 350 40" style="overflow:visible">
+          <line x1="175" y1="0" x2="80" y2="37" stroke="#bdbdbd" stroke-width="1.5"/>
+          <polygon points="77,34 83,40 72,40" fill="#bdbdbd"/>
+          <line x1="175" y1="0" x2="270" y2="37" stroke="#bdbdbd" stroke-width="1.5"/>
+          <polygon points="267,34 273,40 262,40" fill="#bdbdbd"/>
+        </svg>
+      </div>
 
-      <!-- ETL -->
-      <g class="node" data-repo="etl">
-        <rect x="120" y="120" width="200" height="60" rx="10" fill="#1a2a1a" stroke="var(--green)" stroke-width="1.5"/>
-        <text x="220" y="147" text-anchor="middle" fill="var(--green)" font-size="15" font-weight="600">etl</text>
-        <text x="220" y="167" text-anchor="middle" fill="var(--text-muted)" font-size="11">Structured data pipelines</text>
-      </g>
+      <!-- Ingestion -->
+      <div class="diagram-row">
+        <div class="diagram-node" data-id="etl" onclick="toggle('etl')">
+          <div class="name">etl</div>
+          <div class="desc">Structured pipelines</div>
+        </div>
+        <div class="diagram-node" data-id="knowledge" onclick="toggle('knowledge')">
+          <div class="name">knowledge</div>
+          <div class="desc">AI knowledge ingestion</div>
+        </div>
+      </div>
 
-      <!-- Knowledge -->
-      <g class="node" data-repo="knowledge">
-        <rect x="480" y="120" width="200" height="60" rx="10" fill="#1f1a2e" stroke="var(--purple)" stroke-width="1.5"/>
-        <text x="580" y="147" text-anchor="middle" fill="var(--purple)" font-size="15" font-weight="600">knowledge</text>
-        <text x="580" y="167" text-anchor="middle" fill="var(--text-muted)" font-size="11">AI knowledge ingestion</text>
-      </g>
+      <div class="connector-row">
+        <div class="connector-spacer"><div class="connector-line"></div></div>
+        <div class="connector-spacer"><div class="connector-line"></div></div>
+      </div>
 
-      <!-- Flow to storage -->
-      <line x1="220" y1="180" x2="220" y2="240" class="flow-line data" marker-end="url(#arrowhead-green)"/>
-      <line x1="580" y1="180" x2="580" y2="240" class="flow-line knowledge" marker-end="url(#arrowhead-purple)"/>
+      <!-- Storage -->
+      <div class="diagram-row">
+        <div class="diagram-node storage" data-id="gcs" onclick="toggle('gcs')">
+          <div class="name">GCS</div>
+          <div class="desc">Parquet data lake</div>
+        </div>
+        <div class="diagram-node storage" data-id="vectordb" onclick="toggle('vectordb')">
+          <div class="name">Vector DB</div>
+          <div class="desc">Embeddings</div>
+        </div>
+      </div>
 
-      <!-- GCS -->
-      <g class="node" data-repo="gcs">
-        <rect x="120" y="240" width="200" height="60" rx="10" fill="#1a2520" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <text x="220" y="267" text-anchor="middle" fill="var(--green)" font-size="15" font-weight="600">GCS</text>
-        <text x="220" y="287" text-anchor="middle" fill="var(--text-muted)" font-size="11">Parquet data lake</text>
-      </g>
+      <div class="connector-row">
+        <div class="connector-spacer"><div class="connector-line"></div></div>
+        <div class="connector-spacer"><div class="connector-line"></div></div>
+      </div>
 
-      <!-- Vector DB -->
-      <g class="node" data-repo="vectordb">
-        <rect x="480" y="240" width="200" height="60" rx="10" fill="#1f1a2e" stroke="var(--purple)" stroke-width="1.5" stroke-dasharray="4 2"/>
-        <text x="580" y="267" text-anchor="middle" fill="var(--purple)" font-size="15" font-weight="600">Vector DB</text>
-        <text x="580" y="287" text-anchor="middle" fill="var(--text-muted)" font-size="11">Embeddings store</text>
-      </g>
+      <!-- Services -->
+      <div class="diagram-row">
+        <div class="diagram-node" data-id="catalog" onclick="toggle('catalog')">
+          <div class="name">catalog</div>
+          <div class="desc">Metadata & discovery</div>
+        </div>
+        <div class="diagram-node" data-id="intelligence" onclick="toggle('intelligence')">
+          <div class="name">intelligence</div>
+          <div class="desc">RAG & agents</div>
+        </div>
+      </div>
 
-      <!-- Flow from storage to consumers -->
-      <line x1="220" y1="300" x2="180" y2="370" class="flow-line data" marker-end="url(#arrowhead-green)"/>
-      <line x1="220" y1="300" x2="400" y2="480" class="flow-line data" marker-end="url(#arrowhead-green)"/>
-      <line x1="580" y1="300" x2="580" y2="370" class="flow-line knowledge" marker-end="url(#arrowhead-purple)"/>
-
-      <!-- Catalog -->
-      <g class="node" data-repo="catalog">
-        <rect x="80" y="370" width="200" height="60" rx="10" fill="#1a2025" stroke="var(--cyan)" stroke-width="1.5"/>
-        <text x="180" y="397" text-anchor="middle" fill="var(--cyan)" font-size="15" font-weight="600">catalog</text>
-        <text x="180" y="417" text-anchor="middle" fill="var(--text-muted)" font-size="11">Metadata &amp; discovery</text>
-      </g>
-
-      <!-- Intelligence -->
-      <g class="node" data-repo="intelligence">
-        <rect x="480" y="370" width="200" height="60" rx="10" fill="#1f1a2e" stroke="var(--purple)" stroke-width="1.5"/>
-        <text x="580" y="397" text-anchor="middle" fill="var(--purple)" font-size="15" font-weight="600">intelligence</text>
-        <text x="580" y="417" text-anchor="middle" fill="var(--text-muted)" font-size="11">RAG &amp; agent logic</text>
-      </g>
-
-      <!-- Flow to API -->
-      <line x1="180" y1="430" x2="370" y2="480" class="flow-line api-call" marker-end="url(#arrowhead-blue)"/>
-      <line x1="580" y1="430" x2="470" y2="480" class="flow-line api-call" marker-end="url(#arrowhead-blue)"/>
+      <!-- Merge connector -->
+      <div style="height:50px; display:flex; justify-content:center;">
+        <svg width="350" height="50" viewBox="0 0 350 50" style="overflow:visible">
+          <line x1="80" y1="0" x2="155" y2="42" stroke="#bdbdbd" stroke-width="1.5"/>
+          <line x1="270" y1="0" x2="195" y2="42" stroke="#bdbdbd" stroke-width="1.5"/>
+          <polygon points="172,47 178,47 175,52" fill="#bdbdbd"/>
+        </svg>
+      </div>
 
       <!-- API -->
-      <g class="node" data-repo="api">
-        <rect x="300" y="480" width="200" height="74" rx="10" fill="#151d2e" stroke="var(--accent)" stroke-width="1.5"/>
-        <text x="400" y="507" text-anchor="middle" fill="var(--accent)" font-size="15" font-weight="600">api</text>
-        <text x="400" y="525" text-anchor="middle" fill="var(--text-muted)" font-size="11">Flask BFF</text>
-        <text x="400" y="543" text-anchor="middle" fill="var(--text-muted)" font-size="10">SQLite · DuckDB · OM API</text>
-      </g>
+      <div class="diagram-row">
+        <div class="diagram-node" data-id="api" onclick="toggle('api')" style="width:200px;">
+          <div class="name">api</div>
+          <div class="desc">Flask BFF · SQLite · DuckDB</div>
+        </div>
+      </div>
 
-      <!-- Flow to UI -->
-      <line x1="400" y1="554" x2="400" y2="600" class="flow-line api-call" marker-end="url(#arrowhead-blue)"/>
+      <div style="height:40px; display:flex; justify-content:center;">
+        <svg width="10" height="40" viewBox="0 0 10 40">
+          <line x1="5" y1="0" x2="5" y2="35" stroke="#bdbdbd" stroke-width="1.5"/>
+          <polygon points="2,33 8,33 5,38" fill="#bdbdbd"/>
+        </svg>
+      </div>
 
       <!-- UI -->
-      <g class="node" data-repo="ui">
-        <rect x="300" y="600" width="200" height="56" rx="10" fill="#2a1a1a" stroke="var(--orange)" stroke-width="1.5"/>
-        <text x="400" y="625" text-anchor="middle" fill="var(--orange)" font-size="15" font-weight="600">ui</text>
-        <text x="400" y="643" text-anchor="middle" fill="var(--text-muted)" font-size="11">Frontend application</text>
-      </g>
-
-      <!-- Infra (background element) -->
-      <rect x="20" y="230" width="760" height="90" rx="12" fill="none" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="6 4" opacity="0.3"/>
-      <text x="40" y="310" fill="var(--text-muted)" font-size="10" opacity="0.5">infra (Terraform) deploys all infrastructure</text>
-    </svg>
-  </div>
-
-  <div class="detail-panel">
-    <!-- ETL -->
-    <div class="detail-card" id="detail-etl">
-      <h2>etl</h2>
-      <p class="role">Structured data ingestion &amp; transformation — medallion pipeline</p>
-      <div>
-        <span class="tech-badge">Python</span>
-        <span class="tech-badge">Prefect 3.x</span>
-        <span class="tech-badge">DuckDB</span>
-        <span class="tech-badge">GCS</span>
-        <span class="tech-badge">Vertex AI Gemini</span>
-        <span class="tech-badge">openpyxl</span>
+      <div class="diagram-row">
+        <div class="diagram-node" data-id="ui" onclick="toggle('ui')" style="width:200px;">
+          <div class="name">ui</div>
+          <div class="desc">Frontend application</div>
+        </div>
       </div>
-      <ul>
-        <li>Ingests Australian government datasets (ATO, DSS, Parliamentary Budget Office)</li>
-        <li>Transforms through <strong>bronze → silver → gold</strong> layers using DuckDB</li>
-        <li>Orchestrated by Prefect 3.x (self-hosted on GCP VM)</li>
-        <li>Event-driven triggers chain stages: ingestion → bronze → silver</li>
-        <li>Config-driven: one YAML file per dataset</li>
-      </ul>
-      <div class="principle">AI does structural parsing only (find headers, data boundaries). All transformation logic is deterministic DuckDB SQL.</div>
-      <div class="connections">
-        <h4>Data flows</h4>
-        <span class="conn-tag sends" onclick="selectRepo('gcs')">→ GCS (parquet output)</span>
-      </div>
+
     </div>
 
-    <!-- Knowledge -->
-    <div class="detail-card" id="detail-knowledge">
-      <h2>knowledge</h2>
-      <p class="role">AI knowledge base — ingestion and processing of knowledge artifacts</p>
-      <div>
-        <span class="tech-badge">Python</span>
-        <span class="tech-badge">PDF parsing</span>
-        <span class="tech-badge">Web scraping</span>
-        <span class="tech-badge">Embeddings</span>
-      </div>
-      <ul>
-        <li>PDF parsing (government publications, budget statements)</li>
-        <li>Web scraping for definitions and reference data</li>
-        <li>Chunking and embedding generation</li>
-        <li>Writes processed artifacts to vector DB (deployed by <strong>infra</strong>)</li>
-      </ul>
-      <div class="principle">Produces knowledge. Does not own serving infrastructure or RAG logic.</div>
-      <div class="connections">
-        <h4>Data flows</h4>
-        <span class="conn-tag sends" onclick="selectRepo('vectordb')">→ Vector DB (embeddings)</span>
-      </div>
-    </div>
-
-    <!-- GCS -->
-    <div class="detail-card" id="detail-gcs">
-      <h2>GCS (Data Lake)</h2>
-      <p class="role">Google Cloud Storage — parquet data lake for structured data</p>
-      <div>
-        <span class="tech-badge">GCS</span>
-        <span class="tech-badge">Parquet</span>
-      </div>
-      <ul>
-        <li>Stores all medallion layer output (bronze, silver, gold)</li>
-        <li>Queried directly by the API via DuckDB</li>
-        <li>Indexed by the catalog for metadata and discovery</li>
-        <li>Provisioned by <strong>infra/modules/storage/</strong></li>
-      </ul>
-      <div class="connections">
-        <h4>Data flows</h4>
-        <span class="conn-tag receives" onclick="selectRepo('etl')">← etl (writes parquet)</span>
-        <span class="conn-tag sends" onclick="selectRepo('catalog')">→ catalog (metadata indexing)</span>
-        <span class="conn-tag sends" onclick="selectRepo('api')">→ api (DuckDB queries)</span>
-      </div>
-    </div>
-
-    <!-- Vector DB -->
-    <div class="detail-card" id="detail-vectordb">
-      <h2>Vector DB</h2>
-      <p class="role">Embedding store for AI knowledge retrieval</p>
-      <div>
-        <span class="tech-badge">Vector DB</span>
-        <span class="tech-badge">TBD provider</span>
-      </div>
-      <ul>
-        <li>Stores chunked and embedded knowledge artifacts</li>
-        <li>Queried by <strong>intelligence</strong> for RAG retrieval</li>
-        <li>Deployed by <strong>infra</strong></li>
-      </ul>
-      <div class="connections">
-        <h4>Data flows</h4>
-        <span class="conn-tag receives" onclick="selectRepo('knowledge')">← knowledge (writes embeddings)</span>
-        <span class="conn-tag sends" onclick="selectRepo('intelligence')">→ intelligence (reads for RAG)</span>
-      </div>
-    </div>
-
-    <!-- Catalog -->
-    <div class="detail-card" id="detail-catalog">
-      <h2>catalog</h2>
-      <p class="role">Data discovery and metadata management via OpenMetadata</p>
-      <div>
-        <span class="tech-badge">OpenMetadata 1.12</span>
-        <span class="tech-badge">Docker Compose</span>
-        <span class="tech-badge">MySQL</span>
-        <span class="tech-badge">Elasticsearch</span>
-      </div>
-      <ul>
-        <li>OpenMetadata server config and Docker Compose deployment</li>
-        <li>GCS datalake connector configuration</li>
-        <li>Dataset curation: column schemas, table lineage, domain tagging</li>
-        <li>Ingestion scripts (Prefect-compatible, no Airflow)</li>
-      </ul>
-      <div class="principle">The OM API is the interface. Flask (in api) orchestrates calls to it.</div>
-      <div class="connections">
-        <h4>Data flows</h4>
-        <span class="conn-tag receives" onclick="selectRepo('gcs')">← GCS (indexes metadata)</span>
-        <span class="conn-tag sends" onclick="selectRepo('api')">→ api (OM API)</span>
-      </div>
-    </div>
-
-    <!-- Intelligence -->
-    <div class="detail-card" id="detail-intelligence">
-      <h2>intelligence</h2>
-      <p class="role">RAG orchestration and agent logic</p>
-      <div>
-        <span class="tech-badge">Python</span>
-        <span class="tech-badge">LLM APIs</span>
-        <span class="tech-badge">Vector DB client</span>
-      </div>
-      <ul>
-        <li>Retrieval-augmented generation workflows</li>
-        <li>Prompt chains and agent orchestration</li>
-        <li>Reads from vector DB, calls LLM APIs</li>
-        <li>Decoupled from knowledge ingestion</li>
-      </ul>
-      <div class="principle">Consumes knowledge, reasons over it. Separate from ingestion by design.</div>
-      <div class="connections">
-        <h4>Data flows</h4>
-        <span class="conn-tag receives" onclick="selectRepo('vectordb')">← Vector DB (retrieval)</span>
-        <span class="conn-tag sends" onclick="selectRepo('api')">→ api (intelligence service)</span>
-      </div>
-    </div>
-
-    <!-- API -->
-    <div class="detail-card" id="detail-api">
-      <h2>api</h2>
-      <p class="role">Backend-for-frontend (BFF) — single API surface for the UI</p>
-      <div>
-        <span class="tech-badge">Flask</span>
-        <span class="tech-badge">Python</span>
-        <span class="tech-badge">SQLite</span>
-        <span class="tech-badge">DuckDB</span>
-      </div>
-      <ul>
-        <li>Unified Flask API for the frontend</li>
-        <li>Orchestrates calls to: OpenMetadata API, intelligence services</li>
-        <li>Queries GCS datalake directly (DuckDB over parquet)</li>
-        <li>SQLite for application data (users, settings, preferences)</li>
-        <li>Shields the frontend from backend service topology</li>
-      </ul>
-      <div class="connections">
-        <h4>Data flows</h4>
-        <span class="conn-tag receives" onclick="selectRepo('catalog')">← catalog (OM API)</span>
-        <span class="conn-tag receives" onclick="selectRepo('intelligence')">← intelligence (RAG)</span>
-        <span class="conn-tag receives" onclick="selectRepo('gcs')">← GCS (DuckDB queries)</span>
-        <span class="conn-tag sends" onclick="selectRepo('ui')">→ ui (JSON API)</span>
-      </div>
-    </div>
-
-    <!-- UI -->
-    <div class="detail-card" id="detail-ui">
-      <h2>ui</h2>
-      <p class="role">Frontend web application for data exploration and dashboards</p>
-      <div>
-        <span class="tech-badge">TBD</span>
-      </div>
-      <ul>
-        <li>Consumes the Flask BFF exclusively (no direct backend calls)</li>
-        <li>Data exploration, dashboards, catalog browsing</li>
-        <li>Framework and tech stack to be decided</li>
-      </ul>
-      <div class="connections">
-        <h4>Data flows</h4>
-        <span class="conn-tag receives" onclick="selectRepo('api')">← api (Flask BFF)</span>
-      </div>
-    </div>
-
-    <!-- Sources -->
-    <div class="detail-card" id="detail-sources">
-      <h2>External Sources</h2>
-      <p class="role">Government APIs, publications, and web resources</p>
-      <ul>
-        <li><strong>Structured:</strong> Digital Atlas API (ATO, DSS), Parliamentary Budget Office Excel files</li>
-        <li><strong>Unstructured:</strong> Treasury PDFs, government publications, web definitions</li>
-      </ul>
-      <div class="connections">
-        <h4>Data flows</h4>
-        <span class="conn-tag sends" onclick="selectRepo('etl')">→ etl (structured ingestion)</span>
-        <span class="conn-tag sends" onclick="selectRepo('knowledge')">→ knowledge (unstructured ingestion)</span>
-      </div>
+    <div style="position:absolute; right:0; top:50%; transform:translateY(-50%) rotate(90deg); font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-tertiary); white-space:nowrap;">
+      infra · terraform · all infrastructure
     </div>
   </div>
+
+  <!-- Drawer -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-inner" id="drawer-inner"></div>
+  </div>
+
+  <!-- Principles -->
+  <div class="section-label">Design Principles</div>
+  <div class="principles-grid">
+    <div class="principle-cell">
+      <div class="num">01</div>
+      <h3>Loose Coupling</h3>
+      <p>Each repo owns one concern. Communication through APIs, GCS paths, and vector DB — never internals.</p>
+    </div>
+    <div class="principle-cell">
+      <div class="num">02</div>
+      <h3>Infra Owns Deployment</h3>
+      <p>All infrastructure lives in one Terraform repo. App repos define logic, not resources.</p>
+    </div>
+    <div class="principle-cell">
+      <div class="num">03</div>
+      <h3>Knowledge → Intelligence</h3>
+      <p>Knowledge ingests and embeds. Intelligence retrieves and reasons. Separate by design.</p>
+    </div>
+    <div class="principle-cell">
+      <div class="num">04</div>
+      <h3>BFF Pattern</h3>
+      <p>The UI talks to one API. That API orchestrates everything behind it.</p>
+    </div>
+    <div class="principle-cell">
+      <div class="num">05</div>
+      <h3>Config-Driven</h3>
+      <p>New datasets are YAML files, not code. Pipelines are configuration, not engineering.</p>
+    </div>
+    <div class="principle-cell">
+      <div class="num">06</div>
+      <h3>AI Structure, SQL Logic</h3>
+      <p>AI finds headers and boundaries. SQL does the transformation. Deterministic and testable.</p>
+    </div>
+  </div>
+
+  <!-- Environments -->
+  <div class="section-label">Environments</div>
+  <div class="env-grid">
+    <div class="env-col">
+      <div class="env-label">Test</div>
+      <div class="env-row"><span class="label">Project</span><span class="value">big-lake-test-490405</span></div>
+      <div class="env-row"><span class="label">Zone</span><span class="value">australia-southeast2-b</span></div>
+      <div class="env-row"><span class="label">Data bucket</span><span class="value">...-test-490405-analytics-data</span></div>
+      <div class="env-row"><span class="label">TF state</span><span class="value">biglake-tf-state-test</span></div>
+      <div class="env-row"><span class="label">Destructible</span><span class="value">yes</span></div>
+    </div>
+    <div class="env-col">
+      <div class="env-label">Production</div>
+      <div class="env-row"><span class="label">Project</span><span class="value">big-lake-prod</span></div>
+      <div class="env-row"><span class="label">Zone</span><span class="value">australia-southeast2-a</span></div>
+      <div class="env-row"><span class="label">Data bucket</span><span class="value">...-prod-analytics-data</span></div>
+      <div class="env-row"><span class="label">TF state</span><span class="value">biglake-tf-state-prod</span></div>
+      <div class="env-row"><span class="label">Destructible</span><span class="value">no</span></div>
+    </div>
+  </div>
+  <div class="env-note">Deployed via GitHub Actions + Workload Identity Federation. No local Terraform runs.</div>
+
+  <!-- GCP Services -->
+  <div class="section-label">GCP Services</div>
+  <div class="infra-list">
+    <div class="infra-row"><span class="svc">GCS</span><span class="purpose">Data lake (parquet), knowledge artifacts</span><span class="prov">modules/storage/</span></div>
+    <div class="infra-row"><span class="svc">Compute Engine</span><span class="purpose">Prefect server, OpenMetadata server</span><span class="prov">modules/prefect/, openmetadata/</span></div>
+    <div class="infra-row"><span class="svc">Secret Manager</span><span class="purpose">API keys, HMAC keys, DB credentials</span><span class="prov">modules/core/</span></div>
+    <div class="infra-row"><span class="svc">SQLite</span><span class="purpose">App data (users, settings) — co-located with API</span><span class="prov">api/ (file-based)</span></div>
+    <div class="infra-row"><span class="svc">Vector DB</span><span class="purpose">Knowledge embeddings for RAG</span><span class="prov">TBD</span></div>
+    <div class="infra-row"><span class="svc">IAM</span><span class="purpose">Least-privilege service accounts</span><span class="prov">modules/iam/</span></div>
+    <div class="infra-row"><span class="svc">VPC</span><span class="purpose">Private networking, firewall rules</span><span class="prov">modules/network/</span></div>
+  </div>
+
 </div>
 
-<!-- ==================== PRINCIPLES TAB ==================== -->
-<div id="tab-principles" class="tab-content">
-  <div class="principles">
-    <h2>Design Principles</h2>
-    <div class="principles-grid">
-      <div class="principle-card">
-        <div class="num">1</div>
-        <h3>Loose Coupling</h3>
-        <p>Each repo has a single responsibility. No repo directly depends on another's internals. Communication is through well-defined interfaces: APIs, GCS paths, vector DB.</p>
-      </div>
-      <div class="principle-card">
-        <div class="num">2</div>
-        <h3>Infra Owns Deployment</h3>
-        <p>All serving infrastructure (VMs, databases, vector DBs) is provisioned from <code>infra</code>. Application repos define config and logic, not infrastructure.</p>
-      </div>
-      <div class="principle-card">
-        <div class="num">3</div>
-        <h3>Knowledge Produces, Intelligence Consumes</h3>
-        <p>Knowledge ingestion and RAG logic are separate concerns in separate repos. <code>knowledge</code> writes embeddings, <code>intelligence</code> retrieves and reasons over them.</p>
-      </div>
-      <div class="principle-card">
-        <div class="num">4</div>
-        <h3>BFF Pattern</h3>
-        <p>The UI talks to one API (<code>api</code>). The API orchestrates all backend services — OpenMetadata, GCS queries, intelligence. One surface, many backends.</p>
-      </div>
-      <div class="principle-card">
-        <div class="num">5</div>
-        <h3>Config-Driven Pipelines</h3>
-        <p>ETL pipelines are defined by YAML configuration. Adding a new dataset means adding a YAML file, not writing new code.</p>
-      </div>
-      <div class="principle-card">
-        <div class="num">6</div>
-        <h3>AI for Structure, SQL for Logic</h3>
-        <p>In ETL, AI handles structural parsing (finding headers, data boundaries). All transformation logic is deterministic DuckDB SQL — testable and reproducible.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== INFRASTRUCTURE TAB ==================== -->
-<div id="tab-infrastructure" class="tab-content">
-  <div class="infra-section">
-    <h2>GCP Infrastructure</h2>
-    <p style="text-align:center; color: var(--text-muted); margin-bottom: 1.5rem;">All provisioned from <code>infra/</code> via Terraform</p>
-    <table>
-      <thead>
-        <tr><th>Service</th><th>Purpose</th><th>Provisioned By</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>GCS</td><td>Data lake storage (parquet), knowledge artifacts</td><td><code>infra/modules/storage/</code></td></tr>
-        <tr><td>Compute Engine</td><td>Prefect server, OpenMetadata server</td><td><code>infra/modules/prefect/</code>, <code>infra/modules/openmetadata/</code></td></tr>
-        <tr><td>Secret Manager</td><td>API keys, HMAC keys, DB credentials</td><td><code>infra/modules/core/</code></td></tr>
-        <tr><td>SQLite</td><td>Application data (users, settings) — co-located with API</td><td><code>api/</code> (file-based)</td></tr>
-        <tr><td>Vector DB</td><td>Knowledge embeddings for RAG retrieval</td><td><code>infra/</code> (TBD)</td></tr>
-        <tr><td>IAM</td><td>Service accounts with least-privilege roles</td><td><code>infra/modules/iam/</code></td></tr>
-        <tr><td>VPC</td><td>Private networking, firewall rules</td><td><code>infra/modules/network/</code></td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<footer>
-  BigLake Platform · Architecture Documentation
-</footer>
+<footer>BigLake Platform Architecture</footer>
 
 <script>
-  // Tab switching
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    });
-  });
+const data = {
+  sources: {
+    name: 'External Sources', tech: '',
+    responsibilities: [
+      'Government APIs (Digital Atlas — ATO, DSS)',
+      'Excel/PDF publications (Parliamentary Budget Office, Treasury)',
+      'Web scraping for definitions and reference data'
+    ],
+    connections: ['Structured data flows to etl', 'Unstructured content flows to knowledge'],
+    principle: null
+  },
+  etl: {
+    name: 'etl', tech: 'Python · Prefect 3.x · DuckDB · GCS · Vertex AI Gemini',
+    responsibilities: [
+      'Ingests Australian government datasets',
+      'Medallion pipeline: bronze → silver → gold',
+      'Orchestrated by Prefect (self-hosted, event-driven)',
+      'Config-driven: one YAML per dataset'
+    ],
+    connections: ['Reads from external APIs and files', 'Writes parquet to GCS'],
+    principle: 'AI does structural parsing only. All transformation is deterministic DuckDB SQL.'
+  },
+  knowledge: {
+    name: 'knowledge', tech: 'Python · PDF parsing · web scraping · embeddings',
+    responsibilities: [
+      'Parses PDFs (budget statements, publications)',
+      'Scrapes web for definitions and reference data',
+      'Chunks content and generates embeddings',
+      'Writes to vector DB (deployed by infra)'
+    ],
+    connections: ['Reads from external documents and web', 'Writes embeddings to Vector DB'],
+    principle: 'Produces knowledge. Does not own serving infrastructure or RAG logic.'
+  },
+  gcs: {
+    name: 'GCS (Data Lake)', tech: 'Google Cloud Storage · Parquet',
+    responsibilities: [
+      'Stores all medallion layer output (bronze, silver, gold)',
+      'Queried by the API via DuckDB over parquet',
+      'Indexed by catalog for metadata discovery'
+    ],
+    connections: ['Written by etl', 'Read by catalog (metadata) and api (queries)'],
+    principle: null
+  },
+  vectordb: {
+    name: 'Vector DB', tech: 'TBD provider · deployed by infra',
+    responsibilities: [
+      'Stores chunked and embedded knowledge artifacts',
+      'Serves similarity search for RAG retrieval'
+    ],
+    connections: ['Written by knowledge', 'Read by intelligence'],
+    principle: null
+  },
+  catalog: {
+    name: 'catalog', tech: 'OpenMetadata 1.12 · Docker Compose · MySQL · Elasticsearch',
+    responsibilities: [
+      'OpenMetadata server config and deployment',
+      'GCS datalake connector configuration',
+      'Dataset curation: schemas, lineage, domains',
+      'Ingestion scripts (Prefect-compatible)'
+    ],
+    connections: ['Reads metadata from GCS', 'Exposes OM API (consumed by Flask api)'],
+    principle: 'OM API is the interface. Flask orchestrates calls to it.'
+  },
+  intelligence: {
+    name: 'intelligence', tech: 'Python · LLM APIs · Vector DB client',
+    responsibilities: [
+      'Retrieval-augmented generation workflows',
+      'Prompt chains and agent orchestration',
+      'Reads from vector DB, calls LLM APIs',
+      'Decoupled from knowledge ingestion'
+    ],
+    connections: ['Reads from Vector DB', 'Serves intelligence to api'],
+    principle: 'Consumes knowledge, reasons over it. Separate from ingestion by design.'
+  },
+  api: {
+    name: 'api', tech: 'Flask · Python · SQLite · DuckDB',
+    responsibilities: [
+      'Unified Flask API for the frontend (BFF)',
+      'Orchestrates: OM API, intelligence services',
+      'Queries GCS datalake via DuckDB over parquet',
+      'SQLite for app data (users, settings, preferences)'
+    ],
+    connections: ['Consumes catalog (OM API), intelligence, GCS', 'Serves JSON API to ui'],
+    principle: 'Shields the frontend from backend service topology.'
+  },
+  ui: {
+    name: 'ui', tech: 'TBD',
+    responsibilities: [
+      'Frontend for data exploration and dashboards',
+      'Consumes Flask BFF exclusively',
+      'No direct backend calls'
+    ],
+    connections: ['Reads from api only'],
+    principle: null
+  }
+};
 
-  // Node selection
-  function selectRepo(repo) {
-    // Clear previous selection
-    document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
-    document.querySelectorAll('.detail-card').forEach(c => c.classList.remove('visible'));
+let activeId = null;
 
-    // Select node
-    const node = document.querySelector(`.node[data-repo="${repo}"]`);
-    if (node) node.classList.add('selected');
+function toggle(id) {
+  const drawer = document.getElementById('drawer');
+  const inner = document.getElementById('drawer-inner');
+  document.querySelectorAll('.diagram-node').forEach(n => n.classList.remove('active'));
 
-    // Show detail card
-    const card = document.getElementById('detail-' + repo);
-    if (card) card.classList.add('visible');
-
-    // Switch to diagram tab if not there
-    if (!document.getElementById('tab-diagram').classList.contains('active')) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.querySelector('[data-tab="diagram"]').classList.add('active');
-      document.getElementById('tab-diagram').classList.add('active');
-    }
-
-    // Scroll to detail
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (activeId === id) {
+    drawer.classList.remove('open');
+    activeId = null;
+    return;
   }
 
-  document.querySelectorAll('.node').forEach(node => {
-    node.addEventListener('click', () => selectRepo(node.dataset.repo));
-  });
+  activeId = id;
+  const d = data[id];
+  const node = document.querySelector('[data-id="' + id + '"]');
+  if (node) node.classList.add('active');
+
+  inner.innerHTML =
+    '<div class="drawer-header"><div><h3>' + d.name + '</h3>' +
+    (d.tech ? '<div class="tech">' + d.tech + '</div>' : '') +
+    '</div><button class="drawer-close" onclick="toggle(\'' + id + '\')">&times;</button></div>' +
+    '<div class="drawer-col"><h4>Responsibilities</h4><ul>' +
+    d.responsibilities.map(function(r) { return '<li>' + r + '</li>'; }).join('') +
+    '</ul></div><div class="drawer-col"><h4>Connections</h4><ul>' +
+    d.connections.map(function(c) { return '<li>' + c + '</li>'; }).join('') +
+    '</ul></div>' +
+    (d.principle ? '<div class="drawer-principle">' + d.principle + '</div>' : '');
+
+  drawer.classList.add('open');
+  drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
 </script>
 
 </body>

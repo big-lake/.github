@@ -1,6 +1,6 @@
-# .github — BigLake Org Configuration
+# .github — Big Lake Org Configuration
 
-Org-level documentation, Copilot instructions, and shared configuration for the BigLake platform.
+Org-level documentation, Copilot instructions, and shared configuration for the Big Lake platform.
 
 ## Contents
 

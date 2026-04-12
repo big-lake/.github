@@ -2,7 +2,7 @@
 
 ## Overview
 
-BigLake is a data platform for ingesting, transforming, cataloguing, and serving Australian government datasets. It runs on Google Cloud Platform with a self-hosted orchestration layer.
+Big Lake is a data platform for ingesting, transforming, cataloguing, and serving Australian government datasets. It runs on Google Cloud Platform with a self-hosted orchestration layer.
 
 ## Repositories
 
@@ -156,7 +156,7 @@ External Sources (APIs, PDFs, web)
 |---|---|---|
 | GCS | Data lake storage (parquet), knowledge artifacts | `infra/modules/storage/` |
 | Compute Engine | Prefect server, OpenMetadata server | `infra/modules/prefect/`, `infra/modules/openmetadata/` |
-| Secret Manager | API keys, HMAC keys, DB credentials | `infra/modules/core/` |
+| Secret Manager | API keys, HMAC keys, DB credentials, admin password | `infra/modules/iam/` |
 | SQLite | Application data (users, settings) — co-located with `api` | `api/` (file-based, no infra needed) |
 | Cloud SQL / Vector DB | Metadata store, vector embeddings | `infra/` (TBD for vector DB) |
 | IAM | Service accounts with least-privilege roles | `infra/modules/iam/` |
@@ -177,4 +177,4 @@ Two GCP projects, both in `australia-southeast2`:
 
 - **Environment variable:** `ENV` (`test` or `prod`) — used by all application repos
 - **Terraform:** Applied exclusively via GitHub Actions using Workload Identity Federation (no local runs)
-- **WIF pool:** `github-pool` per project, with per-repo OIDC providers (`github-etl-provider`, `github-catalog-provider`, `github-infra-provider`)
+- **WIF pool:** `github-pool` per project, with a single org-wide OIDC provider (`github-provider`, condition: `startsWith('big-lake/')`) — access controlled at the service account level

@@ -49,6 +49,7 @@ BigLake is a GCP-hosted data platform for Australian government datasets. See `A
 
 - **robots.md** — Exhaustive technical reference for AI agents
 - **humans.md** — Concise overview for human readers (~100 lines max)
+- **setup.md** — All manual steps to deploy the repo to a new GCP environment. Keep updated when adding secrets, variables, or infrastructure dependencies
 - In-file comments explain *why*, not *what*
 - See `etl/.github/instructions/documentation.instructions.md` for the full documentation standard
 

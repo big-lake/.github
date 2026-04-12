@@ -61,10 +61,12 @@ biglake/
 **Role:** Backend-for-frontend (BFF) — single API surface for the UI.
 
 - Flask application providing a unified API
-- Orchestrates calls to: OpenMetadata API, GCS data, intelligence services
+- Orchestrates calls to: OpenMetadata API, intelligence services
+- Queries GCS datalake directly (DuckDB over parquet) to serve data to the UI
+- SQLite for application data (users, settings, preferences)
 - Shields the frontend from backend service topology
 
-**Tech:** Flask (Python)
+**Tech:** Flask (Python), SQLite
 
 ### ui
 
@@ -119,25 +121,28 @@ External Sources (APIs, PDFs, web)
         ▼
    ┌─────────┐     ┌───────────┐
    │   etl   │     │ knowledge │
-   │ (structured)  │ (unstructured)
+   │(structured)  │(unstructured)
    └────┬────┘     └─────┬─────┘
         │                │
         ▼                ▼
    ┌─────────┐     ┌──────────┐
    │   GCS   │     │ Vector DB│
-   │ (parquet)│     │          │
+   │(parquet)│     │          │
    └────┬────┘     └─────┬────┘
         │                │
-        ▼                ▼
-   ┌─────────┐     ┌──────────────┐
-   │ catalog │     │ intelligence │
-   │ (metadata)    │ (RAG/agents) │
-   └────┬────┘     └──────┬───────┘
-        │                 │
-        └────────┬────────┘
+        ├────────┐       │
+        ▼        │       ▼
+   ┌─────────┐   │  ┌──────────────┐
+   │ catalog │   │  │ intelligence │
+   │ (metadata)  │  │ (RAG/agents) │
+   └────┬────┘   │  └──────┬───────┘
+        │        │         │
+        └────────┼─────────┘
                  ▼
             ┌─────────┐
             │   api   │  (Flask BFF)
+            │         │
+            │ SQLite  │  (users, settings, etc)
             └────┬────┘
                  ▼
             ┌─────────┐
@@ -152,6 +157,7 @@ External Sources (APIs, PDFs, web)
 | GCS | Data lake storage (parquet), knowledge artifacts | `infra/modules/storage/` |
 | Compute Engine | Prefect server, OpenMetadata server | `infra/modules/prefect/`, `infra/modules/openmetadata/` |
 | Secret Manager | API keys, HMAC keys, DB credentials | `infra/modules/core/` |
+| SQLite | Application data (users, settings) — co-located with `api` | `api/` (file-based, no infra needed) |
 | Cloud SQL / Vector DB | Metadata store, vector embeddings | `infra/` (TBD for vector DB) |
 | IAM | Service accounts with least-privilege roles | `infra/modules/iam/` |
 | VPC | Private networking, firewall rules | `infra/modules/network/` |

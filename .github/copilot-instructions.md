@@ -24,7 +24,7 @@ BigLake is a GCP-hosted data platform for Australian government datasets. See `A
 1. **Loose coupling** — Repos do not depend on each other's internals. Communication is through well-defined interfaces (APIs, GCS paths, vector DB).
 2. **Infra owns all deployment** — VMs, databases, vector DBs, networking are all provisioned from `infra/`. Application repos define config and logic, not infrastructure.
 3. **Knowledge produces, intelligence consumes** — `knowledge` ingests and processes artifacts. `intelligence` retrieves and reasons over them. They are separate repos by design.
-4. **BFF pattern** — The `ui` talks only to `api`. The `api` orchestrates all backend services (OpenMetadata API, GCS, intelligence).
+4. **BFF pattern** — The `ui` talks only to `api`. The `api` orchestrates all backend services (OpenMetadata API, GCS datalake queries, intelligence).
 5. **Config-driven** — Pipelines and datasets are defined by YAML configuration, not hardcoded logic.
 6. **AI for structure, SQL for logic** — In ETL, AI handles structural parsing (headers, boundaries). All transformation is deterministic DuckDB SQL.
 

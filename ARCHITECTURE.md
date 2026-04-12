@@ -1,0 +1,157 @@
+# BigLake Platform Architecture
+
+## Overview
+
+BigLake is a data platform for ingesting, transforming, cataloguing, and serving Australian government datasets. It runs on Google Cloud Platform with a self-hosted orchestration layer.
+
+## Repositories
+
+```
+biglake/
+├── infra/           # GCP infrastructure (Terraform)
+├── etl/             # Data ingestion & transformation pipelines
+├── catalog/         # Data catalog config & curation (OpenMetadata)
+├── api/             # Flask BFF — single API surface for the UI
+├── ui/              # Frontend web application
+├── knowledge/       # AI knowledge base ingestion & processing
+├── intelligence/    # RAG orchestration & agent logic
+└── .github/         # Org-level docs, architecture, Copilot instructions
+```
+
+## Repo Responsibilities
+
+### infra
+
+**Role:** Infrastructure-as-code for the entire platform.
+
+- Terraform modules for GCP resources (VMs, networking, IAM, storage, secrets)
+- Deploys all serving infrastructure: Prefect VM, OpenMetadata VM, vector DB, etc.
+- Multi-environment support (test / prod) with separate state buckets
+- GitHub Actions workflows for plan/apply
+
+**Principle:** Infra deploys everything. No application logic lives here.
+
+### etl
+
+**Role:** Structured data ingestion and transformation through a medallion pipeline.
+
+- Ingests Australian government datasets (ATO, DSS, Parliamentary Budget Office, etc.)
+- Transforms through bronze → silver → gold layers using DuckDB
+- Orchestrated by Prefect 3.x (self-hosted on GCP VM)
+- Event-driven triggers chain stages: ingestion → bronze → silver
+- Config-driven: one YAML file per dataset
+
+**Tech:** Python, Prefect 3.x, DuckDB, GCS, openpyxl, Vertex AI Gemini (structural parsing only)
+
+### catalog
+
+**Role:** Data discovery and metadata management via OpenMetadata.
+
+- OpenMetadata server config and Docker Compose deployment
+- GCS datalake connector configuration
+- Dataset curation: column schemas, table lineage, domain tagging
+- Ingestion scripts (Prefect-compatible, no Airflow)
+
+**Tech:** OpenMetadata 1.12, Docker Compose, MySQL, Elasticsearch
+
+**Note:** The OM API is the interface. Flask (in `api`) orchestrates calls to it.
+
+### api
+
+**Role:** Backend-for-frontend (BFF) — single API surface for the UI.
+
+- Flask application providing a unified API
+- Orchestrates calls to: OpenMetadata API, GCS data, intelligence services
+- Shields the frontend from backend service topology
+
+**Tech:** Flask (Python)
+
+### ui
+
+**Role:** Frontend web application for data exploration and dashboards.
+
+- Consumes the Flask BFF exclusively (no direct backend calls)
+
+### knowledge
+
+**Role:** AI knowledge base — ingestion and processing of knowledge artifacts.
+
+- PDF parsing (government publications, budget statements, etc.)
+- Web scraping for definitions and reference data
+- Chunking and embedding generation
+- Writes processed artifacts to vector DB (deployed by `infra`)
+
+**Principle:** Produces knowledge. Does not own serving infrastructure or RAG logic.
+
+### intelligence
+
+**Role:** RAG orchestration and agent logic.
+
+- Retrieval-augmented generation workflows
+- Prompt chains and agent orchestration
+- Reads from vector DB, calls LLM APIs
+- Decoupled from knowledge ingestion (consumes what `knowledge` produces)
+
+**Principle:** Consumes knowledge, reasons over it. Separate from ingestion by design.
+
+### .github
+
+**Role:** Org-level documentation and configuration.
+
+- Platform architecture documentation (this file)
+- Org-wide Copilot instructions
+- Shared CI/CD workflows (future)
+
+## Design Principles
+
+1. **Loose coupling** — Each repo has a single responsibility. No repo directly depends on another's internals.
+2. **Infra owns deployment** — All serving infrastructure (VMs, databases, vector DBs) is provisioned from `infra`. Application repos define config, not infrastructure.
+3. **Knowledge produces, intelligence consumes** — Knowledge ingestion and RAG logic are separate concerns in separate repos.
+4. **BFF pattern** — The UI talks to one API (`api`), which orchestrates all backend services.
+5. **Config-driven pipelines** — ETL pipelines are defined by YAML config, not code changes.
+6. **AI for structure, SQL for logic** — In ETL, AI handles structural parsing (finding headers, data boundaries). All transformation logic is deterministic SQL in DuckDB.
+
+## Data Flow
+
+```
+External Sources (APIs, PDFs, web)
+        │
+        ▼
+   ┌─────────┐     ┌───────────┐
+   │   etl   │     │ knowledge │
+   │ (structured)  │ (unstructured)
+   └────┬────┘     └─────┬─────┘
+        │                │
+        ▼                ▼
+   ┌─────────┐     ┌──────────┐
+   │   GCS   │     │ Vector DB│
+   │ (parquet)│     │          │
+   └────┬────┘     └─────┬────┘
+        │                │
+        ▼                ▼
+   ┌─────────┐     ┌──────────────┐
+   │ catalog │     │ intelligence │
+   │ (metadata)    │ (RAG/agents) │
+   └────┬────┘     └──────┬───────┘
+        │                 │
+        └────────┬────────┘
+                 ▼
+            ┌─────────┐
+            │   api   │  (Flask BFF)
+            └────┬────┘
+                 ▼
+            ┌─────────┐
+            │   ui    │
+            └─────────┘
+```
+
+## Infrastructure (GCP)
+
+| Service | Purpose | Provisioned By |
+|---|---|---|
+| GCS | Data lake storage (parquet), knowledge artifacts | `infra/modules/storage/` |
+| Compute Engine | Prefect server, OpenMetadata server | `infra/modules/prefect/`, `infra/modules/openmetadata/` |
+| Secret Manager | API keys, HMAC keys, DB credentials | `infra/modules/core/` |
+| Cloud SQL / Vector DB | Metadata store, vector embeddings | `infra/` (TBD for vector DB) |
+| IAM | Service accounts with least-privilege roles | `infra/modules/iam/` |
+| VPC | Private networking, firewall rules | `infra/modules/network/` |

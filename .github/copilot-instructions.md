@@ -1,0 +1,66 @@
+# Copilot Instructions — BigLake Platform (Org-Wide)
+
+These instructions apply across all BigLake repositories. Individual repos may have their own `.github/copilot-instructions.md` with repo-specific conventions.
+
+## Platform Context
+
+BigLake is a GCP-hosted data platform for Australian government datasets. See `ARCHITECTURE.md` in this repo for the full architecture diagram and repo responsibilities.
+
+## Repository Map
+
+| Repo | Role | Key Tech |
+|---|---|---|
+| **infra** | GCP infrastructure (Terraform) | Terraform, GCP |
+| **etl** | Structured data pipelines (medallion) | Python, Prefect 3.x, DuckDB, GCS |
+| **catalog** | Data catalog config & curation | OpenMetadata, Docker Compose |
+| **api** | Flask BFF — unified API for the UI | Flask, Python |
+| **ui** | Frontend web application | TBD |
+| **knowledge** | Knowledge artifact ingestion & processing | Python, PDF parsing, embeddings |
+| **intelligence** | RAG orchestration & agent logic | Python, LLM APIs, vector DB client |
+| **.github** | Org-level docs & Copilot config | Markdown |
+
+## Design Principles
+
+1. **Loose coupling** — Repos do not depend on each other's internals. Communication is through well-defined interfaces (APIs, GCS paths, vector DB).
+2. **Infra owns all deployment** — VMs, databases, vector DBs, networking are all provisioned from `infra/`. Application repos define config and logic, not infrastructure.
+3. **Knowledge produces, intelligence consumes** — `knowledge` ingests and processes artifacts. `intelligence` retrieves and reasons over them. They are separate repos by design.
+4. **BFF pattern** — The `ui` talks only to `api`. The `api` orchestrates all backend services (OpenMetadata API, GCS, intelligence).
+5. **Config-driven** — Pipelines and datasets are defined by YAML configuration, not hardcoded logic.
+6. **AI for structure, SQL for logic** — In ETL, AI handles structural parsing (headers, boundaries). All transformation is deterministic DuckDB SQL.
+
+## Cross-Repo Conventions
+
+### GCP
+
+- **Project:** Referenced via `GOOGLE_CLOUD_PROJECT` env var
+- **Environment:** `ENV` env var (`test` or `prod`)
+- **Storage:** GCS bucket via `GCS_BUCKET` env var
+- **Secrets:** Google Secret Manager — never hardcode credentials
+- **IAM:** Least-privilege service accounts, defined in `infra/modules/iam/`
+
+### Python
+
+- Python 3.8+ across all repos
+- Use `yaml.safe_load()` for config (never `yaml.load()`)
+- Use virtual environments (`.venv/`) per repo
+- Security: follow OWASP Top 10 — no SQL injection, no hardcoded secrets, sanitize inputs
+
+### Documentation
+
+- **robots.md** — Exhaustive technical reference for AI agents
+- **humans.md** — Concise overview for human readers (~100 lines max)
+- In-file comments explain *why*, not *what*
+- See `etl/.github/instructions/documentation.instructions.md` for the full documentation standard
+
+### Naming
+
+- Datasets and variables: `snake_case`
+- GCS paths: `{subject}/{layer}/{source}/{dataset}/`
+- Metadata columns: prefixed with `_` (e.g. `_source_file`, `_ingestion_epoch_utc`)
+
+## When Working Across Repos
+
+- If a change in one repo affects another (e.g. new GCS path in `etl` needs a connector update in `catalog`), note the cross-repo dependency explicitly.
+- Infrastructure changes (new VM, new database, new bucket) always go in `infra/`, never in application repos.
+- API contracts between `api` and `ui` should be documented in `api/`.
+- Vector DB schema changes affect both `knowledge` (writes) and `intelligence` (reads) — coordinate accordingly.

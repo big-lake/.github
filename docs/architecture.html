@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Big Lake — Architecture</title>
+<style>
+  :root {
+    --bg:            #1B2228;
+    --surface:       #232d34;
+    --surface-alt:   #1e272d;
+    --surface-hover: #2a3740;
+    --border:        #2e3d46;
+    --border-strong: #3d5260;
+    --text:          #E9EEEC;
+    --text-secondary:#9fb8ad;
+    --text-muted:    #5a7468;
+    --teal:          #3A7F8F;
+    --teal-light:    #5A9AA8;
+    --teal-dim:      #2a5e6a;
+    --moss:          #2F4A3F;
+    --eucalyptus:    #6E8B7E;
+    --connector:     #3d5260;
+    --arrow:         #5a7a8a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    padding: 3.5rem 2rem 2.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .header p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ===== LAYOUT ===== */
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1.5rem 4rem;
+  }
+
+  .section-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 3.5rem 0 1.25rem;
+  }
+
+  /* ===== DIAGRAM ===== */
+  .diagram-hint {
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .diagram-canvas {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 1rem 0 2rem;
+  }
+
+  .diagram-row {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Node base */
+  .node {
+    padding: 0.85rem 1.1rem;
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    user-select: none;
+    min-width: 140px;
+  }
+  .node:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  }
+  .node.active {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 1px var(--teal), 0 4px 16px rgba(58,127,143,0.2);
+    background: var(--surface-hover);
+  }
+
+  /* Node variants */
+  .node.storage {
+    border-style: dashed;
+    background: var(--surface-alt);
+  }
+  .node.storage:hover { background: var(--surface-hover); }
+  .node.infra-wrap {
+    border: 1px dashed var(--border-strong);
+    background: transparent;
+    padding: 1.5rem 2rem 1rem;
+    border-radius: 12px;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .node-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .node-tag {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+    letter-spacing: 0.02em;
+  }
+  .node.active .node-name { color: var(--teal-light); }
+
+  /* Connector SVGs */
+  .connector {
+    display: flex;
+    justify-content: center;
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+  }
+  .connector svg { overflow: visible; }
+
+  /* infra label along side */
+  .infra-sidebar {
+    position: absolute;
+    right: -1.5rem;
+    top: 50%;
+    transform: translateY(-50%) rotate(90deg);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+    transform-origin: center center;
+  }
+
+  /* ===== DETAIL PANEL ===== */
+  .detail-panel {
+    margin-top: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: none;
+  }
+  .detail-panel.open { display: block; }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .panel-header-left { display: flex; align-items: baseline; gap: 0.75rem; }
+  .panel-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  }
+  .panel-tech {
+    font-size: 0.7rem;
+    color: var(--teal-light);
+    font-weight: 500;
+  }
+  .panel-close {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 2px 6px;
+    border-radius: 4px; transition: color 0.1s, background 0.1s;
+  }
+  .panel-close:hover { color: var(--text); background: var(--surface-hover); }
+
+  .panel-body {
+    padding: 1.25rem 1.5rem;
+    background: var(--surface-alt);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem 2rem;
+  }
+  .panel-role {
+    grid-column: 1 / -1;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-col h4 {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+  }
+  .panel-col ul { list-style: none; padding: 0; }
+  .panel-col li {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    padding: 0.22rem 0 0.22rem 1rem;
+    position: relative;
+    line-height: 1.4;
+  }
+  .panel-col li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0.6rem;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--teal-dim);
+  }
+  .panel-principle {
+    grid-column: 1 / -1;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ===== PRINCIPLES ===== */
+  .principles-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .principle-cell {
+    background: var(--surface);
+    padding: 1.2rem 1.1rem;
+    transition: background 0.15s;
+  }
+  .principle-cell:hover { background: var(--surface-hover); }
+  .principle-num {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--teal-dim);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+  }
+  .principle-cell h3 {
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: var(--text);
+  }
+  .principle-cell p {
+    font-size: 0.77rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ===== INFRA TABLE ===== */
+  .infra-table {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .infra-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 220px;
+    gap: 1rem;
+    padding: 0.7rem 1.25rem;
+    font-size: 0.8rem;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .infra-row.header-row {
+    background: var(--surface);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom-color: var(--border-strong);
+  }
+  .infra-row:not(.header-row) { background: var(--surface-alt); }
+  .infra-row:not(.header-row):nth-child(odd) { background: var(--surface); }
+  .infra-row:last-child { border-bottom: none; }
+  .infra-svc { font-weight: 600; color: var(--text); }
+  .infra-purpose { color: var(--text-secondary); }
+  .infra-prov {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem 1rem 3rem;
+    font-size: 0.67rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--eucalyptus); text-decoration: none; }
+  footer a:hover { color: var(--teal-light); }
+
+  @media (max-width: 680px) {
+    .principles-grid { grid-template-columns: 1fr; }
+    .panel-body { grid-template-columns: 1fr; }
+    .diagram-row { gap: 1rem; }
+    .node { min-width: 110px; padding: 0.7rem 0.7rem; }
+    .infra-row { grid-template-columns: 1fr; gap: 0.2rem; }
+    .infra-prov { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex; align-items:center; justify-content:center; margin-bottom:0.75rem;">
+    <img src="big-lake-logo-light.png" alt="Big Lake" style="height:48px;">
+  </div>
+  <p>A GCP data platform for Australian government datasets — ingest, transform, catalogue, and serve.</p>
+</div>
+
+<div class="main">
+
+  <div class="section-label">Architecture</div>
+  <p class="diagram-hint">Click any component to see details</p>
+
+  <div class="diagram-canvas" style="position:relative;">
+
+    <!-- ── ROW: Sources ── -->
+    <div class="diagram-row">
+      <div class="node" data-id="sources" onclick="select('sources')">
+        <div class="node-name">Sources</div>
+        <div class="node-tag">ATO · DSS · PBO · ...</div>
+      </div>
+    </div>
+
+    <!-- fork connector -->
+    <div class="connector" style="height:44px; width:100%;">
+      <svg width="320" height="44">
+        <line x1="160" y1="0" x2="72" y2="38" stroke="var(--connector)" stroke-width="1.5"/>
+        <polygon points="69,35 75,41 64,41" fill="var(--arrow)"/>
+        <line x1="160" y1="0" x2="248" y2="38" stroke="var(--connector)" stroke-width="1.5"/>
+        <polygon points="245,35 251,41 240,41" fill="var(--arrow)"/>
+      </svg>
+    </div>
+
+    <!-- ── ROW: Ingestion ── -->
+    <div class="diagram-row">
+      <div class="node" data-id="etl" onclick="select('etl')">
+        <div class="node-name">etl</div>
+        <div class="node-tag">Structured pipelines</div>
+      </div>
+      <div class="node" data-id="knowledge" onclick="select('knowledge')">
+        <div class="node-name">knowledge</div>
+        <div class="node-tag">Document ingestion</div>
+      </div>
+    </div>
+
+    <!-- two-col straight connector -->
+    <div class="connector" style="height:36px; width:100%;">
+      <svg width="320" height="36">
+        <line x1="72" y1="0" x2="72" y2="30" stroke="var(--connector)" stroke-width="1.5"/>
+        <polygon points="69,28 75,28 72,34" fill="var(--arrow)"/>
+        <line x1="248" y1="0" x2="248" y2="30" stroke="var(--connector)" stroke-width="1.5"/>
+        <polygon points="245,28 251,28 248,34" fill="var(--arrow)"/>
+      </svg>
+    </div>
+
+    <!-- ── ROW: Storage ── -->
+    <div class="diagram-row">
+      <div class="node storage" data-id="gcs" onclick="select('gcs')">
+        <div class="node-name">GCS</div>
+        <div class="node-tag">Parquet data lake</div>
+      </div>
+      <div class="node storage" data-id="vectordb" onclick="select('vectordb')">
+        <div class="node-name">Vector DB</div>
+        <div class="node-tag">pgvector embeddings</div>
+      </div>
+    </div>
+
+    <!-- two-col straight connector -->
+    <div class="connector" style="height:36px; width:100%;">
+      <svg width="320" height="36">
+        <line x1="72" y1="0" x2="72" y2="30" stroke="var(--connector)" stroke-width="1.5"/>
+        <polygon points="69,28 75,28 72,34" fill="var(--arrow)"/>
+        <line x1="248" y1="0" x2="248" y2="30" stroke="var(--connector)" stroke-width="1.5"/>
+        <polygon points="245,28 251,28 248,34" fill="var(--arrow)"/>
+      </svg>
+    </div>
+
+    <!-- ── ROW: Services ── -->
+    <div class="diagram-row">
+      <div class="node" data-id="catalog" onclick="select('catalog')">
+        <div class="node-name">catalog</div>
+        <div class="node-tag">Metadata & discovery</div>
+      </div>
+      <div class="node" data-id="intelligence" onclick="select('intelligence')">
+        <div class="node-name">intelligence</div>
+        <div class="node-tag">RAG & agents</div>
+      </div>
+    </div>
+
+    <!-- merge connector -->
+    <div class="connector" style="height:50px; width:100%;">
+      <svg width="320" height="50">
+        <line x1="72"  y1="0" x2="148" y2="44" stroke="var(--connector)" stroke-width="1.5"/>
+        <line x1="248" y1="0" x2="172" y2="44" stroke="var(--connector)" stroke-width="1.5"/>
+        <polygon points="157,47 163,47 160,53" fill="var(--arrow)"/>
+      </svg>
+    </div>
+
+    <!-- ── ROW: API ── -->
+    <div class="diagram-row">
+      <div class="node" data-id="api" onclick="select('api')" style="min-width:200px;">
+        <div class="node-name">api</div>
+        <div class="node-tag">Flask BFF · SQLite · DuckDB</div>
+      </div>
+    </div>
+
+    <!-- straight connector -->
+    <div class="connector" style="height:36px; width:100%;">
+      <svg width="10" height="36">
+        <line x1="5" y1="0" x2="5" y2="30" stroke="var(--connector)" stroke-width="1.5"/>
+        <polygon points="2,28 8,28 5,34" fill="var(--arrow)"/>
+      </svg>
+    </div>
+
+    <!-- ── ROW: UI ── -->
+    <div class="diagram-row">
+      <div class="node" data-id="ui" onclick="select('ui')" style="min-width:200px;">
+        <div class="node-name">ui</div>
+        <div class="node-tag">Vue 3 frontend</div>
+      </div>
+    </div>
+
+    <!-- infra label -->
+    <div style="position:absolute; right:0; top:50%; transform:translateY(-50%); writing-mode:vertical-rl; font-size:0.58rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--text-muted); white-space:nowrap; user-select:none;">
+      infra · terraform · all infrastructure
+    </div>
+
+  </div><!-- /diagram-canvas -->
+
+  <!-- ── DETAIL PANEL ── -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <span class="panel-title" id="panel-title"></span>
+        <span class="panel-tech" id="panel-tech"></span>
+      </div>
+      <button class="panel-close" onclick="closePanel()" aria-label="Close">✕</button>
+    </div>
+    <div class="panel-body" id="panel-body"></div>
+  </div>
+
+  <!-- ── DESIGN PRINCIPLES ── -->
+  <div class="section-label">Design Principles</div>
+  <div class="principles-grid">
+    <div class="principle-cell">
+      <div class="principle-num">01</div>
+      <h3>Loose Coupling</h3>
+      <p>Each repo owns one concern. Repos communicate through APIs, GCS paths, and the vector DB — never internal implementations.</p>
+    </div>
+    <div class="principle-cell">
+      <div class="principle-num">02</div>
+      <h3>Infra Owns Deployment</h3>
+      <p>All GCP infrastructure is Terraform in one repo. Application repos define logic and config, never resources.</p>
+    </div>
+    <div class="principle-cell">
+      <div class="principle-num">03</div>
+      <h3>Knowledge → Intelligence</h3>
+      <p>Knowledge ingests and embeds. Intelligence retrieves and reasons. Separate repos, separate concerns, by design.</p>
+    </div>
+    <div class="principle-cell">
+      <div class="principle-num">04</div>
+      <h3>BFF Pattern</h3>
+      <p>The UI talks to one API. That API orchestrates OpenMetadata, DuckDB/GCS, and the intelligence service, shielding the frontend from backend topology.</p>
+    </div>
+    <div class="principle-cell">
+      <div class="principle-num">05</div>
+      <h3>Config-Driven Pipelines</h3>
+      <p>New datasets are YAML files, not code changes. ETL pipelines are parameterised by configuration, not hardcoded logic.</p>
+    </div>
+    <div class="principle-cell">
+      <div class="principle-num">06</div>
+      <h3>AI Structure, SQL Logic</h3>
+      <p>AI (Gemini) finds headers and data boundaries. All transformation logic is deterministic DuckDB SQL — testable and auditable.</p>
+    </div>
+  </div>
+
+  <!-- ── INFRASTRUCTURE ── -->
+  <div class="section-label">GCP Infrastructure</div>
+  <div class="infra-table">
+    <div class="infra-row header-row">
+      <span>Service</span>
+      <span>Purpose</span>
+      <span style="text-align:right;">Provisioned by</span>
+    </div>
+    <div class="infra-row">
+      <span class="infra-svc">GCS</span>
+      <span class="infra-purpose">Data lake (parquet), knowledge artifacts</span>
+      <span class="infra-prov">infra/modules/storage/</span>
+    </div>
+    <div class="infra-row">
+      <span class="infra-svc">Compute Engine</span>
+      <span class="infra-purpose">Prefect server, OpenMetadata server</span>
+      <span class="infra-prov">infra/modules/prefect/ · openmetadata/</span>
+    </div>
+    <div class="infra-row">
+      <span class="infra-svc">Cloud SQL / pgvector</span>
+      <span class="infra-purpose">Vector database for knowledge embeddings</span>
+      <span class="infra-prov">infra/modules/knowledge_db/</span>
+    </div>
+    <div class="infra-row">
+      <span class="infra-svc">Secret Manager</span>
+      <span class="infra-purpose">API keys, HMAC keys, credentials, passwords</span>
+      <span class="infra-prov">infra/modules/iam/</span>
+    </div>
+    <div class="infra-row">
+      <span class="infra-svc">Workload Identity</span>
+      <span class="infra-purpose">Keyless auth for GitHub Actions deployments</span>
+      <span class="infra-prov">infra/modules/iam/</span>
+    </div>
+    <div class="infra-row">
+      <span class="infra-svc">SQLite</span>
+      <span class="infra-purpose">Application data — users, sessions, articles</span>
+      <span class="infra-prov">Co-located with api VM (no infra needed)</span>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<footer>
+  <a href="https://github.com/big-lake">big-lake</a> &nbsp;·&nbsp;
+  <a href="https://github.com/big-lake/.github/blob/main/ARCHITECTURE.md">ARCHITECTURE.md</a> &nbsp;·&nbsp;
+  <a href="https://github.com/big-lake/.github/blob/main/CONTRIBUTING.md">Contributing</a>
+</footer>
+
+<script>
+// ── Component data ──────────────────────────────────────────────
+const COMPONENTS = {
+  sources: {
+    title: 'sources',
+    tech: 'APIs · PDFs · Web',
+    role: 'External Australian government data. Structured datasets (ATO, DSS, Parliamentary Budget Office) are ingested by the ETL pipeline. Unstructured publications (budget statements, policy documents) are ingested by the knowledge pipeline.',
+    cols: [
+      { heading: 'Structured sources', items: ['ATO — individual income & taxation', 'DSS — social security recipients', 'Parliamentary Budget Office — fiscal data'] },
+      { heading: 'Unstructured sources', items: ['Budget statements (PDF)', 'Policy publications (PDF/web)', 'Reference definitions'] },
+    ],
+    principle: null,
+  },
+  etl: {
+    title: 'etl',
+    tech: 'Python · Prefect 3 · DuckDB · GCS',
+    role: 'Structured data ingestion and transformation through a medallion pipeline. Ingests datasets via API or file download, extracts clean tabular data (bronze), then applies business transformations — unpivot, rename, type cast, dedup — in DuckDB SQL (silver). Orchestrated by Prefect, event-driven, config-driven.',
+    cols: [
+      { heading: 'Pipeline layers', items: ['Ingestion — extract to GCS landing', 'Bronze — raw extraction, original shape', 'Silver — business transformation (SQL)', 'Gold — aggregated output for consumption'] },
+      { heading: 'Key design choices', items: ['One YAML config file per dataset', 'AI (Gemini) for structural parsing only', 'DuckDB for all SQL transforms', 'Event triggers chain ingestion → bronze → silver'] },
+    ],
+    principle: 'Principle: AI handles structure (find the headers). SQL handles business logic. Deterministic and testable.',
+  },
+  knowledge: {
+    title: 'knowledge',
+    tech: 'Python · Prefect · pgvector · Vertex AI',
+    role: 'AI knowledge base ingestion and processing. Downloads and parses unstructured government publications, chunks and embeds the content, then writes processed artifacts to the vector database. Does not own serving infrastructure or RAG logic.',
+    cols: [
+      { heading: 'Pipeline stages', items: ['Ingestion — download artifacts to GCS', 'Chunking — split into semantic units', 'Enrichment — metadata, entity tagging', 'Indexing — embed and write to pgvector'] },
+      { heading: 'Key design choices', items: ['13 ADRs covering every design decision', 'Eval harness built for RAG quality tracking', 'GCS as intermediate store between stages', 'Clean separation: knowledge produces, intelligence consumes'] },
+    ],
+    principle: 'Principle: knowledge produces. intelligence consumes. They are separate repos by design.',
+  },
+  gcs: {
+    title: 'GCS',
+    tech: 'Google Cloud Storage · Parquet',
+    role: 'The structured data lake. All ETL output is stored as parquet files in GCS. The API queries these directly via DuckDB (no database server). GCS also serves as the intermediate store between knowledge pipeline stages.',
+    cols: [
+      { heading: 'Structured data paths', items: ['{subject}/bronze/{source}/{dataset}/', '{subject}/silver/{source}/{dataset}/', '{subject}/gold/{source}/{dataset}/'] },
+      { heading: 'Other uses', items: ['Knowledge artifact staging between pipeline stages', 'SQLite backup via Litestream (API WAL replication)', 'Terraform state buckets (per environment)'] },
+    ],
+    principle: 'Principle: GCS is the source of truth for structured data. No database server needed for queries — DuckDB reads parquet directly.',
+  },
+  vectordb: {
+    title: 'Vector DB',
+    tech: 'pgvector · PostgreSQL · Cloud SQL',
+    role: 'Embeddings store for the knowledge base. The knowledge pipeline writes processed and embedded document chunks here. The intelligence service reads from it for hybrid retrieval (vector similarity + keyword search).',
+    cols: [
+      { heading: 'Schema', items: ['Document chunks with dense embeddings', 'Metadata: source, section, document ID', 'Full-text search index (BM25-style)', 'Read-only role for intelligence service'] },
+      { heading: 'Access', items: ['knowledge → write (index pipeline)', 'intelligence → read-only (retrieval)', 'No direct access from api or ui'] },
+    ],
+    principle: 'Principle: vector DB schema changes affect both knowledge (writes) and intelligence (reads). Coordinate across both repos.',
+  },
+  catalog: {
+    title: 'catalog',
+    tech: 'OpenMetadata 1.12 · Docker Compose · MySQL',
+    role: 'Data discovery and metadata management via OpenMetadata. Stores column schemas, table lineage, domain tags, and custom properties (logo, links, most-recent-data). The Flask API queries OpenMetadata\'s REST API to serve catalog data to the UI.',
+    cols: [
+      { heading: 'What it manages', items: ['Column schemas and data types', 'Table lineage (source → bronze → silver → gold)', 'Domain tags (e.g. DataSource.ATO)', 'Custom properties: logo, links, most_recent_data'] },
+      { heading: 'How it\'s used', items: ['api/catalog_client.py → OM REST API', 'Dataset curation via YAML in catalog/curation/', 'GCS connector auto-discovers parquet tables', 'ingestion scripts register metadata programmatically'] },
+    ],
+    principle: 'Principle: OpenMetadata is the metadata registry. The Flask BFF orchestrates calls to it — the UI never calls OM directly.',
+  },
+  intelligence: {
+    title: 'intelligence',
+    tech: 'Python · FastAPI · Gemini · Cohere Rerank',
+    role: 'RAG orchestration and agent logic. Receives questions, performs hybrid retrieval over the vector DB (dense + keyword), reranks results with Cohere, and synthesises answers with Gemini. Returns answers with citations. Called by the Flask BFF, never directly by the UI.',
+    cols: [
+      { heading: 'Pipeline', items: ['Receive question via /chat', 'Hybrid retrieval (vector + BM25)', 'Cohere Rerank v3.5 for relevance scoring', 'Gemini synthesis with citation grounding'] },
+      { heading: 'API surface', items: ['GET /health', 'POST /retrieve — chunks only', 'POST /chat — SSE streamed answer', 'GCP ID-token auth (s2s, no shared secrets)'] },
+    ],
+    principle: 'Principle: intelligence reasons over what knowledge produced. It does not ingest or own the knowledge pipeline.',
+  },
+  api: {
+    title: 'api',
+    tech: 'Flask 3 · Python · SQLite · DuckDB · PyJWT',
+    role: 'Backend-for-frontend (BFF). The single API surface for the UI. Orchestrates calls to OpenMetadata, the intelligence service, and the GCS data lake (via DuckDB). Owns application state: users, sessions, and articles in SQLite.',
+    cols: [
+      { heading: 'Routes', items: ['POST /auth/login, GET /me', 'GET /catalog/tables, GET /catalog/lineage', 'POST /query — DuckDB over GCS parquet', 'POST /chat — proxied SSE from intelligence', 'CRUD /articles (Stage B)'] },
+      { heading: 'Key design choices', items: ['Read-only SQL enforcement via sqlglot AST', 'JWT auth — no sessions on server side', 'SQLite + WAL for all application data', '13 ADRs covering every service decision', 'OpenAPI spec generated from code, CI-checked'] },
+    ],
+    principle: 'Principle: routes contain no business logic. Services are stateless functions. The UI never calls any backend service directly.',
+  },
+  ui: {
+    title: 'ui',
+    tech: 'Vue 3 · Vite 5 · Vue Router',
+    role: 'Frontend web application. A thin SPA that renders data and delegates all logic to the API. All HTTP calls go through a single client module. Designed to be disposable and replaceable — no abstractions, no state library, no CSS framework.',
+    cols: [
+      { heading: 'Views', items: ['Login — JWT auth', 'Dashboard — overview and query entry', 'Catalog — dataset browser (via OpenMetadata)', 'Query — SQL interface', 'Chat — AI assistant with citations'] },
+      { heading: 'Key design choices', items: ['All HTTP calls centralised in src/api/client.js', 'No Vuex/Pinia — plain Vue reactive()', 'No CSS framework — scoped styles only', 'No npm dependencies beyond vue + vue-router', 'Disposable by design — can be rebuilt easily'] },
+    ],
+    principle: 'Principle: the UI is thin. All logic, security, and orchestration lives in the API. The frontend renders; the backend decides.',
+  },
+};
+
+// ── State ──────────────────────────────────────────────────────
+let activeId = null;
+
+function select(id) {
+  if (activeId === id) { closePanel(); return; }
+  activeId = id;
+
+  // update node styles
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll(`[data-id="${id}"]`).forEach(n => n.classList.add('active'));
+
+  const c = COMPONENTS[id];
+  if (!c) return;
+
+  // populate panel
+  document.getElementById('panel-title').textContent = c.title;
+  document.getElementById('panel-tech').textContent = c.tech;
+
+  let bodyHTML = `<div class="panel-role">${c.role}</div>`;
+  c.cols.forEach(col => {
+    bodyHTML += `<div class="panel-col"><h4>${col.heading}</h4><ul>`;
+    col.items.forEach(item => { bodyHTML += `<li>${item}</li>`; });
+    bodyHTML += `</ul></div>`;
+  });
+  if (c.principle) {
+    bodyHTML += `<div class="panel-principle">${c.principle}</div>`;
+  }
+  document.getElementById('panel-body').innerHTML = bodyHTML;
+
+  const panel = document.getElementById('detail-panel');
+  panel.classList.add('open');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closePanel() {
+  activeId = null;
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+  document.getElementById('detail-panel').classList.remove('open');
+}
+</script>
+</body>
+</html>

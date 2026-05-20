@@ -58,7 +58,7 @@ Commits are squashed on merge. Write a clear PR title — it becomes the commit 
 
 ## Reporting security issues
 
-Do not report security vulnerabilities in public issues. Open a blank issue titled "Security concern" and a maintainer will contact you directly.
+See [SECURITY.md](SECURITY.md) for the disclosure policy and reporting channels. Do not report security issues in public issues, PRs, or discussions.
 
 ## Copyright
 

@@ -54,6 +54,15 @@ BigLake is a GCP-hosted data platform for Australian government datasets. See `A
 - In-file comments explain *why*, not *what*
 - See `etl/.github/instructions/documentation.instructions.md` for the full documentation standard
 
+### Security findings
+
+- **Org-wide policy:** [`.github/SECURITY.md`](SECURITY.md) — disclosure + reporting.
+- **Per-repo risk register:** `{repo}/documentation/security/risks.md` — single source of truth for security status. One row per finding (`SEC-NNN`), severity, status, owner.
+- **Review reports:** `{repo}/documentation/security/reviews/YYYY-MM-DD-{topic}.md` — point-in-time snapshots. Each finding they produce becomes a row in `risks.md`.
+- **ADRs vs risks:** decisions (e.g. "accept WebAuthn UV=preferred") → ADR. Findings (e.g. "rate limit not enforced") → `risks.md`.
+- Do NOT duplicate security findings into API-contract gap tables (e.g. `BFF_API_REQUIREMENTS.md`) — link to a `SEC-NNN` row instead.
+- When fixing a finding, change its status in `risks.md` in the **same commit** as the code fix and reference the commit SHA in the "Resolved" row.
+
 ### Naming
 
 - Datasets and variables: `snake_case`

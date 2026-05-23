@@ -100,6 +100,65 @@ The only required env var locally:
 VITE_API_BASE_URL=http://localhost:5000
 ```
 
+---
+
+## Testing during API + UI development
+
+The platform deliberately has **no unit tests**. The testing strategy relies on:
+
+1. **OpenAPI contract check** — the `validate-and-release` workflow diffs the live spec against `openapi.json`. Catches accidental request/response shape drift.
+2. **Newman integration suite** — `api/postman/collections/ci.postman_collection.json` runs against the live API. Hits real routes, asserts on shape and status.
+3. **Browser-driven UI checks** — Vite dev server with real Flask API. Visual + console verification.
+
+### Local test loop (API or API + UI)
+
+**Terminal 1 — start the API:**
+```powershell
+cd api
+.\.venv\Scripts\Activate.ps1
+python run.py            # http://localhost:5000
+```
+
+**Terminal 2 — run the Newman collection against local:**
+```powershell
+cd api
+python -c "import sys, json, yaml; json.dump(yaml.safe_load(open(sys.argv[1], encoding='utf-8')), open(sys.argv[2], 'w'))" `
+  "postman/environments/Big Lake — Local.environment.yaml" "newman-env.json"
+npx --yes newman run "postman/collections/ci.postman_collection.json" --environment "newman-env.json"
+# Cleanup:
+Remove-Item newman-env.json
+```
+
+**Terminal 3 (only for UI work) — start the UI:**
+```powershell
+cd ui
+npm run dev              # http://localhost:5173
+```
+
+### After changing the OpenAPI spec
+
+```powershell
+cd api
+python scripts/update_openapi_baseline.py
+# Commit the updated openapi.json alongside your code change
+```
+
+### After adding/changing an endpoint
+
+Always update both:
+- The Newman CI collection (`postman/collections/ci.postman_collection.json`) — see [`postman-ci.instructions.md`](https://github.com/big-lake/api/blob/main/.github/instructions/postman-ci.instructions.md)
+- The OpenAPI baseline (`openapi.json`)
+
+CI will fail loudly if either drifts from the code.
+
+### Why no pytest?
+
+The API is a thin BFF: route → service → external integration (OpenMetadata, DuckDB/GCS, intelligence). Stateless service functions don't benefit much from unit tests, and the route layer is best verified against a real Flask process anyway. Newman gives us that for free, and it's the same suite CI runs against the deployed test VM.
+
+If a service function ever grows complex logic (parsing, scoring, ranking, etc.), drop a focused pytest for **that function** — but don't build out a test infrastructure pre-emptively.
+
+---
+
 ### etl
 
 ETL flows run on Prefect and require GCS access for all meaningful work. There is no local-only mode.

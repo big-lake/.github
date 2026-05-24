@@ -4,6 +4,61 @@ How to run the BigLake platform locally. You don't need a GCP account to work on
 
 ---
 
+## One-click setup (recommended)
+
+Open `biglake.code-workspace` in VS Code from the parent `biglake/` folder. It loads all repos as a multi-root workspace and ships with tasks for:
+
+- **`Dev: API + UI`** — starts both servers in parallel in dedicated panels
+- **`api: newman (local)`** — runs the CI integration suite against your local API
+- **`api: update OpenAPI baseline`** — regenerates `openapi.json` after endpoint changes
+
+Run via `Tasks: Run Task` in the command palette. Most day-to-day work needs only `Dev: API + UI` and `api: newman (local)`.
+
+---
+
+## Cross-repo workflow — the contract-first loop
+
+When a feature touches both `api` and `ui`, follow this 7-step sequence. Each step has a verifiable artifact, which is what makes it work cleanly for both humans and coding assistants.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  api/app/schemas/__init__.py  ──►  api/app/routes/*  ──►  openapi.json     │
+│         (1) design contract       (2) implement       (3) baseline         │
+│                                                            │                │
+│                                                            ▼                │
+│              ui/src/views/*  ◄──  ui/src/api/client.js  ◄──  Newman ✓       │
+│                 (6) wire view      (5) add client fn    (4) integration    │
+│                                                                             │
+│                  (7) update api/BFF_API_REQUIREMENTS.md                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Design the contract first.** Edit/add the Marshmallow schema in [api/app/schemas/__init__.py](https://github.com/big-lake/api/blob/main/app/schemas/__init__.py) and the route's YAML docstring. Do not write UI code yet.
+2. **Implement the route + service.** Routes validate input and call services; services hold logic. See [api/.github/copilot-instructions.md](https://github.com/big-lake/api/blob/main/.github/copilot-instructions.md).
+3. **Refresh the OpenAPI baseline.** Run the `api: update OpenAPI baseline` task (or `python scripts/update_openapi_baseline.py`). Commit `openapi.json` alongside the route change.
+4. **Add a Newman request** to [api/postman/collections/ci.postman_collection.json](https://github.com/big-lake/api/blob/main/postman/collections/ci.postman_collection.json) per [postman-ci.instructions.md](https://github.com/big-lake/api/blob/main/.github/instructions/postman-ci.instructions.md). Run the `api: newman (local)` task — green = contract works end-to-end.
+5. **Add the `client.js` function** in `ui`. Point your assistant at `../api/openapi.json` and `../api/app/schemas/__init__.py` for exact shapes — never guess field names.
+6. **Wire the view.** Keep components inline-first (no extraction unless a section exceeds the boundary rules in [ui/.github/copilot-instructions.md](https://github.com/big-lake/ui/blob/main/.github/copilot-instructions.md)).
+7. **Update [api/BFF_API_REQUIREMENTS.md](https://github.com/big-lake/api/blob/main/BFF_API_REQUIREMENTS.md)** — status (Mocked → Wired), field usage notes, gaps closed/opened.
+
+### Why this order works for AI-assisted dev
+
+- The OpenAPI spec and Newman collection are the **handshake between sessions** — when both are green, both repos are aligned, even if you're running a separate assistant for each.
+- Steps 1–4 are entirely in `api`. Steps 5–6 are entirely in `ui`. Step 3's `openapi.json` is the single artifact that crosses the boundary.
+- An assistant pointed at the spec can produce correct `client.js` calls without seeing the API source.
+
+### Reusable prompts
+
+The org `.github` repo ships with prompt files in [.github/prompts/](https://github.com/big-lake/.github/tree/main/.github/prompts) that walk through these flows step-by-step:
+
+- `new-endpoint.prompt.md` — adding a new endpoint end-to-end (steps 1–7)
+- `change-endpoint.prompt.md` — modifying an existing endpoint without breaking the UI
+- `new-ui-view.prompt.md` — adding a UI surface that consumes existing endpoints
+
+Invoke with `/new-endpoint`, `/change-endpoint`, or `/new-ui-view` in Copilot Chat from the multi-root workspace.
+
+---
+
 ## Minimal local stack (API + UI — no GCP required)
 
 This is the fastest path. You'll have the full web interface running against a local API. Catalog, query, and AI features will be degraded (they call external services), but auth, navigation, and UI layout work fully.
@@ -34,19 +89,11 @@ python -m venv .venv
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy the example env file
+# Copy the example env file — the defaults are dev-safe, no edits needed
 cp .env.example .env
 ```
 
-Edit `.env` and set:
-
-```env
-ENV=                            # leave empty — disables GCP Secret Manager
-FLASK_SECRET_KEY=any-local-secret
-JWT_SECRET=any-local-secret
-```
-
-The other values (`OPENMETADATA_*`, `GCS_BUCKET`, etc.) can stay as-is from `.env.example` — the API starts and returns graceful errors for those features when they're unavailable.
+The `.env.example` ships with sensible local defaults: `ENV=` (unset, disables Secret Manager), dev-only secrets, and the OpenMetadata / GCS values can stay as-is (the API returns graceful errors for those features when unavailable).
 
 ```powershell
 python run.py
@@ -60,16 +107,20 @@ cd ui
 
 npm install
 
-# Point the UI at your local API
-echo "VITE_API_BASE_URL=http://localhost:5000" > .env.local
+# Point the UI at your local API (dev-safe defaults are in .env.example)
+cp .env.example .env.local
 
 npm run dev
 # UI is now running at http://localhost:5173
 ```
 
-Open `http://localhost:5173` — you should see the login page.
+Open `http://localhost:5173`.
 
-> **Default credentials:** The API seeds an admin user on first boot. Username: `admin`, password: whatever you set as `ADMIN_PASSWORD` in `.env` (or check `api/app/db/seed.py` for the dev default).
+> **Auth in local dev:** The platform is cookie-based passwordless (see [api ADR-0014](https://github.com/big-lake/api/blob/main/documentation/adr/0014-two-tier-session-cookie.md) / [ADR-0015](https://github.com/big-lake/api/blob/main/documentation/adr/0015-passwordless-auth-methods.md)). Locally:
+>
+> - The router currently skips its guard when `import.meta.env.DEV` is true, so navigation works without a session.
+> - Endpoints that require a real session need a cookie. To mint one, hit `POST /auth/dev/session` with `X-Dev-Auth: dev-session-secret-change-me` and body `{"email": "you@biglake.local"}` ([api ADR-0017](https://github.com/big-lake/api/blob/main/documentation/adr/0017-dev-session-endpoint.md)). The Newman suite does this automatically.
+> - The UI dev-mode auto-bootstrap that mints a session on app load is staged as [ui/DESIGN.md Phase 2 Step 3](https://github.com/big-lake/ui/blob/main/DESIGN.md) — landing alongside the broader auth rewire.
 
 ---
 
@@ -84,11 +135,11 @@ Key env vars for local dev:
 | Variable | Purpose | Local value |
 |---|---|---|
 | `ENV` | Enables GCP Secret Manager when set to `test` or `prod` | Leave empty |
-| `JWT_SECRET` | Signing key for auth tokens | Any string |
-| `FLASK_SECRET_KEY` | Flask session key | Any string |
+| `FLASK_SECRET_KEY` | Flask session key | Any string (`.env.example` default is fine) |
 | `OPENMETADATA_API_URL` | Catalog service | Point to a running OM instance, or leave as-is |
 | `INTELLIGENCE_BASE_URL` | RAG service | Point to a running intelligence instance, or leave as-is |
 | `GCS_BUCKET` | Data lake bucket for queries | Needs real GCP access for `/query` |
+| `PUBLIC_BASE_URL` | Base URL used in magic-link emails | `http://localhost:5000` |
 
 ### ui
 

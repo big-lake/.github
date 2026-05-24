@@ -137,7 +137,7 @@ Key env vars for local dev:
 | `ENV` | Enables GCP Secret Manager when set to `test` or `prod` | Leave empty |
 | `FLASK_SECRET_KEY` | Flask session key | Any string (`.env.example` default is fine) |
 | `OPENMETADATA_API_URL` | Catalog service | Point to a running OM instance, or leave as-is |
-| `INTELLIGENCE_BASE_URL` | RAG service | Point to a running intelligence instance, or leave as-is |
+| `INTELLIGENCE_URL` | RAG service | Point to a running intelligence instance (or IAP tunnel — see "Local end-to-end coverage" below) |
 | `GCS_BUCKET` | Data lake bucket for queries | Needs real GCP access for `/query` |
 | `PUBLIC_BASE_URL` | Base URL used in magic-link emails | `http://localhost:5000` |
 
@@ -237,6 +237,81 @@ Knowledge pipelines require GCS access and (for embedding generation) GCP Vertex
 ### catalog
 
 OpenMetadata is deployed via Docker Compose. See [catalog/setup.md](https://github.com/big-lake/catalog/blob/main/setup.md) for running it locally.
+
+---
+
+## Local end-to-end coverage — pointing at deployed dependencies
+
+The minimal local stack above gives you working auth and UI navigation but degraded catalog / query / chat. To exercise the **full** end-to-end flow against real data (real OpenMetadata, real GCS parquet, real RAG with Gemini + Cohere) without standing up the whole platform locally, the local API can point at the deployed `test` environment dependencies.
+
+### Reachability matrix
+
+| Dependency | Reachable from laptop? | How the local API connects |
+|---|---|---|
+| GCS (parquet datalake) | Direct (public API) | HMAC keys auto-resolved from Secret Manager via ADC |
+| Vertex AI / Gemini | Direct (public API) | ADC (not actually used by api locally — intelligence uses it) |
+| Secret Manager | Direct (public API) | ADC, only consulted for unset env vars |
+| OpenMetadata VM | Direct (VM has external IP, 0.0.0.0/0 on port 8585) | `OPENMETADATA_API_URL` + `OPENMETADATA_API_TOKEN` in `api/.env` |
+| Intelligence VM | **Internal only** (no external IP) | IAP tunnel to `localhost:8001` |
+| pgvector / Neo4j (knowledge_db) | **Internal only** | Not connected directly — the deployed intelligence service handles this |
+
+### One-time prereqs
+
+1. `gcloud auth login` and `gcloud auth application-default login`
+2. Grant your user account on the api SA:
+   ```powershell
+   gcloud iam service-accounts add-iam-policy-binding `
+     biglake-sa-api-test@big-lake-test-490405.iam.gserviceaccount.com `
+     --member="user:you@example.com" `
+     --role="roles/iam.serviceAccountTokenCreator" `
+     --project=big-lake-test-490405
+   ```
+3. Grant your user `roles/iap.tunnelResourceAccessor` on the intelligence VM (one-time, per developer). See [intelligence/setup.md](https://github.com/big-lake/intelligence/blob/main/setup.md).
+
+### Populate `api/.env` for chat (intelligence via IAP tunnel)
+
+Uncomment / set in `api/.env`:
+```env
+INTELLIGENCE_URL=http://localhost:8001
+INTELLIGENCE_TOKEN_AUDIENCE=http://biglake-intelligence-test.australia-southeast2-b.c.big-lake-test-490405.internal:8001
+```
+
+`INTELLIGENCE_URL` is the **connect** URL (the local end of the IAP tunnel). `INTELLIGENCE_TOKEN_AUDIENCE` is the **token** audience the deployed intelligence verifies the JWT against — keep them split. The api's `id_token_client` will impersonate the api SA via ADC (no key file) to mint the token.
+
+### Populate `api/.env` for catalog (direct to OpenMetadata VM)
+
+Fetch the OM external IP and JWT token once:
+```powershell
+$omIp = gcloud compute instances describe biglake-openmetadata-test `
+  --zone=australia-southeast2-b --project=big-lake-test-490405 `
+  --format='value(networkInterfaces[0].accessConfigs[0].natIP)'
+$omToken = gcloud secrets versions access latest `
+  --secret=api-openmetadata-token-test --project=big-lake-test-490405
+"OPENMETADATA_API_URL=http://$omIp:8585/api/v1"
+"OPENMETADATA_API_TOKEN=$omToken"
+```
+Paste both lines into `api/.env`.
+
+### Query / GCS
+
+No `api/.env` changes needed. With ADC active, `secrets.py` resolves the GCS HMAC keys from Secret Manager automatically the first time DuckDB initialises the GCS extension. The `GCS_BUCKET` and `GOOGLE_CLOUD_PROJECT` defaults already point at `test`.
+
+### Run it
+
+Open the command palette → `Tasks: Run Task` → **`Dev: Full Stack`**. This launches:
+
+- `api: dev (Flask :5000)`
+- `ui: dev (Vite :5173)`
+- `iap: tunnel intelligence (:8001)`
+
+Then visit `http://localhost:5173`. Catalog, query, and chat should all work end-to-end against `big-lake-test-490405`.
+
+### Caveats
+
+- Chat round-trips hit a real VM via IAP — expect a few seconds of network + reranker latency. This is faithful to prod, not a defect.
+- The IAP tunnel terminates if `gcloud` re-auths or your laptop sleeps. Re-run the task to reconnect.
+- The OpenMetadata external IP is ephemeral by default — if the VM gets recreated, refetch and update `api/.env`.
+- This setup is for **dev only**. Do not commit the OM token or any other fetched secret to git (`.env` is gitignored; `.env.example` is the safe template).
 
 ---
 

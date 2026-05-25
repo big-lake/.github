@@ -134,19 +134,24 @@ External Sources (APIs, PDFs, web)
         ▼        │       ▼
    ┌─────────┐   │  ┌──────────────┐
    │ catalog │   │  │ intelligence │
-   │ (metadata)  │  │ (RAG/agents) │
+   │ (om:8585)   │  │ (RAG/agents) │
    └────┬────┘   │  └──────┬───────┘
         │        │         │
         └────────┼─────────┘
                  ▼
             ┌─────────┐
-            │   api   │  (Flask BFF)
+            │   api   │  (Flask BFF, :8000)
             │         │
-            │ SQLite  │  (users, settings, etc)
+            │ SQLite  │  (users, settings)
             └────┬────┘
-                 ▼
-            ┌─────────┐
-            │   ui    │
+                 │
+        ┌────────▼────────┐
+        │  Global HTTPS LB │  (api.biglake.au / app.biglake.au / om.biglake.au)
+        │  Managed cert    │  Google-managed TLS, auto-renew
+        └────────┬─────────┘
+                 │
+            ┌────▼────┐
+            │   ui    │  (:80)
             └─────────┘
 ```
 
@@ -155,12 +160,14 @@ External Sources (APIs, PDFs, web)
 | Service | Purpose | Provisioned By |
 |---|---|---|
 | GCS | Data lake storage (parquet), knowledge artifacts | `infra/modules/storage/` |
-| Compute Engine | Prefect server, OpenMetadata server | `infra/modules/prefect/`, `infra/modules/openmetadata/` |
+| Compute Engine | Prefect server, OpenMetadata server, api VM, ui VM | `infra/modules/{prefect,openmetadata,api,ui}/` |
+| Global HTTPS LB | TLS termination + host-based routing for `api.biglake.au`, `app.biglake.au`, `om.biglake.au` | `infra/modules/lb/` |
+| Cloud DNS | Managed zone `biglake-au-{env}`; A records for all four subdomains → LB IP | `infra/modules/dns/` |
 | Secret Manager | API keys, HMAC keys, DB credentials, admin password | `infra/modules/iam/` |
 | SQLite | Application data (users, settings) — co-located with `api` | `api/` (file-based, no infra needed) |
 | Cloud SQL / Vector DB | Metadata store, vector embeddings | `infra/` (TBD for vector DB) |
-| IAM | Service accounts with least-privilege roles | `infra/modules/iam/` |
-| VPC | Private networking, firewall rules | `infra/modules/network/` |
+| IAM | Service accounts with least-privilege roles; Workload Identity Federation for GHA | `infra/modules/iam/` |
+| VPC | Private networking, firewall rules — all VMs internal-only after Phase 2 LB rollout | `infra/modules/network/` |
 
 ## Environments
 

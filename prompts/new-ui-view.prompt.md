@@ -5,7 +5,7 @@ mode: agent
 
 # New UI view / feature
 
-Use this when adding UI that consumes endpoints that **already exist** in the API. If you need a new endpoint too, use [new-endpoint.prompt.md](new-endpoint.prompt.md) first.
+Use this when adding UI that consumes endpoints that **already exist** in the API. If you need a new endpoint too, use [new-api-endpoint.prompt.md](new-api-endpoint.prompt.md) first.
 
 Feature to add: ${input:featureDescription:Short description (e.g. "Dataset detail page with column list")}
 

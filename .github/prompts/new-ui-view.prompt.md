@@ -3,7 +3,7 @@ description: "Add a new UI view that consumes existing API endpoints. Follows th
 agent: "agent"
 ---
 
-Add a new UI view in the `ui` repo, consuming endpoints that **already exist** in the API. If the endpoint doesn't exist yet, use `/new-endpoint` instead.
+Add a new UI view in the `ui` repo, consuming endpoints that **already exist** in the API. If the endpoint doesn't exist yet, use `/new-api-endpoint` instead.
 
 Before starting, confirm with the user:
 - View name and route (e.g. `/datasets/:id`)

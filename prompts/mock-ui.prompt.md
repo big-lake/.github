@@ -54,13 +54,15 @@ Follow the UI conventions exactly:
 
 ---
 
-## Step 4 — Verify in the browser
+## Step 4 — Review the code
 
-Check `http://localhost:5173`. Walk the happy path manually and confirm:
+Do **not** use Playwright or any browser automation to verify. The user will test the UI themselves.
 
-- The mock renders without console errors.
-- Layout matches the described feature.
-- Interaction (clicks, toggles, expand/collapse) works as expected.
+Instead, review the code you've written and confirm:
+
+- The mock renders without obvious errors (no missing imports, no undefined references).
+- Layout logic matches the described feature.
+- Interaction (clicks, toggles, expand/collapse) is wired up correctly in the template.
 - The mock data shape uses the field names that match or will become the real API response.
 
 ---

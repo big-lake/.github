@@ -1,4 +1,4 @@
-# BigLake Platform — Org-Wide TODO
+﻿# BigLake Platform — Org-Wide TODO
 
 Last updated 2026-05-19 (Stage A api-side complete). This is the single source of truth for cross-repo planning. Repo-local TODOs should only cover repo-internal task tracking; anything that crosses repo boundaries lives here.
 
@@ -8,7 +8,7 @@ Last updated 2026-05-19 (Stage A api-side complete). This is the single source o
 
 | Repo | Status |
 |---|---|
-| **infra** | Test env up. Intelligence VM deployed (`e2-medium`). Read-only pgvector role for `intelligence` not yet provisioned. Articles persistence layer not designed. |
+| **infra** | Test env up. Intelligence VM deployed (`e2-medium`). Read-only pgvector role for `intelligence` not yet provisioned. Notebooks persistence layer not designed. |
 | **etl** | Bronze/silver/gold flows running for treasury + ATO + DSS sources via Prefect. |
 | **catalog** | OpenMetadata deployed. Curation status of gold-layer datasets in test env unverified — needs check before `api` wires to it. |
 | **api** | Stage A complete (server side). Real intelligence call with ID-token s2s auth, chat sessions persisted to SQLite (WAL + migrations), real OM catalog adapter, DuckDB `/query` with sqlglot read-only enforcement, SQLite-backed users + werkzeug password hashing. Pending: Litestream backup, OM custom-property curation in `catalog`. |
@@ -20,7 +20,7 @@ Last updated 2026-05-19 (Stage A api-side complete). This is the single source o
 
 ## Roadmap — prioritised
 
-**Strategy: ship to prod first, improve later.** Get a working end-to-end product (thin slice → articles → prod deploy) before investing in RAG quality work. The eval framework is built and ready, but we'll only start using it once there's a real user-facing product in prod that we want to measurably improve.
+**Strategy: ship to prod first, improve later.** Get a working end-to-end product (thin slice → notebooks → prod deploy) before investing in RAG quality work. The eval framework is built and ready, but we'll only start using it once there's a real user-facing product in prod that we want to measurably improve.
 
 ### Stage A — Thin end-to-end slice (do first)
 
@@ -38,13 +38,13 @@ Goal: a working `ui → api → intelligence → answer-in-browser` and `ui → 
 - [ ] **UI mock removal + session persistence.** Wire Dashboard `executeQuery()` to real API; wire prompt bar `send()` to `/chat`; persist auth token (localStorage) + call `getMe()` on app init; store `conversation_id` between chat turns. Remove `mockQueryResult()` and `mockCatalog`. Resolves API gaps #1 (UI half), #2, #3, #8, #21. (`ui`)
 - [ ] **Chat error handling + citations rendering.** API returns `{error, kind}` on failure and `citations[]` + `trace` on success. UI needs to render errors gracefully, render citations as references, and optionally show a collapsible "reasoning" panel for `trace`. Resolves API gaps #5, #22. (`ui`)
 
-### Stage B — Articles persistence
+### Stage B — Notebooks persistence
 
-Goal: unlock the UI's core value prop (drafting + publishing data articles). Pure `api`+`ui` work, doesn't touch RAG.
+Goal: unlock the UI's core value prop (drafting + publishing data notebooks). Pure `api`+`ui` work, doesn't touch RAG.
 
 - [ ] Design schema (SQLite in `api` is the default per architecture). (`api`)
-- [ ] Implement `POST /articles`, `GET /articles`, `GET /articles/{id}`, `PATCH /articles/{id}`, `DELETE /articles/{id}`, `POST /articles/{id}/publish`. (`api`)
-- [ ] Add `createArticle`, `getArticles`, `getArticle`, `updateArticle`, `deleteArticle`, `publishArticle` to `ui/src/api/client.js`. Replace in-memory state. Resolves API gaps #7, #14, #19, #20. (`ui`)
+- [ ] Implement `POST /notebooks`, `GET /notebooks`, `GET /notebooks/{id}`, `PATCH /notebooks/{id}`, `DELETE /notebooks/{id}`, `POST /notebooks/{id}/publish`. (`api`)
+- [ ] Add `createNotebook`, `getNotebooks`, `getNotebook`, `updateNotebook`, `deleteNotebook`, `publishNotebook` to `ui/src/api/client.js`. Replace in-memory state. Resolves API gaps #7, #14, #19, #20. (`ui`)
 - [ ] XSS sanitization for text cell HTML on load (server-side or DOMPurify). Resolves API gap #15. (`api` or `ui`)
 - [ ] Cell share endpoint design + implementation. Resolves API gap #12. (`api`, `ui`)
 

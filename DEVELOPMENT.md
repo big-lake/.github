@@ -1,4 +1,4 @@
-# Local Development Guide
+﻿# Local Development Guide
 
 How to run the BigLake platform locally. You don't need a GCP account to work on the API or UI — a minimal local stack runs entirely on your machine.
 

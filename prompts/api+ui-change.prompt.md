@@ -1,4 +1,4 @@
----
+﻿---
 description: "Make a change that touches the UI and/or API using the mock-first, contract-first loop. Handles new endpoints, changed endpoints, and UI-only changes."
 mode: agent
 ---

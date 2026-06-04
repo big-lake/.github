@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -558,7 +558,7 @@
     </div>
     <div class="infra-row">
       <span class="infra-svc">SQLite</span>
-      <span class="infra-purpose">Application data — users, sessions, articles</span>
+      <span class="infra-purpose">Application data — users, sessions, notebooks</span>
       <span class="infra-prov">Co-located with api VM (no infra needed)</span>
     </div>
   </div>
@@ -647,9 +647,9 @@ const COMPONENTS = {
   api: {
     title: 'api',
     tech: 'Flask 3 · Python · SQLite · DuckDB · PyJWT',
-    role: 'Backend-for-frontend (BFF). The single API surface for the UI. Orchestrates calls to OpenMetadata, the intelligence service, and the GCS data lake (via DuckDB). Owns application state: users, sessions, and articles in SQLite.',
+    role: 'Backend-for-frontend (BFF). The single API surface for the UI. Orchestrates calls to OpenMetadata, the intelligence service, and the GCS data lake (via DuckDB). Owns application state: users, sessions, and notebooks in SQLite.',
     cols: [
-      { heading: 'Routes', items: ['POST /auth/login, GET /me', 'GET /catalog/tables, GET /catalog/lineage', 'POST /query — DuckDB over GCS parquet', 'POST /chat — proxied SSE from intelligence', 'CRUD /articles (Stage B)'] },
+      { heading: 'Routes', items: ['POST /auth/login, GET /me', 'GET /catalog/tables, GET /catalog/lineage', 'POST /query — DuckDB over GCS parquet', 'POST /chat — proxied SSE from intelligence', 'CRUD /notebooks (Stage B)'] },
       { heading: 'Key design choices', items: ['Read-only SQL enforcement via sqlglot AST', 'JWT auth — no sessions on server side', 'SQLite + WAL for all application data', '13 ADRs covering every service decision', 'OpenAPI spec generated from code, CI-checked'] },
     ],
     principle: 'Principle: routes contain no business logic. Services are stateless functions. The UI never calls any backend service directly.',

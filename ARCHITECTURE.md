@@ -1,4 +1,4 @@
-# BigLake Platform Architecture
+﻿# BigLake Platform Architecture
 
 ## Overview
 

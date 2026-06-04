@@ -1,4 +1,4 @@
----
+﻿---
 description: "Add a new endpoint to the BigLake API and wire it into the UI using the contract-first loop."
 mode: agent
 ---

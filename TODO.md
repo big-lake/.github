@@ -103,6 +103,7 @@ Each gated by the same eval harness. P1 is the cheapest quality win.
 - [ ] Cohere API key secret (already created? — verify). (`infra`)
 - [ ] Cost guards / alerts on Vertex + Cohere spend. (`infra`)
 - [ ] Internal service auth wiring (see Stage A item). (`infra`)
+- [ ] **Move Prefect server off SQLite onto Postgres.** The Prefect server on `biglake-prefect-{env}` runs the default SQLite backend (no `PREFECT_API_DATABASE_CONNECTION_URL` in `infra/modules/prefect/startup.sh`). SQLite serialises writes, so concurrent deploys can saturate its async session pool and wedge the server — every API call (incl. `/api/health`) then times out with `httpx.ReadTimeout`. A `concurrency` guard in `etl/.github/workflows/deploy-prefect.yml` mitigates this on the ETL side, but knowledge shares the same VM. Pointing Prefect at a Postgres DB (Cloud SQL or a colocated instance) would eliminate this write-contention class entirely. Root cause + evidence documented in [`etl/.github/robots.md`](https://github.com/big-lake/etl/blob/main/.github/robots.md). (`infra`)
 
 ### Stage I — Cross-repo nice-to-haves
 

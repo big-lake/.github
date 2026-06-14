@@ -67,7 +67,7 @@ BigLake is a GCP-hosted data platform for Australian government datasets. See `A
 
 - Datasets and variables: `snake_case`
 - GCS paths: `{subject}/{layer}/{source}/{dataset}/`
-- Metadata columns: prefixed with `_` (e.g. `_source_file`, `_ingestion_epoch_utc`)
+- Metadata columns: prefixed with `meta_` (e.g. `meta_source_file`, `meta_ingestion_epoch_utc`). The `_` prefix is reserved by BigLake/BigQuery for pseudo-columns and is rejected by the Lakehouse runtime catalog (etl ADR-0002).
 
 ## When Working Across Repos
 

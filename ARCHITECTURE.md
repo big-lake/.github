@@ -48,9 +48,9 @@ biglake/
 **Role:** Data discovery and metadata management via OpenMetadata.
 
 - OpenMetadata server config and Docker Compose deployment
-- GCS datalake connector configuration
-- Dataset curation: column schemas, table lineage, domain tagging
-- Ingestion scripts (Prefect-compatible, no Airflow)
+- Iceberg REST connector configuration (reads from BigLake Lakehouse runtime catalog)
+- Dataset curation: column schemas, domain tagging, tier, certification
+- Ingestion scripts run from GHA
 
 **Tech:** OpenMetadata 1.12, Docker Compose, MySQL, Elasticsearch
 
@@ -62,7 +62,7 @@ biglake/
 
 - Flask application providing a unified API
 - Orchestrates calls to: OpenMetadata API, intelligence services
-- Queries GCS datalake directly (DuckDB over parquet) to serve data to the UI
+- Queries Iceberg tables directly (DuckDB `iceberg_scan` views over the BigLake Lakehouse runtime catalog) to serve data to the UI
 - SQLite for application data (users, settings, preferences)
 - Shields the frontend from backend service topology
 
@@ -127,7 +127,7 @@ External Sources (APIs, PDFs, web)
         ▼                ▼
    ┌─────────┐     ┌──────────┐
    │   GCS   │     │ Vector DB│
-   │(parquet)│     │          │
+   │(Iceberg)│     │          │
    └────┬────┘     └─────┬────┘
         │                │
         ├────────┐       │
@@ -159,7 +159,8 @@ External Sources (APIs, PDFs, web)
 
 | Service | Purpose | Provisioned By |
 |---|---|---|
-| GCS | Data lake storage (parquet), knowledge artifacts | `infra/modules/storage/` |
+| GCS — raw bucket | Landing files + bronze Iceberg tables | `infra/modules/storage/` |
+| GCS — lakehouse bucket | Silver + gold Iceberg tables; also the BigLake gcs-bucket catalog | `infra/modules/storage/` |
 | Compute Engine | Prefect server, OpenMetadata server, api VM, ui VM | `infra/modules/{prefect,openmetadata,api,ui}/` |
 | Global HTTPS LB | TLS termination + host-based routing for `api.biglake.au`, `app.biglake.au`, `om.biglake.au` | `infra/modules/lb/` |
 | Cloud DNS | Managed zone `biglake-au-{env}`; A records for all four subdomains → LB IP | `infra/modules/dns/` |
@@ -177,7 +178,8 @@ Two GCP projects, both in `australia-southeast2`:
 |---|---|---|
 | **Project ID** | `big-lake-test-490405` | `big-lake-prod` |
 | **Region / Zone** | `australia-southeast2` / `-b` | `australia-southeast2` / `-a` |
-| **Data bucket** | `big-lake-test-490405-analytics-data` | `big-lake-prod-analytics-data` |
+| **Raw bucket** (landing + bronze Iceberg) | `big-lake-test-490405-raw` | `big-lake-prod-raw` |
+| **Lakehouse bucket** (silver + gold Iceberg, catalog) | `big-lake-test-490405-lakehouse` | `big-lake-prod-lakehouse` |
 | **TF state bucket** | `biglake-tf-state-test` | `biglake-tf-state-prod` |
 | **Deploy SA** | `terraform-deploy@big-lake-test-490405.iam.gserviceaccount.com` | `terraform-deploy@big-lake-prod.iam.gserviceaccount.com` |
 | **Storage force_destroy** | `true` | `false` |

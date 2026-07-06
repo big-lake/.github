@@ -77,7 +77,31 @@ Flag anything that is:
 - A cross-repo dependency that changes the implementation sequence (see 2d)
 - A security concern (injection, unvalidated inputs, exposed credentials)
 
-### 2d. Flag cross-repo deploy requirements
+### 2d. Security review
+
+Before implementing, check the proposed change against the OWASP Top 10 and the project's own
+risk register (`api/documentation/security/risks.md`). Flag any of the following:
+
+- **Injection** — any user-supplied value that reaches SQL, a shell, or an external API call must
+  be validated or parameterised. Check every new service function for f-string interpolation into
+  queries or URLs.
+- **Broken access control** — new endpoints that return or mutate user data must check session
+  ownership (same `session_sub` pattern as existing routes). Endpoints that should be
+  user-tier-only must apply `@require_auth` and reject `tier == "anon"`.
+- **Sensitive data exposure** — no credentials, tokens, GCS paths, or internal service URLs in
+  API responses. Check that error messages don't leak stack traces or internal hostnames.
+- **SSRF** — any new outbound HTTP call (e.g. to OM, intelligence, GCS) must only call
+  allow-listed internal URLs from config/env vars, never from user input.
+- **XSS** — any field that the UI renders via `v-html` (e.g. OM search snippet `<em>` highlights)
+  must be sanitised server-side before returning. Flag the field and confirm the sanitisation
+  approach with the user.
+- **New findings** — if a real finding is identified, add a `SEC-NNN` row to
+  `api/documentation/security/risks.md` before proceeding. Link to it rather than describing the
+  finding inline in `BFF_API_REQUIREMENTS.md`.
+
+If no issues are found, state "No new security findings" explicitly so it's clear the check ran.
+
+### 2e. Flag cross-repo deploy requirements
 
 If the item touches the **intelligence** service:
 

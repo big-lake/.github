@@ -206,7 +206,7 @@ dependency has a different reachability path:
 
 | Dependency | How local API connects | Pre-check |
 |---|---|---|
-| OpenMetadata | HTTPS: `https://om.biglake.au/api/v1` | See OM token check below |
+| OpenMetadata | HTTPS: `https://om.test.biglake.au/api/v1` | See OM token check below |
 | Intelligence | IAP tunnel: `localhost:8001` | IAP tunnel task must be running |
 | GCS / DuckDB | Direct via ADC | `gcloud auth application-default login` |
 | Secret Manager | Direct via ADC | Same ADC login |
@@ -214,7 +214,7 @@ dependency has a different reachability path:
 **Check the OM token (for catalog work):**
 ```powershell
 $token = gcloud secrets versions access latest --secret=api-openmetadata-token-test --project=big-lake-test-490405
-curl -s -o $null -w "%{http_code}" -H "Authorization: Bearer $token" "https://om.biglake.au/api/v1/tables?limit=1"
+curl.exe -s -o NUL -w "%{http_code}" -H "Authorization: Bearer $token" "https://om.test.biglake.au/api/v1/tables?limit=1"
 # Expect 200. If 401, the token needs refreshing via the OM UI → update the Secret Manager value.
 ```
 

@@ -282,7 +282,10 @@ INTELLIGENCE_TOKEN_AUDIENCE=http://biglake-intelligence-test.australia-southeast
 
 The OM VM has no public IP since Phase 2. Use the HTTPS LB hostname directly:
 ```env
-OPENMETADATA_API_URL=https://om.biglake.au/api/v1
+# test environment
+OPENMETADATA_API_URL=https://om.test.biglake.au/api/v1
+# prod environment
+# OPENMETADATA_API_URL=https://om.biglake.au/api/v1
 ```
 Fetch the OM JWT token:
 ```powershell
@@ -309,7 +312,7 @@ Then visit `http://localhost:5173`. Catalog, query, and chat should all work end
 
 - Chat round-trips hit a real VM via IAP — expect a few seconds of network + reranker latency. This is faithful to prod, not a defect.
 - The IAP tunnel terminates if `gcloud` re-auths or your laptop sleeps. Re-run the task to reconnect.
-- The OM URL (`https://om.biglake.au`) is stable — no IP to refetch. If the OM JWT token rotates, update `api-openmetadata-token-test` in Secret Manager and re-run the fetch step.
+- The OM URL (`https://om.test.biglake.au`) is stable — no IP to refetch. If the OM JWT token rotates, update `api-openmetadata-token-test` in Secret Manager and re-run the fetch step.
 - This setup is for **dev only**. Do not commit the OM token or any other fetched secret to git (`.env` is gitignored; `.env.example` is the safe template).
 
 ---

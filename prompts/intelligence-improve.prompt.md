@@ -84,8 +84,27 @@ Per §7 of the framework, write a concrete plan:
   warranted (see §4 — non-obvious design decisions, trade-offs, or reversals of prior ADRs
   usually warrant one).
 - Any cross-repo issue to raise (for category 6 / knowledge-lakehouse findings).
+- How the change will be **documented** once implemented (see the documentation bar below) —
+  don't leave this as an afterthought in the plan.
 
 Present the plan and **ask the user to confirm before writing any code**.
+
+### Documentation bar for any implementation
+
+If the plan proceeds to actual code changes, hold every change to a high documentation standard
+— this is non-negotiable, not optional polish:
+
+- **In-code comments:** every non-obvious change gets a comment explaining *why*, not just what
+  (the rationale, the trade-off accepted, the alternative rejected and why). Any new flag/config
+  knob is documented at its definition (valid values, default, effect). Any workaround or
+  gotcha introduced gets a comment flagging it as such.
+- **READMEs:** update `robots.md` (exhaustive, always) and `humans.md` (concise, if human-facing
+  behaviour changed) per the documentation standard — don't just append a line, integrate the
+  change into the existing narrative so the docs stay coherent, not a changelog bolted on.
+- **ADRs:** per the §4 guidance above — write one whenever the change embodies a non-obvious
+  decision or trade-off, and mark any superseded ADR explicitly.
+- Treat documentation completeness as part of the deliverable, not a follow-up task — the change
+  isn't done until the comments and docs are in place alongside the code.
 
 ---
 
@@ -103,9 +122,11 @@ Once the user confirms (or if they choose to stop after Phase 3 research alone):
     (matching the pattern already used for ADR-0007 → ADR-0008 in DESIGN.md).
   - Minor/mechanical changes (e.g. a config tweak with no real trade-off) don't need a new ADR —
     note in the register why one wasn't warranted.
-- Update `robots.md` / `humans.md` per the documentation standard if implementation proceeded.
+- Update `robots.md` / `humans.md` per the documentation standard if implementation proceeded,
+  and verify in-code comments meet the documentation bar (3b) — check the diff, don't assume.
 
-Report a summary: what was recorded, which ADR(s) were touched, and the register's current state.
+Report a summary: what was recorded, which ADR(s) were touched, which docs/comments were updated,
+and the register's current state.
 
 ---
 
@@ -118,5 +139,9 @@ Report a summary: what was recorded, which ADR(s) were touched, and the register
 - **Every plan needs evidence and a verification method** — no speculative changes.
 - **Speed and quality are assessed together**; flag trade-offs explicitly.
 - **ADRs are part of "done"** — a change that warrants one isn't complete until it's written.
+- **Documentation is part of "done"** — thorough in-code comments, `robots.md`/`humans.md`
+  updates, and ADRs are as mandatory as the code change itself; don't ship one without the other.
+- Respect the infra policy: intelligence VM / model infra changes go through `infra/` Terraform
+  + GHA, never direct CLI.
 - Respect the infra policy: intelligence VM / model infra changes go through `infra/` Terraform
   + GHA, never direct CLI.

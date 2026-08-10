@@ -170,7 +170,7 @@ Update **all** of the following in the same commit:
 - **ADR** (if a new architectural decision was made) — create
   `api/documentation/adr/NNNN-<description>.md` following the existing ADR format
 - **`api/README.md`** — update the endpoint list if a new route domain was added
-- **`intelligence/documentation/robots.md` + `humans.md`** (if intelligence was changed) — update
+- **`intelligence/README.md`** (if intelligence was changed) — update
   architecture, endpoints, SSE event shapes per the documentation instructions
 
 ---

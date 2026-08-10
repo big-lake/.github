@@ -47,12 +47,12 @@ BigLake is a GCP-hosted data platform for Australian government datasets. See `A
 
 ### Documentation
 
-- **robots.md** — Exhaustive technical reference for AI agents
-- **humans.md** — Concise overview for human readers (~100 lines max)
+- **README.md** — single home for each documented area (pipeline, service, CI workflows). No more split `humans.md`/`robots.md` pair — that convention is retired org-wide.
+- **documentation/adr/** — decisions (why X over Y, alternatives, consequences)
 - **setup.md** — All manual steps to deploy the repo to a new GCP environment. Keep updated when adding secrets, variables, or infrastructure dependencies
 - **DEVELOPMENT.md** (in `.github` repo) — Cross-repo local dev guide. Update it when any service's local setup changes (new env var, new prerequisite, changed port)
 - In-file comments explain *why*, not *what*
-- See `etl/.github/instructions/documentation.instructions.md` for the full documentation standard
+- See `etl/.github/instructions/documentation.instructions.md` for the full documentation standard (applies org-wide)
 
 ### Security findings
 

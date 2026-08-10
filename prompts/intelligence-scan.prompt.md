@@ -34,7 +34,7 @@ register if it exists. Note every row already `open`, `chosen`, `in-progress`, `
 since been fixed, note that too (it can be marked `done` with a reference to the fix).
 
 Also skim, for grounding: [`DESIGN.md`](../../intelligence/DESIGN.md) (phasing + ADR-0008) and
-[`robots.md`](../../intelligence/documentation/robots.md).
+[`README.md`](../../intelligence/README.md).
 
 ---
 

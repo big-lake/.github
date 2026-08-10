@@ -41,7 +41,7 @@ If you're considering a larger change (new architecture, new service, major refa
 Every code change must include documentation updates. This is enforced:
 
 - **API changes** — update `api/BFF_API_REQUIREMENTS.md` and the OpenAPI spec docstrings. Run `python scripts/update_openapi_baseline.py` and commit `openapi.json`.
-- **ETL pipeline changes** — update or create `robots.md` and `humans.md` under `etl/documentation/data_source_ingestions/{source}/{pipeline}/`.
+- **ETL pipeline changes** — update or create a `README.md` under `etl/documentation/data_source_ingestions/{source}/{pipeline}/`.
 - **New GCP resources or secrets** — update the relevant repo's `setup.md`.
 - **Local dev setup changes** — if any service's setup changes in a way that affects local development, update `DEVELOPMENT.md` in this repo.
 - **Architectural decisions** — write an ADR in the relevant repo's `documentation/adr/` directory. See existing ADRs for the format.

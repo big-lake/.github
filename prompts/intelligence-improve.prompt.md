@@ -80,7 +80,7 @@ Per §7 of the framework, write a concrete plan:
   research — not the register's original estimate alone.
 - How success would be **verified** (eval delta via the RAGAS harness, manual check, or trace
   inspection) — describe it; don't run it here.
-- Docs to update (`robots.md` always; `humans.md` if human-facing) and whether an ADR is
+- Docs to update (`README.md` always) and whether an ADR is
   warranted (see §4 — non-obvious design decisions, trade-offs, or reversals of prior ADRs
   usually warrant one).
 - Any cross-repo issue to raise (for category 6 / knowledge-lakehouse findings).
@@ -98,9 +98,10 @@ If the plan proceeds to actual code changes, hold every change to a high documen
   (the rationale, the trade-off accepted, the alternative rejected and why). Any new flag/config
   knob is documented at its definition (valid values, default, effect). Any workaround or
   gotcha introduced gets a comment flagging it as such.
-- **READMEs:** update `robots.md` (exhaustive, always) and `humans.md` (concise, if human-facing
-  behaviour changed) per the documentation standard — don't just append a line, integrate the
-  change into the existing narrative so the docs stay coherent, not a changelog bolted on.
+- **README:** update `intelligence/README.md` (endpoints, config, deployment, gotchas) if
+  human-observable behaviour changed, per the documentation standard — don't just append a line,
+  integrate the change into the existing narrative so the docs stay coherent, not a changelog
+  bolted on.
 - **ADRs:** per the §4 guidance above — write one whenever the change embodies a non-obvious
   decision or trade-off, and mark any superseded ADR explicitly.
 - Treat documentation completeness as part of the deliverable, not a follow-up task — the change
@@ -110,10 +111,15 @@ If the plan proceeds to actual code changes, hold every change to a high documen
 
 ## Phase 4 — Record
 
-Once the user confirms (or if they choose to stop after Phase 3 research alone):
+Once the user confirms the plan, implement it (per §7/3b), then close out the register row —
+this phase isn't done until the row reflects the actual outcome, not just the intent to proceed:
 
-- Update the register row's status (`chosen` → `in-progress`, or `done`/`wontfix` with a reason
-  if the research in 3a showed it shouldn't proceed).
+- Update the register row's status:
+  - `chosen` → `in-progress` as soon as the plan is confirmed and implementation starts.
+  - `in-progress` → **`done`** once the code change, docs, and ADR (if warranted) are all
+    actually in place — don't leave it sitting at `in-progress` after finishing the work.
+  - `done`/`wontfix` with a one-line reason if the Phase 3a research showed it shouldn't proceed
+    (in which case skip straight there and never mark it `in-progress`).
 - **Create or update the relevant ADR(s)** in `documentation/adr/`:
   - If the change embodies a non-obvious design decision, a trade-off, or supersedes/extends an
     existing ADR (e.g. ADR-0008's reranker choice), write a new ADR following the repo's existing
@@ -122,11 +128,11 @@ Once the user confirms (or if they choose to stop after Phase 3 research alone):
     (matching the pattern already used for ADR-0007 → ADR-0008 in DESIGN.md).
   - Minor/mechanical changes (e.g. a config tweak with no real trade-off) don't need a new ADR —
     note in the register why one wasn't warranted.
-- Update `robots.md` / `humans.md` per the documentation standard if implementation proceeded,
+- Update `intelligence/README.md` per the documentation standard if implementation proceeded,
   and verify in-code comments meet the documentation bar (3b) — check the diff, don't assume.
 
 Report a summary: what was recorded, which ADR(s) were touched, which docs/comments were updated,
-and the register's current state.
+and the register's **final** status for this row (confirm it's `done`, not left at `in-progress`).
 
 ---
 
@@ -139,7 +145,7 @@ and the register's current state.
 - **Every plan needs evidence and a verification method** — no speculative changes.
 - **Speed and quality are assessed together**; flag trade-offs explicitly.
 - **ADRs are part of "done"** — a change that warrants one isn't complete until it's written.
-- **Documentation is part of "done"** — thorough in-code comments, `robots.md`/`humans.md`
+- **Documentation is part of "done"** — thorough in-code comments, `intelligence/README.md`
   updates, and ADRs are as mandatory as the code change itself; don't ship one without the other.
 - Respect the infra policy: intelligence VM / model infra changes go through `infra/` Terraform
   + GHA, never direct CLI.

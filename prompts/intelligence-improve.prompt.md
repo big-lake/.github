@@ -80,6 +80,15 @@ Per §7 of the framework, write a concrete plan:
   research — not the register's original estimate alone.
 - How success would be **verified** (eval delta via the RAGAS harness, manual check, or trace
   inspection) — describe it; don't run it here.
+- **Whether a before/after RAGAS run applies.** The harness (`evaluation/ragas_eval.py`) only
+  drives `knowledge_retrieval` + `synthesize` (per OPP-006), so it's a meaningful before/after
+  signal for opportunities on that path (categories 1, 2, 4, and cross-cutting changes that feed
+  synthesis quality/faithfulness, e.g. 8/9 when they touch the synthesis prompt or context). It's
+  **not** a fit for the unevaluated NL→SQL/data path (category 5), or for changes with no
+  quality-facing effect (pure logging/observability, e.g. 10/11, or mechanical config cleanup) —
+  for those, say so explicitly and rely on the manual/trace verification method instead. If it
+  applies, say so in the plan and flag that Phase 4 will run the harness once before
+  implementing (baseline) and once after (delta), not automatically here.
 - Docs to update (`README.md` always) and whether an ADR is
   warranted (see §4 — non-obvious design decisions, trade-offs, or reversals of prior ADRs
   usually warrant one).
@@ -114,6 +123,12 @@ If the plan proceeds to actual code changes, hold every change to a high documen
 Once the user confirms the plan, implement it (per §7/3b), then close out the register row —
 this phase isn't done until the row reflects the actual outcome, not just the intent to proceed:
 
+- **If 3b determined a before/after RAGAS run applies:** run `evaluation/ragas_eval.py` against
+  `test_set.json` **before** making the code change to capture a baseline (skip this if a recent,
+  still-valid baseline already exists), implement the change, then run it again **after** and
+  report the per-metric delta (faithfulness, answer_relevancy, etc.) in the Phase 4 summary. If
+  the delta is flat or negative where an uplift was expected, say so plainly — don't paper over a
+  null result — and note it in the register row rather than marking it a clean `done`.
 - Update the register row's status:
   - `chosen` → `in-progress` as soon as the plan is confirmed and implementation starts.
   - `in-progress` → **`done`** once the code change, docs, and ADR (if warranted) are all

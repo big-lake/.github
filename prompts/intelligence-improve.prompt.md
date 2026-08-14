@@ -80,6 +80,12 @@ Per §7 of the framework, write a concrete plan:
   research — not the register's original estimate alone.
 - How success would be **verified** (eval delta via the RAGAS harness, manual check, or trace
   inspection) — describe it; don't run it here.
+- **If verification requires a live/manual test against a real deployed environment** (real
+  Vertex AI/Cohere calls, a real adversarial payload, real network timing — anything this
+  workspace can't exercise because there are no local `.env`/credentials for `intelligence`, which
+  normally only runs on its VM) **that can't be run in this session**, say so explicitly and plan
+  to add it to [`intelligence/documentation/manual-verification-plan.md`](../../intelligence/documentation/manual-verification-plan.md)
+  in Phase 4 rather than treating verification as optional or skipping it silently.
 - **Whether a before/after RAGAS run applies.** The harness (`evaluation/ragas_eval.py`) only
   drives `knowledge_retrieval` + `synthesize` (per OPP-006), so it's a meaningful before/after
   signal for opportunities on that path (categories 1, 2, 4, and cross-cutting changes that feed
@@ -145,9 +151,16 @@ this phase isn't done until the row reflects the actual outcome, not just the in
     note in the register why one wasn't warranted.
 - Update `intelligence/README.md` per the documentation standard if implementation proceeded,
   and verify in-code comments meet the documentation bar (3b) — check the diff, don't assume.
+- **If 3b identified a deferred live/manual test**, add it to
+  [`intelligence/documentation/manual-verification-plan.md`](../../intelligence/documentation/manual-verification-plan.md)
+  as a new `MVP-NNN` entry (next sequential number) — precondition, exact steps, expected result,
+  status `pending` — and reference the `MVP-NNN` id back in the register row's Notes/link column.
+  A change that needed live verification isn't fully "done" until that test case exists, even
+  though the test itself hasn't been *run* yet; don't let it become an untracked TODO in prose.
 
 Report a summary: what was recorded, which ADR(s) were touched, which docs/comments were updated,
-and the register's **final** status for this row (confirm it's `done`, not left at `in-progress`).
+which `MVP-NNN` manual-verification entries (if any) were added, and the register's **final**
+status for this row (confirm it's `done`, not left at `in-progress`).
 
 ---
 
@@ -162,6 +175,10 @@ and the register's **final** status for this row (confirm it's `done`, not left 
 - **ADRs are part of "done"** — a change that warrants one isn't complete until it's written.
 - **Documentation is part of "done"** — thorough in-code comments, `intelligence/README.md`
   updates, and ADRs are as mandatory as the code change itself; don't ship one without the other.
+- **Deferred live verification is tracked, not skipped** — if a change's only meaningful
+  verification requires a real deployed environment unavailable in this session, it gets a
+  concrete `MVP-NNN` entry in `intelligence/documentation/manual-verification-plan.md` (steps +
+  expected result), not a vague note that verification "should happen later".
 - Respect the infra policy: intelligence VM / model infra changes go through `infra/` Terraform
   + GHA, never direct CLI.
 - Respect the infra policy: intelligence VM / model infra changes go through `infra/` Terraform

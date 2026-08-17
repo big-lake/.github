@@ -21,9 +21,13 @@ Read [`intelligence/documentation/continuous-improvement.md`](../../intelligence
 for the category definitions (§3), ranking dimensions (§5), and the "from opportunity to change"
 guidance (§7).
 
-Read [`OPPORTUNITIES.md`](../../intelligence/evaluation/results/OPPORTUNITIES.md). If it doesn't
-exist or has no `open` rows, **stop and tell the user to run `/intelligence-scan` first** — do not
-scan the codebase yourself in this prompt.
+Read [`OPPORTUNITIES.md`](../../intelligence/evaluation/results/OPPORTUNITIES.md) — this is the
+**active-only** register (open/chosen/in-progress rows; closed rows live separately in
+[`OPPORTUNITIES-ARCHIVE.md`](../../intelligence/evaluation/results/OPPORTUNITIES-ARCHIVE.md) and
+don't need to be read for a triage pass — only consult the archive if you need historical context
+on a specific past fix, e.g. to check whether something related was already tried). If the active
+file doesn't exist or has no `open` rows, **stop and tell the user to run `/intelligence-scan`
+first** — do not scan the codebase yourself in this prompt.
 
 Filter to `open` (and, if useful, `chosen`-but-stalled) rows, applying the optional filter input.
 
@@ -136,11 +140,16 @@ this phase isn't done until the row reflects the actual outcome, not just the in
   the delta is flat or negative where an uplift was expected, say so plainly — don't paper over a
   null result — and note it in the register row rather than marking it a clean `done`.
 - Update the register row's status:
-  - `chosen` → `in-progress` as soon as the plan is confirmed and implementation starts.
+  - `chosen` → `in-progress` as soon as the plan is confirmed and implementation starts — update
+    it **in place in `OPPORTUNITIES.md`** (still active, not yet closed).
   - `in-progress` → **`done`** once the code change, docs, and ADR (if warranted) are all
     actually in place — don't leave it sitting at `in-progress` after finishing the work.
   - `done`/`wontfix` with a one-line reason if the Phase 3a research showed it shouldn't proceed
     (in which case skip straight there and never mark it `in-progress`).
+  - **The moment a row reaches `done` or `wontfix`, move its entire row (verbatim, same `OPP-NNN`
+    ID, full notes) from `OPPORTUNITIES.md` to `OPPORTUNITIES-ARCHIVE.md` and delete it from the
+    active file** — closing a row isn't finished until it's out of the active register; don't
+    leave closed rows sitting in `OPPORTUNITIES.md`.
 - **Create or update the relevant ADR(s)** in `documentation/adr/`:
   - If the change embodies a non-obvious design decision, a trade-off, or supersedes/extends an
     existing ADR (e.g. ADR-0008's reranker choice), write a new ADR following the repo's existing

@@ -29,9 +29,13 @@ first. Internalise:
 - The evidence + axis expectations and the register format in §6 (`evaluation/results/OPPORTUNITIES.md`).
 
 Read the existing [`OPPORTUNITIES.md`](../../intelligence/evaluation/results/OPPORTUNITIES.md)
-register if it exists. Note every row already `open`, `chosen`, `in-progress`, `done`, or
-`wontfix` — do not re-add a duplicate of anything already logged. If a previously logged gap has
-since been fixed, note that too (it can be marked `done` with a reference to the fix).
+register if it exists — this holds only the currently **active** (`open`/`chosen`/`in-progress`)
+rows. Note every row already logged so you don't re-add a duplicate. Also check
+[`OPPORTUNITIES-ARCHIVE.md`](../../intelligence/evaluation/results/OPPORTUNITIES-ARCHIVE.md) for
+the highest `OPP-NNN` ID used there too — numbering is sequential across both files, so the next
+new ID must be higher than the max of *either* file, not just the active one. If a previously
+logged `open` row has since been fixed, move it to the archive with a `done` status and a
+reference to the fix rather than leaving it (or a duplicate) in the active file.
 
 Also skim, for grounding: [`DESIGN.md`](../../intelligence/DESIGN.md) (phasing + ADR-0008) and
 [`README.md`](../../intelligence/README.md).
@@ -74,11 +78,14 @@ fixes or implement anything — that's `/intelligence-improve`'s job.
 ## Phase 3 — Append to the register
 
 Append each new finding as a row to `evaluation/results/OPPORTUNITIES.md` (create it using the §6
-table format if it doesn't exist yet), status `open`. Assign the next sequential `OPP-NNN` ID.
+table format if it doesn't exist yet), status `open`. Assign the next sequential `OPP-NNN` ID
+(checking both `OPPORTUNITIES.md` and `OPPORTUNITIES-ARCHIVE.md` for the current max — see Phase 1).
 
-Do not remove or re-rank existing rows — this pass only adds. If you identified that a previously
-`open` row is now stale, obsolete, or already fixed, update its status in place with a one-line
-note, rather than adding a duplicate.
+Do not remove or re-rank other still-open rows — this pass only adds. If you identified that a
+previously `open` row is now stale, obsolete, or already fixed, move its entire row to
+`OPPORTUNITIES-ARCHIVE.md` with the corrected `done`/`wontfix` status and a one-line note, and
+delete it from the active file — don't leave a closed row behind in `OPPORTUNITIES.md`, and don't
+add a duplicate.
 
 Report a short summary: how many new opportunities were added, which categories they fall under,
 and which categories still haven't been scanned recently (for next time).

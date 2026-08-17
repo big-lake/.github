@@ -219,6 +219,14 @@ truly share files per §5.1), its own verification, and its own register closure
   status `pending` — and reference the `MVP-NNN` id back in the register row's Notes/link column.
   A change that needed live verification isn't fully "done" until that test case exists, even
   though the test itself hasn't been *run* yet; don't let it become an untracked TODO in prose.
+- **Commit the change once the row is `done`/`wontfix` and docs/ADR are in place** — one commit
+  per closed item (or one commit per fast-track batch, if its items were already grouped for
+  sharing a file per §5.1 — don't split a genuinely shared-file batch into multiple commits that
+  each leave the repo in a half-updated state). Message references the `OPP-NNN`(s) and a
+  one-line summary of the fix, mirroring the register row's own one-line opportunity text.
+  Commit freely — this repo's convention is to commit as you go; **never `push`, merge, or open a
+  PR without the user's explicit confirmation first** (per the repo's infra/git policy — that
+  goes for every commit made by this prompt, not just bulk mode).
 
 Report a summary: what was recorded, which ADR(s) were touched, which docs/comments were updated,
 which `MVP-NNN` manual-verification entries (if any) were added, and the register's **final**
@@ -266,6 +274,10 @@ workspace regardless.
      don't leave that to the parent session, since the parent's job here is dispatch + aggregate,
      not re-derive per-item state from subagent prose.
    - Tell it whether to expect writing code (yes) per the tool's own guidance for clarity.
+   - **Tell it to commit its own cluster's change before returning** (one commit per item, or one
+     per cluster if the cluster is a genuine shared-file batch) — same message convention as
+     Phase 4 (`OPP-NNN` + one-line summary) — and explicitly **never to `push`, merge, or open a
+     PR**; that stays a user-confirmed action outside any subagent's authority.
 4. **As each subagent returns, immediately reconcile** (don't wait for all of them): confirm its
    register/memory updates actually landed (spot-check, don't just trust the summary — same
    principle as Phase 4's "check the diff, don't assume"), and note anything it flagged as
@@ -305,6 +317,9 @@ workspace regardless.
 - **ADRs are part of "done"** — a change that warrants one isn't complete until it's written.
 - **Documentation is part of "done"** — thorough in-code comments, `intelligence/README.md`
   updates, and ADRs are as mandatory as the code change itself; don't ship one without the other.
+- **Commit along the way, never push unconfirmed** — each closed item (or fast-track/bulk
+  cluster) gets its own commit once its code, docs, and ADR are in place; committing is routine
+  and doesn't need to wait for user sign-off, but `push`/merge/PR always does.
 - **Bulk mode delegates, it doesn't dilute** — subagents dispatched per the section above still
   owe the same evidence/verification/documentation bar as an inline Phase 3/4 run; only the human
   confirmation checkpoint is removed, and only when the user explicitly opted into that trade-off.

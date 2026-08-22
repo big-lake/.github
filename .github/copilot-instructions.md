@@ -19,6 +19,15 @@ BigLake is a GCP-hosted data platform for Australian government datasets. See `A
 | **intelligence** | RAG orchestration & agent logic | Python, LLM APIs, vector DB client |
 | **.github** | Org-level docs & Copilot config | Markdown |
 
+## Cross-repo TODO tracking (`.github/TODO.md`)
+
+`.github/TODO.md` is the single source of truth for cross-repo planning — read it whenever picking up a task that isn't purely repo-local, and whenever the user asks about project status, priorities, or "what's next."
+
+- **Keep it current, but never unilaterally.** Don't add, check off, reword, or defer/re-prioritise items in `TODO.md` without first confirming with the user — even if the change looks obviously correct from code/memory evidence. Surface the proposed change and wait for a go-ahead, the same way pushes/deploys require confirmation.
+- **Do flag drift proactively.** If work observed in code, commits, or repo memory contradicts what `TODO.md` says (an item marked open is actually done, a shipped feature isn't listed at all, a stage is further along than recorded), point it out to the user rather than silently trusting or silently fixing the file.
+- **Don't duplicate the intelligence quality register.** `intelligence/evaluation/results/OPPORTUNITIES.md` (+ `OPPORTUNITIES-ARCHIVE.md`) is the authoritative backlog for retrieval/routing/generation/eval quality work. `TODO.md` only summarises rows that are cross-repo or blocked on a human decision — check with the user before adding a new row there instead of just letting the register own it.
+- **Prefer striking + linking over deleting** when an item is confirmed done, so history stays recoverable — same convention the file documents for itself.
+
 ## Design Principles
 
 1. **Loose coupling** — Repos do not depend on each other's internals. Communication is through well-defined interfaces (APIs, GCS paths, vector DB).

@@ -128,7 +128,7 @@ Open `http://localhost:5173`.
 
 ### api
 
-See [api/setup.md](https://github.com/big-lake/api/blob/main/setup.md) for GCP deployment.
+See [api/SETUP.md](https://github.com/big-lake/api/blob/main/SETUP.md) for GCP deployment.
 
 Key env vars for local dev:
 
@@ -143,7 +143,7 @@ Key env vars for local dev:
 
 ### ui
 
-See [ui/setup.md](https://github.com/big-lake/ui/blob/main/setup.md) for GCP deployment.
+See [ui/SETUP.md](https://github.com/big-lake/ui/blob/main/SETUP.md) for GCP deployment.
 
 The only required env var locally:
 
@@ -214,13 +214,13 @@ If a service function ever grows complex logic (parsing, scoring, ranking, etc.)
 
 ETL flows run on Prefect and require GCS access for all meaningful work. There is no local-only mode.
 
-See [etl/setup.md](https://github.com/big-lake/etl/blob/main/setup.md) for full setup, including running a local Prefect server against GCS test data.
+See [etl/SETUP.md](https://github.com/big-lake/etl/blob/main/SETUP.md) for full setup, including running a local Prefect server against GCS test data.
 
 ### intelligence
 
 The intelligence service requires a running pgvector database and GCP credentials (for Vertex AI).
 
-See [intelligence/setup.md](https://github.com/big-lake/intelligence/blob/main/setup.md) for full setup. A local pgvector instance can be run with Docker:
+See [intelligence/SETUP.md](https://github.com/big-lake/intelligence/blob/main/SETUP.md) for full setup. A local pgvector instance can be run with Docker:
 
 ```bash
 docker run -d \
@@ -232,11 +232,11 @@ docker run -d \
 
 ### knowledge
 
-Knowledge pipelines require GCS access and (for embedding generation) GCP Vertex AI credentials. See [knowledge/setup.md](https://github.com/big-lake/knowledge/blob/main/setup.md).
+Knowledge pipelines require GCS access and (for embedding generation) GCP Vertex AI credentials. See [knowledge/SETUP.md](https://github.com/big-lake/knowledge/blob/main/SETUP.md).
 
 ### catalog
 
-OpenMetadata is deployed via Docker Compose. See [catalog/setup.md](https://github.com/big-lake/catalog/blob/main/setup.md) for running it locally.
+OpenMetadata is deployed via Docker Compose. See [catalog/SETUP.md](https://github.com/big-lake/catalog/blob/main/SETUP.md) for running it locally.
 
 ---
 
@@ -266,7 +266,7 @@ The minimal local stack above gives you working auth and UI navigation but degra
      --role="roles/iam.serviceAccountTokenCreator" `
      --project=big-lake-test-490405
    ```
-3. Grant your user `roles/iap.tunnelResourceAccessor` on the intelligence VM (one-time, per developer). See [intelligence/setup.md](https://github.com/big-lake/intelligence/blob/main/setup.md).
+3. Grant your user `roles/iap.tunnelResourceAccessor` on the intelligence VM (one-time, per developer). See [intelligence/SETUP.md](https://github.com/big-lake/intelligence/blob/main/SETUP.md).
 
 ### Populate `api/.env` for chat (intelligence via IAP tunnel)
 
@@ -319,17 +319,17 @@ Then visit `http://localhost:5173`. Catalog, query, and chat should all work end
 
 ## Full GCP environment
 
-To deploy the complete platform to a new GCP project, work through the `setup.md` files in this order:
+To deploy the complete platform to a new GCP project, work through the `SETUP.md` files in this order:
 
-1. `infra/setup.md` — provision all GCP resources (do this first)
-2. `etl/setup.md`
-3. `catalog/setup.md`
-4. `knowledge/setup.md`
-5. `intelligence/setup.md`
-6. `api/setup.md`
-7. `ui/setup.md`
+1. `infra/SETUP.md` — provision all GCP resources (do this first)
+2. `etl/SETUP.md`
+3. `catalog/SETUP.md`
+4. `knowledge/SETUP.md`
+5. `intelligence/SETUP.md`
+6. `api/SETUP.md`
+7. `ui/SETUP.md`
 
-Each `setup.md` documents its own GCP prerequisites and GitHub Actions secrets.
+Each `SETUP.md` documents its own GCP prerequisites and GitHub Actions secrets.
 
 ---
 

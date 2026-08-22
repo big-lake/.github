@@ -8,10 +8,10 @@ process changes — treat it as the canonical runbook, not a one-off record.
 `knowledge` → `intelligence` → `api` → `ui`. Each phase below assumes the
 previous ones are complete.
 
-Each repo also has its own `setup.md` with the authoritative low-level
+Each repo also has its own `SETUP.md` with the authoritative low-level
 steps and current field/secret names — this checklist sequences them and
-tracks cross-repo gotchas. If a repo's `setup.md` and this file disagree,
-`setup.md` wins; update this file to match.
+tracks cross-repo gotchas. If a repo's `SETUP.md` and this file disagree,
+`SETUP.md` wins; update this file to match.
 
 ---
 
@@ -54,7 +54,7 @@ this — it has real DNS/cert implications.
        `cloudresourcemanager`, `iap`, `aiplatform` (Vertex AI, needed by
        `etl`)
 3. [ ] Create `terraform-deploy` SA + grant bootstrap roles
-       (`infra/setup.md` §2–3)
+       (`infra/SETUP.md` §2–3)
 4. [ ] Create WIF pool + OIDC provider scoped to `big-lake/*` repos (§4)
 5. [ ] Bind `terraform-deploy` SA to WIF for the `infra` repo (§5)
 6. [ ] Create the GitHub environment (e.g. `prod`) in every repo: infra,
@@ -71,7 +71,7 @@ this — it has real DNS/cert implications.
 
 11. [ ] Populate Secret Manager values via **GCP Console UI only** — never
         CLI (`gcloud secrets versions add`). Full table in
-        `infra/setup.md` §10: GCS HMAC keys, OM MySQL passwords,
+        `infra/SETUP.md` §10: GCS HMAC keys, OM MySQL passwords,
         `api-admin-password`, `api-jwt-secret`, `session-jwt-secret`,
         `magic-link-hmac-secret`, OAuth client id/secret ×3 providers
         (Google/LinkedIn/GitHub — **register new OAuth apps/redirect URIs
@@ -84,7 +84,7 @@ this — it has real DNS/cert implications.
         using the resolved internal DNS name
 13. [ ] Configure Lakehouse runtime catalog (`gcloud beta biglake iceberg
         catalogs create`) for both lakehouse and raw buckets + grant
-        `biglake.viewer`/`biglake.editor` IAM (`infra/setup.md` §11)
+        `biglake.viewer`/`biglake.editor` IAM (`infra/SETUP.md` §11)
 14. [ ] Resolve the domain/DNS decision from Phase 0, then delegate at the
         registrar (cheaperdomains.com.au) if a new zone is needed
 15. [ ] Wait for the managed cert to go `ACTIVE`, then run the Phase 2

@@ -78,6 +78,12 @@ BigLake is a GCP-hosted data platform for Australian government datasets. See `A
 - GCS paths: `{subject}/{layer}/{source}/{dataset}/`
 - Metadata columns: prefixed with `meta_` (e.g. `meta_source_file`, `meta_ingestion_epoch_utc`). The `_` prefix is reserved by BigLake/BigQuery for pseudo-columns and is rejected by the Lakehouse runtime catalog (etl ADR-0002).
 
+### GitHub Actions — avoid third-party marketplace actions
+
+- Prefer official (`actions/*`, `google-github-actions/*`) or first-party CLI tooling over third-party marketplace actions. GitHub-hosted runners come with `git` and `gh` preinstalled and pre-authenticated via `GITHUB_TOKEN` — use them directly instead of pulling in a third-party action for something they can already do.
+- **Opening/updating PRs from a workflow:** use plain `git` (`checkout -B`, `add`, `commit`, `push --force` for a long-lived branch) + `gh pr create` / `gh pr view`, **not** `peter-evans/create-pull-request`. See `catalog/.github/workflows/onboard-new-abs-datasets.yml` and `knowledge/.github/workflows/open-inbox-pr.yml` for the reference pattern.
+- If a third-party action is genuinely necessary (no first-party equivalent), pin it to a full commit SHA (not just a version tag) and note why in a comment.
+
 ## When Working Across Repos
 
 - If a change in one repo affects another (e.g. new GCS path in `etl` needs a connector update in `catalog`), note the cross-repo dependency explicitly.

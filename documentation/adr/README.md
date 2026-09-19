@@ -28,3 +28,4 @@ superseding an ADR, write a new one referencing it — don't rewrite history.
 | # | Title | Status |
 |---|---|---|
 | [0001](0001-abs-sdmx-canonical-subject-taxonomy.md) | ABS SDMX category scheme is the canonical subject taxonomy — fetch live, consistently, per repo | accepted |
+| [0002](0002-knowledge-document-entities-and-retrieval-plane-boundary.md) | Knowledge document entities in OpenMetadata; OM as control plane, not retrieval plane | accepted |

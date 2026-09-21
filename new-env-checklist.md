@@ -124,13 +124,14 @@ this — it has real DNS/cert implications.
 29. [ ] Run flows 1–4 (ingest → chunk → enrich → embed_and_index) against
         real sources for this env — check `pipeline.yaml` source configs
         are appropriate for the target env
-30. [ ] Confirm manifest published at
-        `gs://{bucket}/{manifest_prefix}/{version}/manifest.json`
+30. [ ] Confirm the corpus-wide manifest published at
+        `gs://{bucket}/index/{version}/manifest.json` (knowledge ADR-0022)
 
 ## Phase 6 — Intelligence (`intelligence`, depends on knowledge_db + manifest)
 
-31. [ ] Confirm `infra/modules/intelligence/startup.sh` env vars point at
-        the correct manifest prefix/version for this env
+31. [ ] Confirm `infra/modules/intelligence/startup.sh`'s `KNOWLEDGE_INDEX_VERSION`
+        points at the correct manifest version for this env (path itself is
+        fixed — intelligence ADR-0023)
 32. [ ] Trigger `Deploy Intelligence` workflow
 33. [ ] Verify `/health` via IAP tunnel returns `status: ok` with correct
         `manifest_version`/`embedding_model`

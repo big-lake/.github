@@ -54,8 +54,11 @@ The org `.github` repo ships with prompt files in [.github/prompts/](https://git
 - `new-endpoint.prompt.md` — adding a new endpoint end-to-end (steps 1–7)
 - `change-endpoint.prompt.md` — modifying an existing endpoint without breaking the UI
 - `new-ui-view.prompt.md` — adding a UI surface that consumes existing endpoints
+- `ui-e2e-bug-triage.prompt.md` — diagnosing a bug found while manually exercising the live UI
+  end-to-end (UI → api → intelligence/catalog/DuckDB), one bug at a time, no browser automation
 
-Invoke with `/new-endpoint`, `/change-endpoint`, or `/new-ui-view` in Copilot Chat from the multi-root workspace.
+Invoke with `/new-endpoint`, `/change-endpoint`, `/new-ui-view`, or `/ui-e2e-bug-triage` in Copilot
+Chat from the multi-root workspace.
 
 ---
 

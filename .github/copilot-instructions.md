@@ -73,6 +73,14 @@ BigLake is a GCP-hosted data platform for Australian government datasets. See `A
 - Do NOT duplicate security findings into API-contract gap tables (e.g. `BFF_API_REQUIREMENTS.md`) — link to a `SEC-NNN` row instead.
 - When fixing a finding, change its status in `risks.md` in the **same commit** as the code fix and reference the commit SHA in the "Resolved" row.
 
+### Bug reports
+
+- **Per-repo bug register:** `{repo}/documentation/bugs/` — one file per bug (`BUG-NNNN-kebab-case-title.md`), monotonic IDs, never reused. Convention and status vocabulary: `documentation/bugs/README.md` in each repo (same shape as `documentation/adr/README.md`).
+- **Bugs vs security findings:** incorrect *behaviour* → `BUG-NNNN` here. A security *weakness* → `SEC-NNN` in `risks.md`. A bug with security implications gets both, cross-linked.
+- **Bugs vs ADRs:** a bug fix is corrective, not a design choice — it doesn't need an ADR unless the fix itself involved picking between alternatives worth recording.
+- **Cross-repo bugs:** each affected repo gets its own `BUG-NNNN` file; cross-link them under **Related** using full `https://github.com/big-lake/{repo}/blob/main/...` URLs (relative links don't resolve across repos).
+- When fixing a bug, set its file's `Status` to `fixed` and record the commit SHA in the same commit as the code fix — same discipline as the security risk register.
+
 ### Naming
 
 - Datasets and variables: `snake_case`

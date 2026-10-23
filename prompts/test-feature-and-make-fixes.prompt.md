@@ -1,5 +1,5 @@
 ---
-description: "Autonomously QA one named UI feature end-to-end, record every finding as a BUG-NNNN / SEC-NNN entry, fix them securely (parallelised with subagents where independent), verify, update the docs, and commit + push. Browser work is batched into consolidated Playwright scripts to keep cost down."
+description: "Autonomously QA one named UI feature end-to-end, record every finding as a BUG-NNNN / SEC-NNN entry, fix them securely (parallelised with subagents where independent), verify, update the docs, commit, push, and deploy to test. Browser work is batched into consolidated Playwright scripts to keep cost down."
 mode: agent
 ---
 
@@ -8,10 +8,10 @@ mode: agent
 Feature or area to test: ${input:feature:Short name (e.g. "notebooks", "sidebar catalog", "chat")}
 
 Use this to get broad, repeatable coverage of a specific feature and drive every finding through
-to a verified, documented, pushed fix — without a human clicking through it. This is
-**exploratory automated QA plus remediation**, not a committed test suite: per the `ui` repo's
-"no testing infrastructure unless asked" rule, no `.spec.js`/Playwright test files get written.
-What *does* get written: bug reports, security register rows, code fixes, and their docs.
+to a verified, documented, pushed, **and deployed** fix — without a human clicking through it.
+This is **exploratory automated QA plus remediation**, not a committed test suite: per the `ui`
+repo's "no testing infrastructure unless asked" rule, no `.spec.js`/Playwright test files get
+written. What *does* get written: bug reports, security register rows, code fixes, and their docs.
 
 For diagnosing a single already-known bug reported by the user, use `/ui-e2e-bug-triage` instead
 — that flow is cheaper for one issue because it skips browser automation entirely. This prompt is
@@ -287,7 +287,28 @@ read each changed region yourself, run `get_errors` across all changed files, an
 
 ---
 
-## Step 10 — Final report
+## Step 10 — Deploy
+
+Only for repos that were actually pushed in Step 9, and only once validation CI
+(`validate-and-release.yml`, triggered by the push) has gone green — check its run status via
+`gh run list`/`gh run watch` before deploying on top of it.
+
+- Trigger that repo's deploy workflow to **test** (never prod without explicit user confirmation —
+  prod is a shared-infrastructure action per the operational-safety rules):
+  `gh workflow run deploy.yml -f environment=test` (run from the repo root so `gh` resolves the
+  right repo).
+- Watch it to completion: `gh run watch $(gh run list --workflow=deploy.yml -L1 --json databaseId
+  -q '.[0].databaseId')`. If it fails, stop, report the failure with the run URL, and do not retry
+  silently — a failed deploy needs a human look, not another push.
+- After a successful deploy, hit the environment's `/health` endpoint once to confirm the new
+  version is actually serving (not just that the workflow reported success).
+- `api`/`ui`/`knowledge`/`intelligence`/`catalog` all follow this same `workflow_dispatch` shape —
+  deploy whichever of them were pushed. `etl` and `infra` don't have this kind of app deploy; skip
+  them (etl ships via Prefect deployment YAMLs, infra via Terraform — out of scope here).
+
+---
+
+## Step 11 — Final report
 
 Concise, not a transcript of every tool call:
 
@@ -316,6 +337,10 @@ Concise, not a transcript of every tool call:
 ### Commits pushed
 | Repo | SHA | Message |
 |---|---|---|
+
+### Deployments
+| Repo | Environment | Run | Result |
+|---|---|---|---|
 
 ### Left alone
 - pre-existing uncommitted changes found in working trees

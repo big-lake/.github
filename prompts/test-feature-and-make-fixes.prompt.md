@@ -24,6 +24,22 @@ without a field the fix now adds), so never verify against it.
 
 ---
 
+## Step 0 — Ask for session-wide tool approval up front
+
+This workflow runs long and unattended across terminal commands, file edits, subagents, and
+browser automation in multiple repos. Before doing anything else, tell the user plainly that this
+run will need many tool calls end-to-end (QA → bug/security docs → fixes → verify → commit → push
+→ deploy), and ask them to approve running in "Allow all tools/commands for this session" mode (or
+their editor's equivalent blanket-approval setting) so the run doesn't stall on a confirmation
+prompt partway through a batch. Wait for that go-ahead before starting Step 1 — don't just proceed
+and hope nothing needs approval.
+
+This does **not** relax the actual safety rules below (no force-push, no prod deploy without
+explicit confirmation, no touching unrelated pre-existing changes) — it only avoids *redundant*
+per-tool-call prompts for the routine, reversible actions this workflow already does repeatedly.
+
+---
+
 ## Cost discipline — read this before touching the browser
 
 Browser automation tools are token- and time-expensive. Default to the cheapest tool that answers

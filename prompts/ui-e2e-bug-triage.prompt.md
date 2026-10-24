@@ -1,9 +1,9 @@
 ---
-description: "Triage and fix bugs found while manually exercising the live UI end-to-end (UI → api → intelligence / catalog / DuckDB query service). Works one bug at a time: gather repro details from the user, localise the fault to a layer, propose a fix, confirm, implement, ask the user to retest. Applies a security lens throughout — flags existing exposures and keeps fixes secure."
-mode: agent
+description: "Triage UI end-to-end bugs, capture confirmed defects in each affected repo's bug register, create an ordered fix plan, and execute and validate fixes with subagents where useful. The user drives browser testing; security and deployment approval boundaries remain in force."
+agent: agent
 ---
 
-# /ui-e2e-bug-triage — One bug at a time, UI-first
+# /ui-e2e-bug-triage — Register, plan, fix, verify
 
 Use this prompt once the stack is wired enough that a user can ask real questions in the `ui` and
 expect real answers to come back from `api` → (`intelligence` and/or `catalog`/OpenMetadata and/or
@@ -15,8 +15,10 @@ the browser manually (Chrome) and reports back. You may open the UI in VS Code's
 purely to *look* at something together, but all real testing, clicking, and network-tab
 inspection is done by the user.
 
-Work **one bug at a time**. Do not move to the next issue until the current one is confirmed
-fixed (or explicitly deferred) by the user.
+Capture all reported bugs, then work through an **ordered fix plan**. Keep each root cause and
+its verification distinct. Independent fixes may be delegated in parallel; dependent fixes must
+run in order. Do not stop at diagnosis or a proposed plan: execute actionable local fixes unless
+the user requests planning only. Pending manual retests do not block work on independent bugs.
 
 ---
 
@@ -51,7 +53,7 @@ When you find one:
   evidence, an OWASP Top 10 category, and a suggested severity. Never silently fix or ignore it.
 - Propose recording it as a `SEC-NNN` row in `{repo}/documentation/security/risks.md` (confirm
   with the user first). Don't put it in `BFF_API_REQUIREMENTS.md` gap tables — link the `SEC-NNN`.
-- It doesn't break the one-bug-at-a-time rule: log it and continue, unless it's actively
+- Keep it separate from the functional fix: log it and continue, unless it's actively
   exploitable/high severity — then recommend the user prioritise it ahead of the current bug.
 
 ### Keeping fixes secure
@@ -71,7 +73,8 @@ When you find one:
 
 ## Step 1 — Get a repro from the user
 
-If the user hasn't already given you this, ask for it before doing anything else:
+Use the details already provided. For each reported bug, collect the following where relevant;
+ask only for missing information that blocks diagnosis or verification:
 
 1. **What view and action** — which page/tab, what question or operation was attempted
 2. **Expected vs. actual** — what should have happened vs. what actually happened on screen
@@ -84,7 +87,9 @@ If the user hasn't already given you this, ask for it before doing anything else
    `api: dev (Flask :5000)`, `ui: dev (Vite :5173)`, and `iap: tunnel intelligence (:8001)`
    (catalog/OM calls go through the API's own OM client config, not a tunnel)
 
-Don't guess at missing details — ask a targeted follow-up question instead of assuming.
+Don't invent missing details. Use available local logs, tasks, code, and focused non-browser
+checks before asking the user for evidence they need to collect manually. Never request secrets
+or unredacted cookies/tokens.
 
 ---
 
@@ -144,21 +149,73 @@ Narrow down using the evidence from Step 1:
 
 ---
 
-## Step 3 — Confirm root cause, then propose a fix
+## Step 3 — Capture confirmed bugs in the register
+
+As soon as evidence confirms a functional defect, record it; don't wait until the fix is done.
+An unproven report remains a hypothesis, not a confirmed bug or invented root cause.
+
+- Read `{repo}/documentation/bugs/README.md` for each affected repo and follow its template,
+  status vocabulary, and index conventions. Check existing reports first; update a matching
+  report instead of creating a duplicate. If the register is missing, create it using the
+  org-wide bug-register convention and the UI register as a template.
+- Create `BUG-NNNN-kebab-case-title.md` using the next unused, monotonically increasing ID in
+  that repo, and add its index row. Inspect existing filenames as well as the index; never reuse
+  an ID or delete a report.
+- Include the reported date, severity, impact, expected vs. actual behaviour, repro steps,
+  redacted evidence, affected files, and known root cause. Label unknowns as pending diagnosis.
+  Start with `Status: open`; populate Fix and Verification as work progresses.
+- For a cross-repo defect, create a companion report in each affected repo and cross-link under
+  Related using full `https://github.com/big-lake/{repo}/blob/main/...` URLs. A UI symptom alone
+  doesn't require a UI report if only another repo needs a change.
+- Security weaknesses belong in `documentation/security/risks.md`, following the confirmation
+  rule above. A functional bug with security implications gets both records, cross-linked.
+- Keep register writes and ID allocation with the coordinating agent so concurrent subagents
+  cannot allocate duplicate IDs or overwrite the index.
+
+---
+
+## Step 4 — Confirm root cause and make an executable fix plan
 
 State plainly which layer and file(s) are at fault and why, citing the actual evidence from
 Step 1 (status code, response body, log line) — not speculation. If you're not sure, say so and
 propose the smallest next diagnostic step (e.g. "add a log line here and reproduce again") rather
 than guessing at a fix.
 
-Once you're confident, propose the fix as a short plan (what file, what change, why) and **ask the
-user to confirm before editing**, same as any other change in this workspace. The plan must state
-the security impact of the change ("none" is a valid answer, but say it) and list any security
-exposures spotted along the way per the Security lens section.
+For each confirmed bug, identify one falsifiable local hypothesis and the cheapest focused check
+that could disprove it. Once the owning code path and check are clear, stop exploring and make
+the smallest testable fix.
+
+Present a short ordered plan keyed by repo and `BUG-NNNN`. For each item include:
+
+- Root cause and evidence, files to change, intended behaviour, and why the change addresses it.
+- Dependencies and order, plus any independent work suitable for a subagent.
+- Focused validation command/check and the manual UI retest needed from the user.
+- Security impact ("none" is valid), exposures spotted, and any approval or environment blocker.
+
+Then **execute the plan without an extra approval round for ordinary local edits**. Ask only
+when a material ambiguity blocks a safe fix or an action needs explicit approval. Do not push,
+merge, deploy, run destructive operations, or weaken security controls without the required
+confirmation. Never edit the cross-repo `TODO.md` without confirmation.
 
 ---
 
-## Step 4 — Implement the minimal fix
+## Step 5 — Execute fixes, delegating where useful
+
+Use subagents when independent bugs or clearly bounded implementation tasks benefit from
+separate context. Keep a simple, local fix in the coordinating agent when delegation adds no
+value.
+
+- Give each subagent the bug ID/report, repro evidence, root-cause hypothesis, relevant repo
+  instructions, exact file ownership, expected change, validation command, and approval limits.
+- Use a read-only agent such as `Explore` only for investigation. Delegate implementation only
+  to an agent that can edit and validate; if none is available, implement in the coordinator.
+- Parallelise only tasks with disjoint file ownership and no contract dependencies. Execute API
+  contract changes before dependent UI changes. Keep shared files and register/index updates
+  coordinator-owned; all agents share the working tree and must preserve others' changes.
+- Require a return summary of root cause, changed files, checks run/results, remaining risks,
+  and blockers. Review returned changes and run any necessary integration check yourself.
+- Subagents must obey the no-browser-automation rule and must not commit, push, merge, deploy,
+  or perform destructive actions. Do not create a commit unless the user requests one.
 
 - Fix only the bug identified — do not refactor unrelated code while you're in there.
 - Re-check the diff against the Security lens "Keeping fixes secure" rules before handing back.
@@ -173,11 +230,31 @@ exposures spotted along the way per the Security lens section.
 - If the root cause was a genuine design flaw worth remembering (not just a typo), add a short
   gotcha note to the relevant README per `etl/.github/instructions/documentation.instructions.md`
   (applies org-wide) — don't write an ADR for a plain bug fix, only for an actual decision.
+- Immediately after each substantive edit, run the cheapest focused executable validation
+  before further exploration or edits. Repair local failures and rerun the same check. Use
+  existing checks and repo testing conventions; do not add test infrastructure unnecessarily.
+- Record implemented changes and actual validation results in the bug report, including failed
+  checks and remaining blockers. Keep the report and index `open` while manual verification or
+  a required deployment is pending; don't invent a pending status outside the repo vocabulary.
+- Continue other independent planned fixes while waiting for a manual retest or deployment
+  approval. Explicitly report blocked work rather than silently skipping it.
 
 ---
 
-## Step 5 — Hand back to the user to retest
+## Step 6 — Manual retest and register close-out
 
-Do not mark the bug fixed yourself. Tell the user exactly what to redo in the UI (same view/action
-from Step 1) and ask them to confirm it now works, pasting new network/console details if it
-doesn't. Only then move to the next bug.
+For each implemented fix, tell the user exactly what to redo in the UI (same view/action from
+Step 1), what result to expect, and whether the running stack contains the changed code. A local
+source edit is not proof that the deployed intelligence service is fixed. Request new redacted
+network/console evidence if the bug persists and resume diagnosis against the same report.
+
+Do not mark a bug `fixed` until the focused checks pass and the user confirms the manual retest.
+Then update both the report and its index, with the verification date and evidence. If a commit
+is requested, record its real SHA according to the repo convention; never fabricate a SHA or
+commit merely to fill the field. Until committed, state that the verified fix is local/uncommitted.
+User-deferred bugs stay `open` with the reason and next step; use `wontfix` only for an explicit
+decision not to fix.
+
+Finish with a compact summary keyed by repo and bug ID: changes made, checks and outcomes,
+manual retests awaiting the user, and any deployment/approval blockers. Keep the fix plan current
+as items complete; do not claim all bugs resolved while any required verification remains.

@@ -233,6 +233,8 @@ docker run -d \
   pgvector/pgvector:pg16
 ```
 
+**Evaluating against the deployed service (no local intelligence needed):** `intelligence/evaluation/e2e_eval.py` replays regression cases through the `test` VM over the IAP tunnel, reusing `api/.env`'s intelligence settings and the same api-SA impersonation grant described under "Local end-to-end coverage" below. It uses its own lightweight venv (`intelligence/evaluation/requirements-e2e.txt`) — see the intelligence README's "End-to-end regression harness" section.
+
 ### knowledge
 
 Knowledge pipelines require GCS access and (for embedding generation) GCP Vertex AI credentials. See [knowledge/SETUP.md](https://github.com/big-lake/knowledge/blob/main/SETUP.md).

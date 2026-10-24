@@ -56,6 +56,9 @@ The org `.github` repo ships with prompt files in [.github/prompts/](https://git
 - `new-ui-view.prompt.md` — adding a UI surface that consumes existing endpoints
 - `ui-e2e-bug-triage.prompt.md` — diagnosing a bug found while manually exercising the live UI
   end-to-end (UI → api → intelligence/catalog/DuckDB), one bug at a time, no browser automation
+- `prompts/intelligence-triage-and-optimise.prompt.md` (repo root `prompts/`) — one sub-optimal
+  intelligence answer (query + actual + ideal) → reproduce with the e2e harness → root cause →
+  fix → before/after-verified deploy to test
 
 Invoke with `/new-endpoint`, `/change-endpoint`, `/new-ui-view`, or `/ui-e2e-bug-triage` in Copilot
 Chat from the multi-root workspace.

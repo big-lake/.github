@@ -393,6 +393,13 @@ Each phase ships independently. Exit criteria are gates for the next.
 
 **Exit:** spike files validate; reviewability judged acceptable — i.e. none of ADR-0003's Phase 0 triggers fired.
 
+**Implementation status (2026-10-25):** Phases 2–4 code is merged to `main`; nothing is yet running end to end.
+- **P1:** infra applied to **test** only (bucket `{project}-semantics`, `biglake-sa-semantics-test`, bundle/evidence grants; infra `0db5a24`). Prod not applied. Two plan deviations: (1) no lakehouse `/metadata/` read for the semantics SA — GCS IAM conditions support only `startsWith`/`endsWith` (not `contains`/`matches`) and `loadTable` returns schema and snapshot inline; (2) lifecycle deletes only `evidence/` after 30 days — an age rule on `bundles/` would delete the live bundle after a quiet period, so old bundles need pruning logic. Still human-only: GitHub App, secrets, environments, branch protection (`semantics/SETUP.md`).
+- **P2:** `semantics` has the validator, assembler, projector and publisher, `validate.yml`/`publish.yml` (publish gated by `PUBLISH_ENABLED`), and the 9 seeded datasets (one-shot seed script deleted after use).
+- **P3:** catalog is governance-only (catalog `72ce346`): loader overlay, `jobs` input on `sync_catalog.yml`, `validate-curation.yml`, slimmed ABS generator (124 files regenerated; only `description`/`temporal` removed, verified), prompts split, ADR-0003/0008 amended. **Exit not met:** a test `jobs=curate` sync has not applied a published projection, because no bundle has been published (needs the GitHub setup above).
+- **P4:** etl evidence flows, guard, tests (28 pass), `run-evidence.yml`, docs (etl `c130242`). One plan deviation: `run_probes` takes only `run_id` and derives `evidence/{run_id}/probes/input.json` itself rather than accepting a `probes_uri`, so a caller cannot point it at an arbitrary object. **Not deployed:** the test Prefect VM is `TERMINATED`, so `deploy-prefect.yml` fails at SSH (two consecutive runs); the exit check "profile of the 3 PBO tables while silver runs" has not been run.
+- **Phase 0 gates still open:** description-diff review sign-off, and `prod` environment protection in etl and catalog.
+
 ### Converter implementation references
 
 Use [apache/ossie-converters](https://github.com/apache/ossie-converters) as an implementation reference, not a required runtime dependency. Its current converters do not import SDMX; ABS still needs the deterministic adapter in §3.7, without an intermediate vendor format.

@@ -6,6 +6,8 @@
 - **Amends (on acceptance):** catalog ADR-0003 (curation in YAML — descriptions and `temporal` leave catalog), catalog ADR-0008 (SDMX-generated curation — ABS descriptions are generated in `semantics`)
 - **Implementation plan:** [ossie-semantic-layer.md](../plans/ossie-semantic-layer.md)
 
+> Phase 0 spike and survey results are recorded in the [implementation plan](../plans/ossie-semantic-layer.md#phase-0--decide-and-spike-no-production-change). The pilot reviewability verdict and production environment protections remain open; this ADR remains provisional.
+
 ## Context
 
 BigLake joins structured data (Iceberg) and unstructured knowledge

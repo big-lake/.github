@@ -382,12 +382,14 @@ Each phase ships independently. Exit criteria are gates for the next.
 
 ### Phase 0 — Decide and spike (no production change)
 
-- [ ] Run the ADR-0003 Phase 0 exit triggers (pilot exit-check, tooling spike); record outcomes in the ADR.
-- [ ] Spike (decision 7): pin one upstream `apache/ossie` commit for `core-spec/ossie-schema.json`, `ontology/ontology.json`, `ontology/mapping.json`, the `python/` package and `validation/validate.py`. Confirm: (a) the package loads both pilot files, (b) `validate.py` is callable as a library, (c) our emitter → package load round-trips equal, (d) whether the package models ontology documents. Any failure → fall back to `jsonschema` + own loader.
-- [ ] Hand-write `historical_debt` `semantic.ossie.yaml` from its `table.yaml` + `cols.yaml` and compare diffs for reviewability (**pilot exit-check** input).
-- [ ] Hand-write `births_summary` `semantic.ossie.yaml` + `sdmx.yaml` (ABS pilot: exercises §3.7, the `additive_over` rule and the `AUS`/state hierarchy trap).
-- [ ] SDMX coverage survey (read-only, public API) across every flow in `datasets.yml`: count Actual constraints (and how many are currently valid), parent codes, `CONTEXT`/`DEFAULT` annotations, categorisations, geography URIs, and configured `dsd_version` behind the dataflow's latest DSD. Sizes §3.7's value and surfaces shape variance before Phase 5.
-- [ ] Verify prod-protection pre-reqs in etl and catalog (§3.5).
+- [ ] Run the ADR-0003 Phase 0 exit triggers (pilot exit-check, tooling spike); record outcomes in the ADR. Technical spike complete; description-diff review still requires human sign-off (see below).
+- [x] Spike (decision 7): pin one upstream `apache/ossie` commit for `core-spec/ossie-schema.json`, `ontology/ontology.json`, `ontology/mapping.json`, the `python/` package and `validation/validate.py`. Confirm: (a) the package loads both pilot files, (b) `validate.py` is callable as a library, (c) our emitter → package load round-trips equal, (d) whether the package models ontology documents. Any failure → fall back to `jsonschema` + own loader.
+- [x] Hand-write `historical_debt` `semantic.ossie.yaml` from its `table.yaml` + `cols.yaml` and compare diffs for reviewability (**pilot exit-check** input). Pilot written and compared; human verdict still open.
+- [ ] Hand-write `births_summary` `semantic.ossie.yaml` + `sdmx.yaml` (ABS pilot: exercises §3.7, the `additive_over` rule and the `AUS`/state hierarchy trap). Preliminary model and SDMX subset validate; additivity remains unasserted until data probes.
+- [x] SDMX coverage survey (read-only, public API) across every flow in `datasets.yml`: count Actual constraints (and how many are currently valid), parent codes, `CONTEXT`/`DEFAULT` annotations, categorisations, geography URIs, and configured `dsd_version` behind the dataflow's latest DSD. Sizes §3.7's value and surfaces shape variance before Phase 5.
+- [ ] Verify prod-protection pre-reqs in etl and catalog (§3.5). Checked: both `prod` GitHub environments have empty protection rules and no deployment branch policy; configure before production dispatch.
+
+2026-10-25 spike results: `semantics` commit `d31055b` contains the first pilots; the follow-up pins `apache/ossie@01a5488d840deda309aac68cc0b312c195369b8d` for Python, schemas and validator. Both models load and round-trip, and the callable validator passes. Upstream Python has no standalone ontology/mapping model, so those documents need schema-only validation. The 124-flow survey found zero request failures, 235 Actual constraints (124 currently valid), 51,400 per-flow parent-code entries, 114 DEFAULT and zero dataflow CONTEXT annotations, 124 categorisations, 17,910 per-flow ASGS URIs and no configured/latest DSD mismatches. Polaris importer `bc4eb5d051dcc1825d90aea7f0c2c4cf89015d3c` is a mapping reference only: OAuth, source names and unproven identifier keys differ from BigLake. Full findings and rerun instructions live in `semantics/README.md`.
 
 **Exit:** spike files validate; reviewability judged acceptable — i.e. none of ADR-0003's Phase 0 triggers fired.
 

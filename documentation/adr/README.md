@@ -61,3 +61,4 @@ they are not rules. Any ADR, `accepted` included, can be challenged:
 |---|---|---|
 | [0001](0001-abs-sdmx-canonical-subject-taxonomy.md) | ABS SDMX category scheme is the canonical subject taxonomy — fetch live, consistently, per repo | accepted |
 | [0002](0002-knowledge-document-entities-and-retrieval-plane-boundary.md) | Knowledge document entities in OpenMetadata; OM as control plane, not retrieval plane | accepted |
+| [0003](0003-ossie-semantic-layer-source-of-truth.md) | Apache Ossie, in a dedicated `semantics` repo, is the source of truth for semantic content; catalog keeps governance only | provisional |

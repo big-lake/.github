@@ -1,10 +1,49 @@
 # Implementation plan — Apache Ossie semantic layer
 
-- **Status:** finalised 2026-10-25 — all §7 decisions closed. **In implementation (as of 2026-10-30):** Phases 1–4 done on test, Phase 5 mostly done, Phases 6–9 not started; prod deliberately not set up. Current state per phase: see *Implementation status* under Phase 0 and the Phase 5 status line.
+- **Status:** finalised 2026-10-25 — all §7 decisions closed. **In implementation (as of 2026-10-30):** Phases 1–4 done on test, Phase 5 mostly done, Phases 6–9 not started; prod deliberately not set up. Current state per phase: see *Implementation status* under Phase 0 and the Phase 5 status line. **Course-corrected 2026-10-31:** read [§0](#0-course-correction-2026-10-31-review--read-before-resuming) before resuming — it reorders the remaining work.
 - **Decision record:** [org ADR-0003](../adr/0003-ossie-semantic-layer-source-of-truth.md) (provisional — revisited after implementation)
 - **Repos touched:** **semantics (new)**, catalog (refactor), etl, intelligence, infra, .github · follow-on: knowledge · unaffected: api, ui
 - **Code state verified against:** local working trees on 2026-10-25 — some repos had feature branches checked out, so re-check file/line refs against `main` before implementing
 - **Implementer notes:** read ADR-0003 first (ownership split + its *Revisit when* triggers gate Phase 0). Session context is in repo memory `ossie-semantic-layer-plan.md`. **No migration:** the initial implementation lands via a clean rebuild of all datasets and the etl + knowledge pipelines (§3.9) — don't build compatibility with existing data/OM state. Standing constraints: the user authorised commits, pushes and deploys on 2026-10-25 (semantics and infra `main` are protected: open a PR, the user merges); confirm before every destructive step of the rebuild and before any prod dispatch; infra changes only via Terraform + GHA; GitHub App / secrets are human-created in the GitHub UI (record in `SETUP.md`); `.github/TODO.md` must not be edited without explicit user confirmation (§9 rows not applied).
+
+---
+
+## 0. Course correction (2026-10-31 review) — read before resuming
+
+A review on 2026-10-31 (user-approved) found the **core design sound**: one-way repo contract, Ossie-free `projections/om.json`, a deterministic and testable ABS generator, fail-closed metrics, and no speculative ontology code. The risk is the **orchestration perimeter** (6 workflows ≈ 770 lines of mostly bash, a cross-repo dispatch/poll chain, 2 new SAs + a GitHub App on 3 repos, and this ≈ 11k-word plan) growing faster than delivered value: ≈ 1,750 lines of semantics Python and **zero runtime consumers** (no intelligence path; test OM is empty, so the projection patches nothing).
+
+The items below **take precedence over** the phase order in §4/§5 and the "Next, in order" list in repo memory `ossie-semantic-layer-plan.md` wherever they conflict. Work them in this order; confirm each with the user before starting.
+
+1. **Next build: the eval harness, then a consumer — not more producer work.**
+   - Build the Phase 7 eval oracle first (`evaluation/data_query_eval.py` via api `POST /query`, gold SQL, trap cases — design unchanged from Phase 7).
+   - Measure three arms: **(a)** today's OM path (baseline); **(b)** *grounding-only* — bundle text (descriptions, fields, metrics, synonyms) replaces OM schema in the `data_query` prompt, the LLM still writes SQL; **(c)** planner + compiler (intelligence ADR-0028).
+   - Build (b) before (c): it needs only the bundle loader, which (c) needs anyway.
+   - Decision rule: if (b) passes every trap case and matches (c) on accuracy, **stop** — no compiler, and Phases 7b/8/9 and their producer prerequisites are dropped. Expected outcome is that (b) misses some trap cases (a prompt advises, it doesn't enforce), which then justifies (c) with evidence.
+   - Amend intelligence ADR-0028 (still `proposed`) so grounding-only is a measured arm, not only a rejected alternative.
+   - Test OM is empty (Phase 6 not run): check whether eval cases can pin the dataset directly so the harness doesn't depend on OM discovery; if not, the harness waits on a test ingestion run, not on more semantics work.
+
+2. **Park the description drafter.** The merged code (`drafter_*`, `semantic-describe.yml`, `drafter-fetch-check.yml`) stays dormant: no extensions, no PDF parsing, no `drafter-test` live-run setup unless a description-less non-ABS table actually appears. Every non-ABS table is already described; for occasional new ones, use `.github/prompts/describe-dataset.prompt.md` with a human. The Phase 5 drafter exit check is **deferred**. semantics SEC-001..005 are unchanged.
+
+3. **Write an org ADR amending ADR-0003 decision 7: profile in the runner.**
+   - Changed assumption: decision 7 rejected runner-side lakehouse queries partly on "no CI data-plane access", but infra #64 has since granted `biglake-sa-semantics-{env}` lakehouse `objectViewer` + `legacyBucketReader`, so the drift workflow already has data-plane read.
+   - Proposal: `profile_dataset` (deterministic, our own SQL) runs inside `semantic-drift.yml` with DuckDB + `iceberg` against the lakehouse. That removes the dispatch/poll chain, the artifact hand-offs for profiles, and the Prefect VM dependency from the daily path.
+   - `run_probes` **stays in etl** by default: probe SQL derives from LLM-proposed expressions, and moving it would execute that SQL in a job holding WIF credentials. The amendment must justify any move explicitly.
+   - Check runner capacity (~7 GB on `ubuntu-latest` vs the VM's 12 GB limit) against the largest ABS table; ADR-0003's "low hundreds of small tables" assumption suggests it fits.
+   - If accepted, retiring etl's `profile_dataset` deployment is an etl change; confirm with the user. Status `proposed` until the user decides.
+
+4. **Small internal refactor in semantics (one PR, no behaviour change except the noted one).**
+   - New `src/semantics/model.py`: `ext()` (from the private `validate._ext`, imported by 6 modules), `set_ext()`, `physical_dataset()` (replaces 7 inline copies in `drift`/`fields`/`temporal` plus `drafter_inputs.physical_dataset`), `is_provenance()`, `TIME_TYPES`, `OSSIE_VERSION` (duplicated in `generators/abs.py` and `fields.py`).
+   - **Behaviour change to call out:** provenance detection differs today — `fields.py` strips a leading `_`, `generators/abs.py` doesn't. Unify on one rule.
+   - Move `catalog_scope` out of `validate.py` (e.g. `catalog.py`); move SDMX namespace constants and `fetch` out of the Phase 0 `sdmx_survey.py` script (e.g. `generators/sdmx_http.py`); remove `probes.py`'s import from `drafter_inputs`.
+   - Don't extend derived-dataset handling (none exist in `datasets/`); keep the existing validator rule.
+
+5. **Doc hygiene — at the next phase boundary, not mid-flight.**
+   - Once the first Phase 7 slice merges, collapse this plan into a short status list: ADR-0003 keeps the *why*, the semantics README keeps the *how*, and completed phase detail goes into git history.
+   - Fix doc/code drift: ADR-0003 and §3.1 say `semantic.override.yaml`; the code reads `datasets/abs/{dataset}/overrides.yaml` (no override files exist yet). Pick one: fix the code or §3.1, and note it in the item-3 amendment (ADR bodies are not rewritten).
+
+**On hold until the item-1 result:** Phases 7b, 8, 9; the `ai_context` drafter; new probe kinds (uniqueness, reconciliation); `additive_over` widening; relationship inference; the availability gap report. Add producer features only when a failing eval case needs them. ABS per-`MEASURE` metrics stay as they are; they currently act as named filters, so don't expand them until the compiler path shows value.
+
+**Unchanged:** the ownership split (ADR-0003 decisions 1–6, 8–10), the bundle/projection contract (§3.3, §3.8), the publish workflow, and the catalog governance-only refactor.
 
 ---
 

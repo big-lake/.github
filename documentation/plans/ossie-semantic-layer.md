@@ -543,9 +543,15 @@ Starts only after Phases 1–5 are merged and deployed. Test first, then prod. E
 | Compiler (§3.6) | new `app/services/semantic/compiler.py` |
 | Path: plan → compile → validate → `data_sql_ready`; fallback to raw path; `ENABLE_SEMANTIC_COMPILER` default off | `tools/data_query.py`, `orchestrator._data_path()` |
 | **Eval oracle (decided 2026-10-25):** generated and `gold_sql` both executed through the api's `POST /query` (same executor, validator, views and type mapping as production — the public contract, no DuckDB in intelligence, no reach into api internals). Default target: local api (`python run.py`) on the **test** lakehouse; `--api-base-url` for deployed apis (throttled — Cloud Armor 429s). Gold is SQL run in the same window, not stored numbers, so ABS revisions don't break cases. Comparison: equal column + row counts, rows as a multiset after canonical sort, numeric tolerance; a result at the 10,000-row cap is **incomparable**, never a pass; an api validator rejection of compiled SQL is a **fail**. Trap cases assert properties, not values (no `AUS` mixed with states, no stock summed over years, latest vintage only). Runs locally like today's evals; CI optional later. Replace the harness's "SCOPE BOUNDARY" docstring | `evaluation/data_query_eval.py`, `evaluation/test_set.json` |
-| Repo-local ADR: planner/compiler design | `intelligence/documentation/adr/00NN-…` |
+| Repo-local ADR: planner/compiler design | **Drafted 2026-10-30:** intelligence [ADR-0028](https://github.com/big-lake/intelligence/blob/main/documentation/adr/0028-semantic-query-plan-and-compiler.md) (`proposed`) |
 
 **Gate:** baseline (current OM path) measured first; enable compiler only if result accuracy ≥ baseline and every trap case passes.
+
+**Design (2026-10-30, intelligence ADR-0028, proposed).** The planner and compiler run inside `data_query`; any fallback goes to the existing raw path in the same request, and the output contract is unchanged. Plan v1 uses unqualified names for a single dataset (Ossie dataset-scoped metrics reference fields unqualified) and adds a `latest` filter op. `ai_context.instructions` is never passed to the planner. Hierarchy and code-membership rules are weaker than §3.6 until codelists ship, so the compiler refuses any metric with a non-empty `additive_over`. Prerequisites the design surfaced:
+- semantics: ABS generator marks SDMX dimension fields (`dimension: {is_time: false}`), code/label pairs (`label_of`), the unit field (`role: unit`), and the dimensions each metric fixes (`fixes: [measure_code]`). Without these the additivity and unit rules can't be enforced.
+- semantics: publish codelists (with parents) in the bundle. Decision 8 says SDMX facts are published, but `assemble.py` only publishes models today.
+- infra: `SEMANTIC_BUNDLE_URI` VM metadata (the bundle read grant already exists).
+- Phase 6: test OM is empty, so discovery finds nothing; build can start now, but end-to-end use and the gate wait for the rebuild.
 
 ### Phase 7b — cross-dataset (drill-across) metrics
 

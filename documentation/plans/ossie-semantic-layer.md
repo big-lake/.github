@@ -1,6 +1,6 @@
 # Implementation plan — Apache Ossie semantic layer
 
-- **Status:** finalised 2026-10-25 — all §7 decisions closed. **In implementation (as of 2026-10-30):** Phases 1–4 done on test, Phase 5 mostly done, Phases 6–9 not started; prod deliberately not set up. Current state per phase: see *Implementation status* under Phase 0 and the Phase 5 status line. **Course-corrected 2026-10-31:** read [§0](#0-course-correction-2026-10-31-review--read-before-resuming) before resuming — it reorders the remaining work.
+- **Status:** **On hold 2026-10-31 pending the eval workstream** (evaluation is being planned separately and will gate the next Ossie steps). Previously: finalised 2026-10-25 — all §7 decisions closed. **In implementation (as of 2026-10-30):** Phases 1–4 done on test, Phase 5 mostly done, Phases 6–9 not started; prod deliberately not set up. Current state per phase: see *Implementation status* under Phase 0 and the Phase 5 status line. **Course-corrected 2026-10-31:** read [§0](#0-course-correction-2026-10-31-review--read-before-resuming) before resuming — it reorders the remaining work.
 - **Decision record:** [org ADR-0003](../adr/0003-ossie-semantic-layer-source-of-truth.md) (provisional — revisited after implementation)
 - **Repos touched:** **semantics (new)**, catalog (refactor), etl, intelligence, infra, .github · follow-on: knowledge · unaffected: api, ui
 - **Code state verified against:** local working trees on 2026-10-25 — some repos had feature branches checked out, so re-check file/line refs against `main` before implementing

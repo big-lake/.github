@@ -21,6 +21,17 @@ The items below **take precedence over** the phase order in §4/§5 and the "Nex
    - Decision rule: if (b) passes every trap case and matches (c) on accuracy, **stop** — no compiler, and Phases 7b/8/9 and their producer prerequisites are dropped. Expected outcome is that (b) misses some trap cases (a prompt advises, it doesn't enforce), which then justifies (c) with evidence.
    - Amend intelligence ADR-0028 (still `proposed`) so grounding-only is a measured arm, not only a rejected alternative.
    - Test OM is empty (Phase 6 not run): check whether eval cases can pin the dataset directly so the harness doesn't depend on OM discovery; if not, the harness waits on a test ingestion run, not on more semantics work.
+   - **Eval requirements (added 2026-10-31, user-approved):**
+     - **Scoring = execution accuracy:** run generated and gold SQL through the local api `POST /query` and compare result sets (multiset, numeric tolerance; never compare SQL text). Reuse `e2e_eval.py`'s `_execute_sql` pattern; run the arms **in-process** like `data_query_eval.py` so local, undeployed code can be measured.
+     - **Gold set:** aim for 30–50 data cases with gold SQL, including trap cases (AUS + states, mixed measures/units in `obs_value`, stock summed over years, PBO revisions across releases). The agent may draft cases; **the user approves gold SQL**.
+     - **Held-out cases:** the user writes ~10 extra questions + gold SQL kept outside the agent-visible case file (e.g. a git-ignored `evaluation/holdout.json` supplied at run time). The agent never reads or tunes against them; report held-out scores separately.
+     - **Repeats:** each case runs k = 3 times per arm; report **pass^k** (all k runs correct) as the reliability metric, plus pass rate.
+     - **Fair baseline:** arm (a) needs a populated test OM; don't publish an arm comparison while (a) is failing on empty discovery.
+     - **Output:** JSON per run (source of truth: question, arm, per-repeat SQL, result rows, verdict + reason) under `evaluation/results/data/`, plus a generated markdown **comparison report** from any two runs (`--compare before.json after.json`):
+       - header: correct before → after, trap cases before → after, held-out before → after, number of regressions;
+       - cases ordered **regressions, fixed, still failing, unchanged-pass**;
+       - per case: question, gold result, pass counts (e.g. 0/3 → 3/3), the SQL as a fenced ` ```diff ` block (before `-`, after `+`), first ~10 result rows of each side in a small table, and the failure reason (value mismatch, trap rule broken, declined, api rejected, row cap reached = incomparable).
+     - Read per-case flips and pass^k rather than only totals; with ~40 cases a 2–3 case swing can be noise.
 
 2. **Park the description drafter.** The merged code (`drafter_*`, `semantic-describe.yml`, `drafter-fetch-check.yml`) stays dormant: no extensions, no PDF parsing, no `drafter-test` live-run setup unless a description-less non-ABS table actually appears. Every non-ABS table is already described; for occasional new ones, use `.github/prompts/describe-dataset.prompt.md` with a human. The Phase 5 drafter exit check is **deferred**. semantics SEC-001..005 are unchanged.
 

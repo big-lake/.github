@@ -9,6 +9,8 @@ I'm not a UI designer. I'll describe what I see or want in everyday words; you w
 
 What I want to change: ${input:change:Describe it in your own words (e.g. "the buttons feel too sharp", "make the top bar feel warmer", "the notebook cells look cramped", "I don't like the green")}
 
+Example class names or elements where I see it (optional): ${input:examples:Paste class names/HTML from DevTools, e.g. class="notebook", class="cell-toolbar", or leave blank}
+
 ---
 
 ## Ground rules
@@ -29,6 +31,7 @@ These live in `ui/src/styles/tokens.css`. Read the file for current values and l
 | "disabled things look too faded / not faded enough" | `--disabled-opacity` | All disabled controls |
 | "cramped", "too spacious", "buttons/inputs feel small" | `--control-pad-y/x`, `--control-pad-y/x-sm` | Padding in `.btn`, `.field` |
 | "cards/panels feel tight" | `--card-pad` | Card/panel padding |
+| "panels too close/far apart", "panels too sharp/round" | `--pane-gap`, `--pane-radius` | Gap and corners of workspace panels, tabs, sidebar rows, notebook cells |
 | "too sharp", "too rounded" | `--radius-sm/md/lg/xl/pill` | Corner roundness everywhere |
 | "text too small/large", "hierarchy unclear" | `--text-2xs` … `--text-3xl` | Font sizes everywhere |
 | "feels flat", "too heavy/floaty", "modal backdrop too dark" | `--shadow-*`, `--overlay-bg` | Elevation and backdrop |
@@ -47,11 +50,16 @@ If what I describe isn't controlled by any existing knob but is repeated across 
 Do this before proposing edits, and report it to me concisely:
 
 1. **Restate** what you think I mean in one sentence. If it's ambiguous (e.g. "the green" could be the brand colour, the top bar, or the chart colours), ask me one short question, offering the options.
-2. **Find where it appears.** Search `ui/src` for the relevant classes/tokens and open the running app (`http://localhost:5173`, dev server is normally up) to look at the real thing. Take a screenshot if useful.
-3. **Show a "what controls this" table** with these columns:
+2. **Treat my example classes as samples, not the full scope.** Each class or element I paste is one place I noticed the style; I probably haven't seen all of them. For each example:
+   - Find its CSS rule(s) in `ui/src` (`Select-String` for `\.class-name`, including scoped `<style>` blocks) and note which properties produce the look I described (colour, padding, radius, hover, etc.) and whether they already use a token/knob or a hardcoded value.
+   - Find **similar places**: other selectors that set the same properties with the same or near-identical values (e.g. the same padding, radius, hover background or `color-mix` tint), elements with sibling-style class names (`*-btn`, `*-card`, `*-header`, `*-item`, `*-tab`), and shared classes (`.btn`, `.field`, `.card`, `.chip`) that already cover the same role.
+   - Group the results: **(a)** already controlled by the same knob/token as my example (will change automatically), **(b)** looks the same but hardcoded locally (needs migrating onto a knob/shared class to change together), **(c)** looks similar but may be intentionally different (ask me).
+   - If no examples were given, infer likely candidates from my description and say which you picked.
+3. **Find where it appears.** Open the running app (`http://localhost:5173`, dev server is normally up) and look at my examples and the similar places you found. Take a screenshot if useful; mark which are examples and which are your discoveries.
+4. **Show a "what controls this" table** with these columns:
    | Thing I'll see change | Controlled by (token / shared class / component) | Where it's defined | Everything else it affects |
-   Use the real token and class names. "Everything else it affects" is the important column: count roughly how many components/views use a token or class (`grep` for `var(--token)` / class usage) and name the notable ones in words ("every button", "all modals", "notebook cells", "charts").
-4. **Say which layer is right** and why: a style-guide knob or colour token (changes the look everywhere), a shared class (changes every use of that component), or one component only. Flag the trade-off if I only want a local change but the cleanest fix is global, or vice versa. Prefer an existing knob; if none fits, propose a new one (see above).
+   Use the real token and class names. "Everything else it affects" is the important column: count roughly how many components/views use a token or class (`grep` for `var(--token)` / class usage) and name the notable ones in words ("every button", "all modals", "notebook cells", "charts"). Add a short list of the similar places from step 2 under the table, grouped (a)/(b)/(c).
+5. **Say which layer is right** and why: a style-guide knob or colour token (changes the look everywhere), a shared class (changes every use of that component), or one component only. Flag the trade-off if I only want a local change but the cleanest fix is global, or vice versa. Prefer an existing knob; if none fits, propose a new one (see above). If group (b) is large, recommend migrating those places onto the knob/shared class so the style changes together, and tell me how many places that touches.
 
 ## Step 2 — Offer options
 
@@ -84,7 +92,7 @@ If the change needs a shared class or component edit that tokens can't express (
 
 ## Step 6 — Report back in plain language
 
-- What I'll now see differently, and where.
+- What I'll now see differently, and where (my example classes plus the similar places you found and changed).
 - Which tokens/classes were changed, and what else shifted as a side effect.
 - Anything that still looks old because a component has its own local styling (list it; offer to migrate it onto the shared class).
 - Update `ui/README.md` "Styling & branding" if tokens or shared classes were added, renamed or removed.

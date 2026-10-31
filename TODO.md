@@ -1,6 +1,6 @@
 ﻿# BigLake Platform — Org-Wide TODO
 
-Last updated 2026-08-22. This is the single source of truth for cross-repo planning. Repo-local TODOs should only cover repo-internal task tracking; anything that crosses repo boundaries lives here.
+Last updated 2026-10-31. This is the single source of truth for cross-repo planning. Repo-local TODOs should only cover repo-internal task tracking; anything that crosses repo boundaries lives here.
 
 **Intelligence RAG-quality work has its own live register — don't duplicate it here.** `intelligence/evaluation/results/OPPORTUNITIES.md` (open/in-progress rows) + `OPPORTUNITIES-ARCHIVE.md` (closed rows) is the authoritative, actively-maintained backlog for retrieval/routing/generation/eval quality opportunities, produced by the `/intelligence-scan` + `/intelligence-improve` loop. This file only summarises the handful of rows that are cross-repo or currently blocked on a human decision — see "Intelligence quality backlog" below.
 
@@ -17,6 +17,8 @@ Last updated 2026-08-22. This is the single source of truth for cross-repo plann
 | **ui** | Live end-to-end against `api` for catalog, knowledge, query, chat tabs, notebooks (CRUD + publish + share), agent. Remaining mocked surfaces: Sponsorship/Stripe checkout, metadata-only "donate to unlock" flow, dataset lineage view (API exists, no UI), knowledge-document PDF preview. |
 | **knowledge** | Production through indexing (Flows 1–4) plus a `search_summaries` retrieval tier (OPP-027, done). `search_questions` tier designed but not built (OPP-029, open). Eval harness built; blocked on a human curating the golden set (OPP-005). |
 | **intelligence** | Chat + agent surfaces live: hybrid retrieval + Cohere rerank + Gemini synthesis, real `thought` SSE events, gated query decomposition (multi-artifact chat responses, phase 2a), class-based Pro/Flash model routing, per-turn LLM budget, classifier confidence from logprobs. See `evaluation/results/OPPORTUNITIES.md` for the live quality backlog. |
+| **semantics** | **On hold (2026-10-31)** pending the evaluation workstream. Bundles publish to test; generators, drift and evidence flows built. See plan `documentation/plans/ossie-semantic-layer.md` §0. |
+| **evaluation** | New repo (2026-10-31), phase 0: skeleton + ADR-0001 done; `/health` commit reporting in review (api#1, intelligence#2). |
 
 ---
 
@@ -54,6 +56,21 @@ Not evidenced anywhere in recent work — treat as still open until confirmed ot
 - [ ] Deploy `api` + `ui` + `intelligence` to prod via GHA.
 - [ ] Smoke-test end-to-end in prod: login → catalog browse → query → chat.
 - [ ] See `environment-copy-plan` repo memory for the (currently undecided) question of copying expensive-to-recompute artefacts (embeddings, enriched chunks) test→prod vs. re-running pipelines from scratch. No code written yet — needs a decision before Stage C if re-running everything from raw landing files in prod is too slow/costly.
+
+---
+
+## Evaluation framework (new workstream, 2026-10-31)
+
+Public, outside-in measurement of answer quality; the gate for intelligence and semantic-layer changes. Plan: [`evaluation/documentation/plans/evaluation-framework.md`](https://github.com/big-lake/evaluation/blob/main/documentation/plans/evaluation-framework.md).
+
+- [ ] **Phase 0 — foundations.** Skeleton + ADR-0001 done; api + intelligence `/health` report `commit`/`dirty` (api#1, intelligence#2); move `e2e_eval.py` + `intelligence:wip/eval-gold-drafts` into the repo; enable Claude Opus 5.5 on Vertex (human). (`evaluation`, `api`, `intelligence`)
+- [ ] **Phase 1 — data eval** on ABS datasets with methodology links (`config/datasets.yaml`), gold from ABS published figures, baseline run on test. (`evaluation`)
+- [ ] **Phase 2 — official runs in CI** (eval service account + WIF + IAP). (`evaluation`, `infra`)
+- [ ] **Phase 3 — public site** on GitHub Pages; **phase 4** knowledge eval; **phase 5** optional Langfuse trial. (`evaluation`)
+
+## Semantic layer (Ossie) — on hold
+
+- [ ] Paused 2026-10-31 until the evaluation baseline exists; resumes as a measured variant (grounding-only, then compiler). State and resume notes: [plan](documentation/plans/ossie-semantic-layer.md) §0; intelligence ADR-0028 stays `proposed`. (`semantics`, `intelligence`)
 
 ---
 

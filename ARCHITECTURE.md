@@ -15,6 +15,8 @@ biglake/
 ├── ui/              # Frontend web application
 ├── knowledge/       # AI knowledge base ingestion & processing
 ├── intelligence/    # RAG orchestration & agent logic
+├── semantics/       # Semantic layer (Ossie models) — descriptions, metrics, structure
+├── evaluation/      # Outside-in answer-quality evaluation + public results site
 └── .github/         # Org-level docs, architecture, Copilot instructions
 ```
 
@@ -95,6 +97,24 @@ biglake/
 - Decoupled from knowledge ingestion (consumes what `knowledge` produces)
 
 **Principle:** Consumes knowledge, reasons over it. Separate from ingestion by design.
+
+### semantics
+
+**Role:** Source of truth for semantic content ([ADR-0003](documentation/adr/0003-ossie-semantic-layer-source-of-truth.md)) — currently **on hold** pending the evaluation workstream.
+
+- Apache Ossie model per dataset: descriptions, fields, temporal coverage, metrics; ABS SDMX extracts and codelists
+- Publishes a versioned bundle to GCS; catalog projects its descriptions into OpenMetadata
+- Bot-authored, human-reviewed PRs; never writes to OM directly
+
+### evaluation
+
+**Role:** Measures answer quality from the outside and publishes it.
+
+- Calls the running services over HTTP only (intelligence chat/agent, api `/query`, `/health`) — never imports their code
+- Gold answers from independent truth (ABS published figures, source documents); records the exact commits under test
+- Official runs in GitHub Actions; results published as a static, read-only public site
+
+**Principle:** The eval sits outside everything it measures. Plan: `evaluation/documentation/plans/evaluation-framework.md`.
 
 ### .github
 

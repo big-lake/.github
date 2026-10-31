@@ -15,6 +15,7 @@ A review on 2026-10-31 (user-approved) found the **core design sound**: one-way 
 The items below **take precedence over** the phase order in §4/§5 and the "Next, in order" list in repo memory `ossie-semantic-layer-plan.md` wherever they conflict. Work them in this order; confirm each with the user before starting.
 
 1. **Next build: the eval harness, then a consumer — not more producer work.**
+   - **Moved (2026-10-31):** the eval is now its own workstream in `big-lake/evaluation` — plan [`evaluation-framework.md`](https://github.com/big-lake/evaluation/blob/main/documentation/plans/evaluation-framework.md) supersedes the eval details in this item. What stays here: the arms (a) baseline, (b) grounding-only, (c) compiler, measured by that eval when Ossie resumes.
    - Build the Phase 7 eval oracle first (`evaluation/data_query_eval.py` via api `POST /query`, gold SQL, trap cases — design unchanged from Phase 7).
    - Measure three arms: **(a)** today's OM path (baseline); **(b)** *grounding-only* — bundle text (descriptions, fields, metrics, synonyms) replaces OM schema in the `data_query` prompt, the LLM still writes SQL; **(c)** planner + compiler (intelligence ADR-0028).
    - Build (b) before (c): it needs only the bundle loader, which (c) needs anyway.

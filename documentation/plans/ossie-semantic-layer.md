@@ -1,6 +1,6 @@
 # Implementation plan — Apache Ossie semantic layer
 
-- **Status:** **On hold 2026-10-31 pending the eval workstream** (evaluation is being planned separately and will gate the next Ossie steps). Previously: finalised 2026-10-25 — all §7 decisions closed. **In implementation (as of 2026-10-30):** Phases 1–4 done on test, Phase 5 mostly done, Phases 6–9 not started; prod deliberately not set up. Current state per phase: see *Implementation status* under Phase 0 and the Phase 5 status line. **Course-corrected 2026-10-31:** read [§0](#0-course-correction-2026-10-31-review--read-before-resuming) before resuming — it reorders the remaining work.
+- **Status:** **On hold 2026-10-31 pending the eval workstream** (evaluation is being planned separately and will gate the next Ossie steps; **eval framework and baseline now available 2026-11-01 — see §0.1**). Previously: finalised 2026-10-25 — all §7 decisions closed. **In implementation (as of 2026-10-30):** Phases 1–4 done on test, Phase 5 mostly done, Phases 6–9 not started; prod deliberately not set up. Current state per phase: see *Implementation status* under Phase 0 and the Phase 5 status line. **Course-corrected 2026-10-31:** read [§0](#0-course-correction-2026-10-31-review--read-before-resuming) before resuming — it reorders the remaining work.
 - **Decision record:** [org ADR-0003](../adr/0003-ossie-semantic-layer-source-of-truth.md) (provisional — revisited after implementation)
 - **Repos touched:** **semantics (new)**, catalog (refactor), etl, intelligence, infra, .github · follow-on: knowledge · unaffected: api, ui
 - **Code state verified against:** local working trees on 2026-10-25 — some repos had feature branches checked out, so re-check file/line refs against `main` before implementing
@@ -63,6 +63,20 @@ The items below **take precedence over** the phase order in §4/§5 and the "Nex
 **On hold until the item-1 result:** Phases 7b, 8, 9; the `ai_context` drafter; new probe kinds (uniqueness, reconciliation); `additive_over` widening; relationship inference; the availability gap report. Add producer features only when a failing eval case needs them. ABS per-`MEASURE` metrics stay as they are; they currently act as named filters, so don't expand them until the compiler path shows value.
 
 **Unchanged:** the ownership split (ADR-0003 decisions 1–6, 8–10), the bundle/projection contract (§3.3, §3.8), the publish workflow, and the catalog governance-only refactor.
+
+### 0.1 Eval framework and baseline now available (2026-11-01)
+
+The eval workstream ([`big-lake/evaluation`](https://github.com/big-lake/evaluation), [plan](https://github.com/big-lake/evaluation/blob/main/documentation/plans/evaluation-framework.md)) is built, so the item-1 gate can be measured. Resume Ossie work from it, not from the producer list.
+
+- **What exists:** execution-accuracy scoring through the api `POST /query` against ABS-published gold figures (verified by code), trap checks, pass^k over 3 repeats, weekly official runs from CI against test, a public results site (https://big-lake.github.io/evaluation/) and an optional Langfuse mirror. Every run records the intelligence, api and evaluation commits tested, and compare shows regressions and fixes per case.
+- **Baseline = arm (a), today's OM path** (official run 41250055133, 2026-11-01, intelligence `b7d8e6f`, api `eb6557b`, run record `arm: om`): 81 runnable cases × 3 → 19 correct on every repeat (23%), 17 flaky, 43 fail, 2 invalid, 27 trap violations. Run-to-run noise on identical commits is about ±4 cases, so read per-case flips, not totals.
+- **Baseline caveat — what it does and doesn't include:** the runtime pieces (bundle loader, grounding, planner, compiler, `additive_over`/unit/hierarchy rules) are **not** in `b7d8e6f`, so the baseline is a clean "before" for arms (b) and (c). But descriptions and temporal coverage reach OM from the semantics projection (Phase 3), so OM text on test may already include semantics-owned and ABS-enriched text. Before claiming an Ossie gain, check what OM text was live during the baseline; to isolate runtime effects from description effects, keep OM text fixed across arms.
+- **How to use it for the gate:**
+  1. Implement arm (b) and (c) behind flags, deploy to test, run the data suite officially (`run-eval.yml` dispatch, label the arm), and compare against run 41250055133.
+  2. Apply the item-1 decision rule to per-case flips and the trap cases, not to totals.
+  3. Add an arm field to the run record when (b) lands (the record has `arm`; the runner currently only emits `om`) so runs are comparable by arm.
+- **Before tuning against the case set:** hold back a generated batch (evaluation plan §11 U1) and record models/flags in `/health` (U2), or the gate will be measured on cases that were tuned against.
+- **Known coverage gaps are Ossie-relevant:** 5 rejected cases need etl/lakehouse work (evaluation plan §11 U5), and the failure causes in the baseline (wrong code or dimension choice, hierarchy double-counting, OM schema lookup timeouts) are what the compiler rules target — use them as the first trap-case candidates.
 
 ---
 

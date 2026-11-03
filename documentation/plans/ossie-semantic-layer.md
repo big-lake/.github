@@ -75,7 +75,7 @@ The eval workstream ([`big-lake/evaluation`](https://github.com/big-lake/evaluat
   1. Implement arm (b) and (c) behind flags, deploy to test, run the data suite officially (`run-eval.yml` dispatch, label the arm), and compare against run 41250055133.
   2. Apply the item-1 decision rule to per-case flips and the trap cases, not to totals.
   3. Add an arm field to the run record when (b) lands (the record has `arm`; the runner currently only emits `om`) so runs are comparable by arm.
-- **Before tuning against the case set:** hold back a generated batch (evaluation plan §11 U1) and record models/flags in `/health` (U2), or the gate will be measured on cases that were tuned against.
+- **Before tuning against the case set:** models/flags are now recorded in `/health` (evaluation plan §11 U2, done 2026-11-01). The held-out batch (U1) is **deferred** (user, 2026-11-01) — so arm results are measured on visible cases: no case-specific fixes (few-shots, hard-coded codes from case questions), and judge the gate on per-case flips and trap cases. Revisit U1 if arm work starts targeting individual failing cases.
 - **Known coverage gaps are Ossie-relevant:** 5 rejected cases need etl/lakehouse work (evaluation plan §11 U5), and the failure causes in the baseline (wrong code or dimension choice, hierarchy double-counting, OM schema lookup timeouts) are what the compiler rules target — use them as the first trap-case candidates.
 
 ---

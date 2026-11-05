@@ -62,7 +62,7 @@ BigLake is a GCP-hosted data platform for Australian government datasets. See `A
 - **documentation/adr/** — decisions (why X over Y, alternatives, consequences)
 - **ADRs are reasoning, not rules.** Don't drop a design option just because an ADR ruled it out. If a rejected option now looks better, or an ADR's Assumptions/Context no longer hold, say so explicitly — name the ADR, state what changed, and propose amending or superseding it. Status vocabulary and challenge process: `documentation/adr/README.md` in this repo.
 - **SETUP.md** — All manual steps to deploy the repo to a new GCP environment. Keep updated when adding secrets, variables, or infrastructure dependencies
-- **DEVELOPMENT.md** (in `.github` repo) — Cross-repo local dev guide. Update it when any service's local setup changes (new env var, new prerequisite, changed port)
+- **DEVELOPMENT.md** (in `engineering` repo) — Cross-repo local dev guide. Update it when any service's local setup changes (new env var, new prerequisite, changed port)
 - In-file comments explain *why*, not *what*
 - See `etl/.github/instructions/documentation.instructions.md` for the full documentation standard (applies org-wide)
 

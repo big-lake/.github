@@ -3,7 +3,7 @@ description: "Modify an existing API endpoint (request/response shape, query par
 agent: "agent"
 ---
 
-Modify an existing API endpoint. The risk here is **silent breakage of the UI** when the response shape changes. This prompt enforces the cross-repo loop in [.github/DEVELOPMENT.md](../DEVELOPMENT.md#cross-repo-workflow--the-contract-first-loop).
+Modify an existing API endpoint. The risk here is **silent breakage of the UI** when the response shape changes. This prompt enforces the cross-repo loop in [engineering/DEVELOPMENT.md](https://github.com/big-lake/engineering/blob/main/DEVELOPMENT.md#cross-repo-workflow--the-contract-first-loop).
 
 Before starting, confirm with the user:
 - Which endpoint (method + path)

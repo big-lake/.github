@@ -3,7 +3,7 @@ description: "Add a new API endpoint end-to-end across the api and ui repos usin
 agent: "agent"
 ---
 
-Add a new API endpoint following the **contract-first 7-step loop** documented in [.github/DEVELOPMENT.md](../DEVELOPMENT.md#cross-repo-workflow--the-contract-first-loop).
+Add a new API endpoint following the **contract-first 7-step loop** documented in [engineering/DEVELOPMENT.md](https://github.com/big-lake/engineering/blob/main/DEVELOPMENT.md#cross-repo-workflow--the-contract-first-loop).
 
 Before starting, confirm with the user:
 - Endpoint method + path (e.g. `GET /catalog/datasets/{id}/columns`)

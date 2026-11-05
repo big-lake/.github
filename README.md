@@ -5,7 +5,7 @@ Org-level documentation, Copilot instructions, and shared configuration for the 
 ## Contents
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Platform architecture: repo responsibilities, data flow, design principles
-- [DEVELOPMENT.md](DEVELOPMENT.md) — How to run the platform locally (no GCP required)
+- [DEVELOPMENT.md](https://github.com/big-lake/engineering/blob/main/DEVELOPMENT.md) — How to run the platform locally (private `engineering` repo)
 - [CONTRIBUTING.md](CONTRIBUTING.md) — Contribution guide and coding conventions
 - [COPYRIGHT](COPYRIGHT) — Copyright and usage terms
 - [TODO.md](TODO.md) — Cross-repo roadmap and current state

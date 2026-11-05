@@ -51,7 +51,7 @@ External Sources (ATO, DSS, PBO, ...)
 
 ## Getting started
 
-To run the API and UI locally (no GCP required): see [DEVELOPMENT.md](.github/blob/main/DEVELOPMENT.md).
+To run the API and UI locally (no GCP required): see `DEVELOPMENT.md` in the private `engineering` repo.
 
 For deploying a new GCP environment, see the `SETUP.md` in each repo.
 

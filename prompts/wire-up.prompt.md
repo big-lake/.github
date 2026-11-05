@@ -123,7 +123,7 @@ confirm before writing any code.
 
 ## Step 3 — Implement end-to-end
 
-Follow the contract-first loop from `DEVELOPMENT.md`. Implement in this order.
+Follow the contract-first loop from `engineering/DEVELOPMENT.md`. Implement in this order.
 
 ### 3a. API contract first (if API changes are involved)
 

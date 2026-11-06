@@ -11,13 +11,15 @@ State: compiler + grounding ON on test; eval **73/81 pass^3**, 0 trap violations
 | # | Item | Status |
 |---|---|---|
 | 1 | Collapse this plan | done 2026-11-07 |
-| 2 | `semantics/src/semantics/model.py` refactor (`validate._ext` has 7 importers; unify provenance rule: `fields.py` strips a leading `_`, `generators/abs.py` does not) | done (semantics #45) |
-| 3 | ADR amending org ADR-0003 decision 7: profile in the runner (removes etl dispatch/poll chain; `semantics.integrity` and `profile_all` move with it). Also settle `semantic.override.yaml` (ADR/docs) vs `datasets/abs/{dataset}/overrides.yaml` (code). Before any prod Terraform | ADR-0004 drafted (proposed); needs the DuckDB-on-runner GCS auth spike |
-| 4 | Steers 7–8: integrity assertions in etl bronze (fail loudly); profile freshness (`profiled_at` in bundle or ingestion-coupled profiling) | after 3 |
-| 5 | Dormant drafter: **delete** (user, 2026-11-07); mark semantics SEC-001..005 superseded; restore trigger = a description-less non-ABS table that `describe-dataset.prompt.md` + a human cannot cover | done (semantics #46) |
-| 6 | DQ-0085/87/89 (wrong `index_code` on `abs.itpi_exp`): time-boxed, general mechanism only, stop rule (steer 4); stopping at 73 is a success | after 4 |
-| 7 | Full-history re-ingest on test of `abs.merch_exp`, `abs.merch_imp`, `abs.pop_proj_region` (user go-ahead 2026-11-07; check worker memory first; then `profile_all`, check `semantics.integrity`, merge bot PR, rerun eval) | approved |
+| 2 | `semantics.model` refactor | done ([semantics #45](https://github.com/big-lake/semantics/pull/45)) |
+| 3 | ADR amending ADR-0003 decision 7: profile in the runner (removes etl dispatch/poll chain). Must land before any prod Terraform | [ADR-0004](../adr/0004-profile-in-the-semantics-runner.md) `proposed`. **Blocked on a spike:** can DuckDB on a GitHub runner read the lakehouse with the semantics SA's ADC token (etl uses HMAC keys)? Options in the ADR. Then: implement `semantics.profile`, retire etl `profile_dataset` + `run-evidence.yml` (confirm with user), drop the `etl` App Actions-write grant |
+| 4 | Drafter deleted | done ([semantics #46](https://github.com/big-lake/semantics/pull/46)); unused SA `biglake-sa-sem-draft-{env}` still in infra: remove via an infra PR |
+| 5 | Steer 7: bronze integrity assertions | done ([etl #40](https://github.com/big-lake/etl/pull/40), deployed to test). `semantics.integrity` stays as a cross-check until ADR-0004 lands, then retire it |
+| 6 | Steer 8: profile freshness | stamp done ([semantics #47](https://github.com/big-lake/semantics/pull/47), [intelligence #22](https://github.com/big-lake/intelligence/pull/22), deployed to test). `profiled_at` appears in bundle files only after the next profile run (`profile_all=true` refreshes all). Ingestion-coupled profiling is a follow-up after ADR-0004 |
+| 7 | Full-history re-ingest on test of `abs.merch_exp`, `abs.merch_imp`, `abs.pop_proj_region` | **approved by user, not started.** Blocked: `gcloud auth login` expired (needs the user, interactive). First a read-only worker memory check on `biglake-prefect-test` (`free -m`; MERCH_EXP once SIGKILLed the worker), then reopen the Prefect tunnel + `PREFECT_API_URL`, create `ingest-abs` runs. Then `semantic-drift.yml` `profile_all=true`, check `semantics.integrity` shows none of these, merge the bot PR, publish, wait ~5 min, one eval |
+| 8 | DQ-0085/87/89 (wrong `index_code` on `abs.itpi_exp`) | user chose a time-boxed general-mechanism investigation, **after** items 3 and 7. Stop rule (steer 4): no general mechanism quickly means record as a known limitation and stop at 73 |
 
+Eval rule: one change-class per run. Items 6 and 7 change bundle data, so run them as separate evals or accept one combined data-only run labelled as such.
 ## Phase status
 
 | Phase | State |
@@ -27,7 +29,7 @@ State: compiler + grounding ON on test; eval **73/81 pass^3**, 0 trap violations
 | 2 Foundation + seed | Done (test) |
 | 3 Catalog governance-only | Done |
 | 4 etl evidence flows | Done (test); `run_probes` has no caller |
-| 5 Generators + drift | Done; drafter built, dormant (to be deleted, item 5) |
+| 5 Generators + drift | Done; drafter deleted 2026-11-07 |
 | 6 Clean rebuild | Not run; not needed for the eval gate |
 | 7 intelligence | Done on test (grounding + compiler ON); see ADR-0028 *Results* |
 | 7b Drill-across / roll-ups | On hold; named cases DQ-0030/31/33/76, DH-0001-3 |
@@ -42,7 +44,7 @@ Spike complete (2026-10-25): both pilots load and round-trip in the pinned upstr
 
 - Visible-case eval only (held-out on hold); run-to-run noise about ±4 cases; read per-case flips.
 - Remaining fails: roll-ups (7b), DQ-0046 (`IB` vs `IM`, defensible), DQ-0085/87/89 (label choice).
-- etl BUG-0001 latent (financial year and month share a shape); `abs.merch_exp`/`merch_imp`/`pop_proj_region` hold old duplicates until item 7.
+- etl BUG-0001 latent (financial year and month share a shape); `abs.merch_exp`/`merch_imp`/`pop_proj_region` hold old duplicates until item 7. Bronze now fails on mixed flows or stacked snapshots, but cannot see existing duplicates.
 - A code or period newly present in data is refused or invisible until the next profile run (steer 8).
 
 ## Gotchas

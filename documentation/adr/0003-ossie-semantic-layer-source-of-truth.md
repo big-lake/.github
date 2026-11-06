@@ -8,6 +8,8 @@
 
 > Phase 0 spike and survey results are recorded in the [implementation plan](../plans/ossie-semantic-layer.md#phase-0--decide-and-spike-no-production-change). The pilot reviewability verdict and production environment protections remain open; this ADR remains provisional.
 
+> Decision 7 (evidence via etl dispatch) is challenged by [ADR-0004](0004-profile-in-the-semantics-runner.md) (proposed): profiling moves into the semantics runner.
+
 ## Context
 
 BigLake joins structured data (Iceberg) and unstructured knowledge

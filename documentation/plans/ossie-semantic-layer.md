@@ -11,10 +11,10 @@ State: compiler + grounding ON on test; eval **73/81 pass^3**, 0 trap violations
 | # | Item | Status |
 |---|---|---|
 | 1 | Collapse this plan | done 2026-11-07 |
-| 2 | `semantics/src/semantics/model.py` refactor (`validate._ext` has 7 importers; unify provenance rule: `fields.py` strips a leading `_`, `generators/abs.py` does not) | next |
-| 3 | ADR amending org ADR-0003 decision 7: profile in the runner (removes etl dispatch/poll chain; `semantics.integrity` and `profile_all` move with it). Also settle `semantic.override.yaml` (ADR/docs) vs `datasets/abs/{dataset}/overrides.yaml` (code). Before any prod Terraform | after 2 |
+| 2 | `semantics/src/semantics/model.py` refactor (`validate._ext` has 7 importers; unify provenance rule: `fields.py` strips a leading `_`, `generators/abs.py` does not) | done (semantics #45) |
+| 3 | ADR amending org ADR-0003 decision 7: profile in the runner (removes etl dispatch/poll chain; `semantics.integrity` and `profile_all` move with it). Also settle `semantic.override.yaml` (ADR/docs) vs `datasets/abs/{dataset}/overrides.yaml` (code). Before any prod Terraform | ADR-0004 drafted (proposed); needs the DuckDB-on-runner GCS auth spike |
 | 4 | Steers 7–8: integrity assertions in etl bronze (fail loudly); profile freshness (`profiled_at` in bundle or ingestion-coupled profiling) | after 3 |
-| 5 | Dormant drafter: **delete** (user, 2026-11-07); mark semantics SEC-001..005 superseded; restore trigger = a description-less non-ABS table that `describe-dataset.prompt.md` + a human cannot cover | decided |
+| 5 | Dormant drafter: **delete** (user, 2026-11-07); mark semantics SEC-001..005 superseded; restore trigger = a description-less non-ABS table that `describe-dataset.prompt.md` + a human cannot cover | done (semantics #46) |
 | 6 | DQ-0085/87/89 (wrong `index_code` on `abs.itpi_exp`): time-boxed, general mechanism only, stop rule (steer 4); stopping at 73 is a success | after 4 |
 | 7 | Full-history re-ingest on test of `abs.merch_exp`, `abs.merch_imp`, `abs.pop_proj_region` (user go-ahead 2026-11-07; check worker memory first; then `profile_all`, check `semantics.integrity`, merge bot PR, rerun eval) | approved |
 

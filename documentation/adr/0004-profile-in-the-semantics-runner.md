@@ -1,6 +1,6 @@
 # ADR-0004 — Profile in the semantics runner, not through the etl dispatch chain
 
-- **Status:** provisional (2026-11-08; spike passed locally, first CI run as the semantics SA still to confirm)
+- **Status:** accepted (2026-11-08; implemented in semantics #49/#50 and etl 0c30e8f, proven in CI as the semantics SA)
 - **Date:** 2026-11-07
 - **Amends:** [ADR-0003](0003-ossie-semantic-layer-source-of-truth.md) decision 7 (the "Rejected: the GHA runner querying the lakehouse directly" bullet and the dispatch-through-etl trigger path). Decisions 1–6 and 8–10 are unchanged.
 - **Tags:** semantics, etl, evidence, profiling, ci, perimeter
@@ -45,7 +45,7 @@ What changed:
 
 - Positive: removes a cross-repo dispatch chain, one App permission and the VM dependency from a daily job; prod Terraform no longer has to replicate the grant; profiles and their freshness live next to the code that consumes them; the incremental-list duplication disappears.
 - Negative: DuckDB-on-runner is a second place that reads silver (a bug in one, e.g. the `_shapes()` format logic, now needs fixing in two while etl's flow still exists, until item 5); runner memory is a hard ceiling (about 7 GB) instead of the VM's configurable limit.
-- Follow-on: etl change to retire `profile_dataset`/`run-evidence.yml` (item 5); etl bronze integrity assertions (item 7); bundle `profiled_at` stamp and a grounding line (item 6); infra: remove the `etl` App permission and (separately) the unused drafter SA.
+- Follow-on, all done 2026-11-08: etl `profile_dataset` and its `run-evidence.yml` option retired (the workflow and `run_probes` stay); etl bronze integrity assertions; bundle `profiled_at` stamp and grounding line; unused drafter SA removed (infra #77). **Still open:** the `etl` App Actions-write permission stays while `semantic-verify.yml` dispatches `run_probes`; dropping it needs verify moved off etl (separate decision).
 
 ## Assumptions
 

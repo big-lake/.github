@@ -2,7 +2,7 @@
 
 **Status: completed 2026-11-08.** Remaining work is under [Future work](#future-work); prod rollout is tracked in `engineering/go-to-prod.md`.
 
-- **Why:** [org ADR-0003](../adr/0003-ossie-semantic-layer-source-of-truth.md) (provisional). **How:** `semantics/README.md`. **Runtime:** intelligence [ADR-0028](https://github.com/big-lake/intelligence/blob/main/documentation/adr/0028-semantic-query-plan-and-compiler.md) (accepted 2026-11-08). **Eval:** [big-lake/evaluation](https://github.com/big-lake/evaluation).
+- **Why:** [org ADR-0003](../adr/0003-ossie-semantic-layer-source-of-truth.md) (accepted 2026-11-08). **How:** `semantics/README.md`. **Runtime:** intelligence [ADR-0028](https://github.com/big-lake/intelligence/blob/main/documentation/adr/0028-semantic-query-plan-and-compiler.md) (accepted 2026-11-08). **Eval:** [big-lake/evaluation](https://github.com/big-lake/evaluation).
 - **Collapsed 2026-11-07** (§0.2 steer 6): the earlier full plan (phases, contracts, §0 review, dated resume blocks) is in git history of this file. Do not append dated blocks; replace "Final state".
 - **Standing constraints:** `.github/TODO.md` is not edited without user confirmation; infra changes only via Terraform + GHA; `semantics` and `infra` `main` are protected (PR, user merges); confirm before anything prod or destructive; never `git add -A` in semantics.
 

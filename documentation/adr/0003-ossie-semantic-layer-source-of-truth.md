@@ -1,14 +1,14 @@
 # ADR-0003 — Apache Ossie, in a dedicated `semantics` repo, is the source of truth for semantic content; catalog keeps governance only
 
-- **Status:** provisional (2026-10-25) — to be revisited after implementation; see *Revisit when*
+- **Status:** accepted (2026-11-08); decision 7 amended by [ADR-0004](0004-profile-in-the-semantics-runner.md)
 - **Date:** 2026-10-25
 - **Tags:** semantics, ontology, catalog, intelligence, openmetadata, cross-repo, curation, new-repo
 - **Amends (on acceptance):** catalog ADR-0003 (curation in YAML — descriptions and `temporal` leave catalog), catalog ADR-0008 (SDMX-generated curation — ABS descriptions are generated in `semantics`)
 - **Implementation plan:** [ossie-semantic-layer.md](../plans/ossie-semantic-layer.md)
 
-> Phase 0 spike and survey results are recorded in the [implementation plan](../plans/ossie-semantic-layer.md#phase-0--decide-and-spike-no-production-change). The pilot reviewability verdict and production environment protections remain open; this ADR remains provisional.
+> Accepted 2026-11-08 on completion of the [implementation plan](../plans/ossie-semantic-layer.md) (user). Pilot reviewability verdict closed; production environment protections are a step in `engineering/go-to-prod.md`.
 
-> Decision 7 (evidence via etl dispatch) is challenged by [ADR-0004](0004-profile-in-the-semantics-runner.md) (proposed): profiling moves into the semantics runner.
+> Decision 7 (evidence via etl dispatch) is amended by [ADR-0004](0004-profile-in-the-semantics-runner.md) (accepted): profiling runs in the semantics runner.
 
 ## Context
 

@@ -1,6 +1,7 @@
 # Implementation Plan — Data Answers: Context Table, Answer Highlighting, Narration
 
-**Status:** phases 1–3 built and deployed to test 2026-11-08 (intelligence ADR-0032); prod not deployed, eval A/B not yet run
+**Status:** phases 1–3 built and deployed to test 2026-11-08 (intelligence ADR-0032); prod not deployed, eval A/B not yet run.
+**Prod gate:** do not deploy intelligence/api to prod until the eval A/B (widening on vs off, plus the OPP-044 router/SQL temperature change) has run, or deploy with `ENABLE_CONTEXT_WIDENING=false` and `ENABLE_DATA_NARRATION=false` and flip them after.
 **Date:** 2026-11-08
 **Repos touched:** intelligence, api, ui (evaluation later, semantics none)
 
@@ -50,7 +51,7 @@ ui            ChatTab.vue entry role 'data' → CellData.vue → DataTable.vue
 | D3 | **Narration is option (a) of ADR-0010 phase 2b**: new intelligence `POST /agent/narrate`; api calls it *after* yielding the `data` event, then yields a `narration` event. | LLM stays in intelligence (api's query surface stays SQL-only); table latency unchanged; narration adds ~1–2 s to the tail of the turn only. |
 | D4 | **Narration is one whole event, not a token stream**, and is dropped (not shown) if its figures fail verification or the call times out (~8 s). | Can't retract streamed text after a failed check. Table always stands alone; a lost narration is cosmetic. |
 | D5 | **Verification is deterministic, in intelligence**: before the LLM call, compute summary facts (first/last/min/max/pct-change) in plain code; after, require every number in the text to match a focus-cell value or a computed fact (within rounding). Returns `verified: bool`; api drops unverified text. | Removes the confident-but-wrong failure mode ADR-0010 exists to prevent, without a second LLM judge. |
-| D6 | Flags: `ENABLE_CONTEXT_WIDENING` (intelligence) and `ENABLE_DATA_NARRATION` (api) — both default off until eval comparison passes. | Each phase independently revertible; eval A/B before default-on. |
+| D6 | Flags: `ENABLE_CONTEXT_WIDENING` (intelligence) and `ENABLE_DATA_NARRATION` (api) — planned default off until eval comparison passes (shipped default ON, see "As built"). | Each phase independently revertible; eval A/B before default-on. |
 
 ### Not building (no spaceships)
 
@@ -269,6 +270,17 @@ User-visible: a sentence or two of commentary appears above the data table
   the text simply appears above the table when it arrives. Notebook cells store `narration`.
 - ADR is intelligence **ADR-0032** (0031 was taken).
 - Newman covers none of this (needs a live LLM turn).
+- Narrate timeout in the BFF is 10 s (plan said ~8 s).
+- `use_context` returns an explicit `widened` flag; `focus.source` no longer infers it from a
+  `meta_focus` column in the result (api `394a499`).
+- **Post-test findings (2026-11-09, OPP-044):** the same trend question routed `multi_hop` twice and
+  `data` once, and one data run added `obs_status IS NULL` (blank `obs_status` is `''` in etl output)
+  and returned 0 rows. Fixed with `temperature=0` on `classify_query`/`data_query`, a router example
+  and a prompt rule against status-column filters (intelligence `61cec7b`). Known limits: the
+  decline-to-data fallback is still `factoid`-only; etl writes `''` rather than NULL.
+- Known, accepted: narration verification accepts a figure matching any numeric cell in the answer
+  rows (not only focus cells); narrate runs inline in the SSE loop, so in combined turns it can delay
+  later events by up to its timeout.
 
 ## Open questions (decide before the phase that needs them)
 

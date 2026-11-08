@@ -17,7 +17,7 @@ State (2026-11-08): compiler + grounding ON on test; eval **73/81 pass^3**, 0 tr
 | 5 | Steer 7: bronze integrity assertions | done ([etl #40](https://github.com/big-lake/etl/pull/40), deployed to test); the semantics cross-check is retired (item 3) |
 | 6 | Steer 8: profile freshness | stamp done ([semantics #47](https://github.com/big-lake/semantics/pull/47), [intelligence #22](https://github.com/big-lake/intelligence/pull/22)); `profiled_at` is in every bundle file on test. Ingestion-coupled profiling (trigger `semantic-drift.yml` after bronze) is now unblocked but is new capability: not before the consolidation window ends |
 | 7 | Full-history re-ingest on test of `abs.merch_exp`, `abs.merch_imp`, `abs.pop_proj_region` | done 2026-11-08 ([semantics #48](https://github.com/big-lake/semantics/pull/48); eval unchanged). `pop_proj_region` also held rows of a removed flow, so it was dropped and re-seeded from the newest landing file; the two older ones are in `gs://big-lake-test-490405-raw/_landing_quarantine/abs/abs_data_api/pop_proj_region/` (delete when the user agrees). Fixed on the way: etl `9ab0650`, `558a24c` |
-| 8 | **NEXT:** DQ-0085/87/89 (wrong `index_code` on `abs.itpi_exp`) | time-boxed, general-mechanism-only investigation (user choice). Stop rule (steer 4): a change must plausibly fix a class (≥2 cases or a structural failure mode); if nothing general emerges quickly, add it to Known limitations and **stop at 73**, which is a success |
+| 8 | DQ-0085/87/89 (wrong `index_code` on `abs.itpi_exp`) | done 2026-11-08, no change built (steer 4): `CL_ITPI_INDEX` has two near-identical codes, `3111001` "All groups" and `8093697` "SITC (Rev3) All Groups"; the gold uses the latter while the question says "All groups", so the exact-label match is the other code. Only one table is affected and any fix would be a new duplicate-label disambiguation capability, so recorded in Known limitations. **Stopped at 73** |
 
 Follow-ups outside this plan: etl bronze/silver ABS triggers are hard-coded `run_all` (handed to another agent session as a prompt; not tracked here). Eval rule: one change-class per run, always.
 ## Phase status
@@ -43,7 +43,7 @@ Spike complete (2026-10-25): both pilots load and round-trip in the pinned upstr
 ## Known limitations
 
 - Visible-case eval only (held-out on hold); run-to-run noise about ±4 cases; read per-case flips.
-- Remaining fails: roll-ups (7b), DQ-0046 (`IB` vs `IM`, defensible), DQ-0085/87/89 (label choice).
+- Remaining fails: roll-ups (7b), DQ-0046 (`IB` vs `IM`, defensible), DQ-0085/87/89 (label choice: `abs.itpi_exp` has two "All groups" codes, `3111001` and `8093697`; the gold uses `8093697`, the question wording matches `3111001`).
 - etl BUG-0001 latent (financial year and month share a shape). Bronze now fails on mixed flows or stacked snapshots, but cannot see existing duplicates.
 - A code or period newly present in data is refused or invisible until the next profile run (steer 8).
 

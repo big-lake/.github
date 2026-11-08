@@ -278,6 +278,7 @@ User-visible: a sentence or two of commentary appears above the data table
   and returned 0 rows. Fixed with `temperature=0` on `classify_query`/`data_query`, a router example
   and a prompt rule against status-column filters (intelligence `61cec7b`). Known limits: the
   decline-to-data fallback is still `factoid`-only; etl writes `''` rather than NULL.
+- **Calculated answers (2026-11-09, intelligence `45539ab`):** the context-table prompt now also widens a percentage/ratio answer (single value or series) with its input columns plus at most one comparable value, computed from the displayed inputs so the existing exact-vs-wide check covers the inputs transitively; the comparable value is unverified. Calculated figures are `ROUND(..., 2)` in both queries, and narration may round decimals to 1-2 places. No api/ui change; the answer stays identifiable via `focus` (no separate exact array). Mixed-unit tables make the chart toggle unhelpful.
 - Known, accepted: narration verification accepts a figure matching any numeric cell in the answer
   rows (not only focus cells); narrate runs inline in the SSE loop, so in combined turns it can delay
   later events by up to its timeout.

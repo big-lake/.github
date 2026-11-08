@@ -54,6 +54,7 @@ Not evidenced anywhere in recent work — treat as still open until confirmed ot
 - [ ] Run all `knowledge` pipelines against prod to populate prod pgvector + Neo4j.
 - [ ] Deploy `catalog` (OM ingestion + curation) to prod.
 - [ ] Deploy `api` + `ui` + `intelligence` to prod via GHA.
+- [ ] **Prod gate for the data-answer features** — before deploying `intelligence`/`api` to prod, run the eval A/B (context widening on vs off, plus the OPP-044 router/`data_query` `temperature=0` change), or deploy with `ENABLE_CONTEXT_WIDENING=false` and `ENABLE_DATA_NARRATION=false` and flip them after. Both default ON in code. [Plan](documentation/plans/data-answer-highlight-and-narration.md). (`intelligence`, `api`, `evaluation`)
 - [ ] Smoke-test end-to-end in prod: login → catalog browse → query → chat.
 - [ ] See `environment-copy-plan` repo memory for the (currently undecided) question of copying expensive-to-recompute artefacts (embeddings, enriched chunks) test→prod vs. re-running pipelines from scratch. No code written yet — needs a decision before Stage C if re-running everything from raw landing files in prod is too slow/costly.
 

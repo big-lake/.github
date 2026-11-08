@@ -6,20 +6,20 @@
 
 ## PICK UP HERE
 
-State: compiler + grounding ON on test; eval **73/81 pass^3**, 0 trap violations, 0 gold errors (run [42437018692](https://github.com/big-lake/evaluation/actions/runs/42437018692), data-only after the re-ingest; identical per-case to [42299639355](https://github.com/big-lake/evaluation/actions/runs/42299639355)); baseline 18/81 (run 41282922830). Prod undeployed (`engineering/go-to-prod.md`). Held-out set on hold, including for prod. Consolidation window (§0.2 steer 1): no new capability.
+State (2026-11-08): compiler + grounding ON on test; eval **73/81 pass^3**, 0 trap violations, 0 gold errors (run [42437018692](https://github.com/big-lake/evaluation/actions/runs/42437018692), data-only after the re-ingest; identical per-case to [42299639355](https://github.com/big-lake/evaluation/actions/runs/42299639355)); baseline 18/81 (run 41282922830). Prod undeployed (`engineering/go-to-prod.md`). Held-out set on hold, including for prod. Consolidation window (§0.2 steer 1): no new capability. No open PRs.
 
 | # | Item | Status |
 |---|---|---|
 | 1 | Collapse this plan | done 2026-11-07 |
 | 2 | `semantics.model` refactor | done ([semantics #45](https://github.com/big-lake/semantics/pull/45)) |
-| 3 | ADR amending ADR-0003 decision 7: profile in the runner (removes etl dispatch/poll chain). Must land before any prod Terraform | [ADR-0004](../adr/0004-profile-in-the-semantics-runner.md) `provisional`. Spike passed 2026-11-08: `CREATE SECRET (TYPE gcs, BEARER_TOKEN ...)` lets DuckDB read the lakehouse with an ADC token, and etl's `profile_table` runs unchanged (details in the ADR). Proven as the semantics SA in CI. Done in [semantics #49](https://github.com/big-lake/semantics/pull/49) (`semantics.profile`; `semantic-drift.yml` no longer dispatches etl): full `profile_all` run [42447755977](https://github.com/big-lake/semantics/actions/runs/42447755977), 132 tables in ~14 min, bundle identical to the etl-profiled one. (Querying GCS directly from the US runner was still running after 55 min, run 42442464262, cancelled; each snapshot is now copied to local Parquet first.) Also done 2026-11-08: etl `profile_dataset` flow, its deployment and the `profile_dataset` option of `run-evidence.yml` retired (etl `0c30e8f`; `run_probes` stays), and `semantics.integrity` with its hard-coded incremental list removed ([semantics #50](https://github.com/big-lake/semantics/pull/50)). **Item 3 is complete. The `etl` App Actions-write grant stays** while `semantic-verify.yml` dispatches `run_probes` (ADR decision 4); dropping it needs verify moved off etl, which is a separate decision, and prod Terraform should still carry it for verify only |
-| 4 | Drafter deleted | done ([semantics #46](https://github.com/big-lake/semantics/pull/46)); unused SA `biglake-sa-sem-draft-{env}` removal: [infra #77](https://github.com/big-lake/infra/pull/77) |
-| 5 | Steer 7: bronze integrity assertions | done ([etl #40](https://github.com/big-lake/etl/pull/40), deployed to test). `semantics.integrity` retired with ADR-0004 ([semantics #50](https://github.com/big-lake/semantics/pull/50)) |
-| 6 | Steer 8: profile freshness | stamp done ([semantics #47](https://github.com/big-lake/semantics/pull/47), [intelligence #22](https://github.com/big-lake/intelligence/pull/22), deployed to test); `profile_all=true` run 2026-11-08 ([42434110286](https://github.com/big-lake/semantics/actions/runs/42434110286)), so `profiled_at` is now in every bundle file on test. Ingestion-coupled profiling is a follow-up after ADR-0004 |
-| 7 | Full-history re-ingest on test of `abs.merch_exp`, `abs.merch_imp`, `abs.pop_proj_region` | done 2026-11-08. `pop_proj_region` also held rows of a removed flow, so it was dropped and re-seeded (bronze+silver, from the newest landing file; older ones are in `_landing_quarantine/`). `semantics.integrity` empty; [semantics #48](https://github.com/big-lake/semantics/pull/48) merged and published; eval 42437018692 unchanged at 73/81. Found and fixed on the way: silver period filter used `TIME_PERIOD` instead of `time_period`, and unclosed DuckDB connections cascaded failures across a batch (etl `9ab0650`, `558a24c`). Follow-up for another agent: bronze/silver triggers are hard-coded `run_all` |
-| 8 | DQ-0085/87/89 (wrong `index_code` on `abs.itpi_exp`) | user chose a time-boxed general-mechanism investigation, **after** item 3. Stop rule (steer 4): no general mechanism quickly means record as a known limitation and stop at 73 |
+| 3 | Profile in the runner (ADR amending ADR-0003 decision 7) | done 2026-11-08. [ADR-0004](../adr/0004-profile-in-the-semantics-runner.md) `accepted`. `semantics.profile` profiles in `semantic-drift.yml` with DuckDB + the job's ADC token as a `gcs` `BEARER_TOKEN` secret, copying each snapshot to local Parquet first ([semantics #49](https://github.com/big-lake/semantics/pull/49); full run [42447755977](https://github.com/big-lake/semantics/actions/runs/42447755977): 132 tables in ~14 min, bundle identical to the etl-profiled one). etl `profile_dataset` retired (etl `0c30e8f`; `run_probes` and `run-evidence.yml` stay); `semantics.integrity` retired ([semantics #50](https://github.com/big-lake/semantics/pull/50)). **Open decision (user):** the `etl` App Actions-write grant stays while `semantic-verify.yml` dispatches `run_probes` (ADR decision 4); prod Terraform carries it for verify only unless verify moves off etl |
+| 4 | Drafter deleted | done ([semantics #46](https://github.com/big-lake/semantics/pull/46)); SA `biglake-sa-sem-draft-{env}` removal merged ([infra #77](https://github.com/big-lake/infra/pull/77)) but **not yet applied**: the post-merge run skipped "Trigger Deploy (test)", so the SA still exists on test until a `Terraform Deploy` dispatch (destroys the SA; confirm with user) |
+| 5 | Steer 7: bronze integrity assertions | done ([etl #40](https://github.com/big-lake/etl/pull/40), deployed to test); the semantics cross-check is retired (item 3) |
+| 6 | Steer 8: profile freshness | stamp done ([semantics #47](https://github.com/big-lake/semantics/pull/47), [intelligence #22](https://github.com/big-lake/intelligence/pull/22)); `profiled_at` is in every bundle file on test. Ingestion-coupled profiling (trigger `semantic-drift.yml` after bronze) is now unblocked but is new capability: not before the consolidation window ends |
+| 7 | Full-history re-ingest on test of `abs.merch_exp`, `abs.merch_imp`, `abs.pop_proj_region` | done 2026-11-08 ([semantics #48](https://github.com/big-lake/semantics/pull/48); eval unchanged). `pop_proj_region` also held rows of a removed flow, so it was dropped and re-seeded from the newest landing file; the two older ones are in `gs://big-lake-test-490405-raw/_landing_quarantine/abs/abs_data_api/pop_proj_region/` (delete when the user agrees). Fixed on the way: etl `9ab0650`, `558a24c` |
+| 8 | **NEXT:** DQ-0085/87/89 (wrong `index_code` on `abs.itpi_exp`) | time-boxed, general-mechanism-only investigation (user choice). Stop rule (steer 4): a change must plausibly fix a class (≥2 cases or a structural failure mode); if nothing general emerges quickly, add it to Known limitations and **stop at 73**, which is a success |
 
-Eval rule: one change-class per run. Items 6 and 7 change bundle data, so run them as separate evals or accept one combined data-only run labelled as such.
+Follow-ups outside this plan: etl bronze/silver ABS triggers are hard-coded `run_all` (handed to another agent session as a prompt; not tracked here). Eval rule: one change-class per run, always.
 ## Phase status
 
 | Phase | State |
@@ -28,7 +28,7 @@ Eval rule: one change-class per run. Items 6 and 7 change bundle data, so run th
 | 1 Infra | Test only; prod not set up |
 | 2 Foundation + seed | Done (test) |
 | 3 Catalog governance-only | Done |
-| 4 etl evidence flows | Done (test); `run_probes` has no caller |
+| 4 etl evidence flows | `profile_dataset` retired (ADR-0004); `run_probes` stays, used only by `semantic-verify.yml` |
 | 5 Generators + drift | Done; drafter deleted 2026-11-07 |
 | 6 Clean rebuild | Not run; not needed for the eval gate |
 | 7 intelligence | Done on test (grounding + compiler ON); see ADR-0028 *Results* |
@@ -51,10 +51,13 @@ Spike complete (2026-10-25): both pilots load and round-trip in the pinned upstr
 
 1. intelligence caches the bundle 300 s: wait ~5 min after a Publish before an eval; code changes need `deploy.yml`.
 2. Prefect tunnel drops overnight: reopen `etl: iap tunnel prefect (:4200)`, then `$env:PREFECT_API_URL = 'http://127.0.0.1:4200/api'`; ABS ingest = flow run on deployment `ingest-abs` (`1e237ece-6f0c-4344-ab66-e8747e977298`) with `parameters={datasets:[...], run_all:false}`.
-3. Evidence profiles are sharded `drift-{run}-1-NN/profiles/*.json`.
+3. Profiles are the `profiles-out` artifact of the `semantic-drift.yml` run (no longer in `gs://…-semantics/evidence/`). `profile_all=true` refreshes every table (~14 min).
 4. Local api `POST /auth/dev/session` hangs without `X-Dev-Auth`; query data via profiles or the eval.
-5. etl has no PR checks: run `pytest tests/bronze tests/evidence` locally.
+5. etl has no PR checks: run `pytest tests/bronze tests/evidence` locally; etl deploys on push to main.
 6. Verify loaders against the real published bundle, not synthetic fixtures.
+7. `ingest-abs` takes bare dataset names (`merch_exp`, not `abs.merch_exp`); a full re-pull needs `full_history: true`. bronze-abs/silver-abs then run over every ABS dataset (~30+ min) because their triggers are `run_all`.
+8. Dropping a bronze INCREMENTAL table makes the next bronze run re-read every landing file and can hit the VM's ~13.6 GiB spill cap: move older landing files aside first (etl ABS README).
+9. A drift run from a branch (`--ref`) still pushes the bot PR; dispatch from `main` unless testing the workflow itself.
 
 ---
 

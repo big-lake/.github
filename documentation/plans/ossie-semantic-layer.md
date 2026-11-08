@@ -1,12 +1,14 @@
 # Ossie semantic layer — status
 
-- **Why:** [org ADR-0003](../adr/0003-ossie-semantic-layer-source-of-truth.md) (provisional). **How:** `semantics/README.md`. **Runtime:** intelligence [ADR-0028](https://github.com/big-lake/intelligence/blob/main/documentation/adr/0028-semantic-query-plan-and-compiler.md) (provisional). **Eval:** [big-lake/evaluation](https://github.com/big-lake/evaluation).
-- **Collapsed 2026-11-07** (§0.2 steer 6): the earlier full plan (phases, contracts, §0 review, dated resume blocks) is in git history of this file. Do not append dated blocks; replace "PICK UP HERE".
+**Status: completed 2026-11-08.** Remaining work is under [Future work](#future-work); prod rollout is tracked in `engineering/go-to-prod.md`.
+
+- **Why:** [org ADR-0003](../adr/0003-ossie-semantic-layer-source-of-truth.md) (provisional). **How:** `semantics/README.md`. **Runtime:** intelligence [ADR-0028](https://github.com/big-lake/intelligence/blob/main/documentation/adr/0028-semantic-query-plan-and-compiler.md) (accepted 2026-11-08). **Eval:** [big-lake/evaluation](https://github.com/big-lake/evaluation).
+- **Collapsed 2026-11-07** (§0.2 steer 6): the earlier full plan (phases, contracts, §0 review, dated resume blocks) is in git history of this file. Do not append dated blocks; replace "Final state".
 - **Standing constraints:** `.github/TODO.md` is not edited without user confirmation; infra changes only via Terraform + GHA; `semantics` and `infra` `main` are protected (PR, user merges); confirm before anything prod or destructive; never `git add -A` in semantics.
 
-## PICK UP HERE
+## Final state
 
-State (2026-11-08): compiler + grounding ON on test; eval **73/81 pass^3**, 0 trap violations, 0 gold errors (run [42437018692](https://github.com/big-lake/evaluation/actions/runs/42437018692), data-only after the re-ingest; identical per-case to [42299639355](https://github.com/big-lake/evaluation/actions/runs/42299639355)); baseline 18/81 (run 41282922830). Prod undeployed (`engineering/go-to-prod.md`). Held-out set on hold, including for prod. Consolidation window (§0.2 steer 1): no new capability. No open PRs.
+State (2026-11-08, plan completed): compiler + grounding ON on test; eval **73/81 pass^3**, 0 trap violations, 0 gold errors (run [42437018692](https://github.com/big-lake/evaluation/actions/runs/42437018692), data-only after the re-ingest; identical per-case to [42299639355](https://github.com/big-lake/evaluation/actions/runs/42299639355)); baseline 18/81 (run 41282922830). Prod undeployed (`engineering/go-to-prod.md`). Consolidation window (§0.2 steer 1) complete: all items below done. No open PRs.
 
 | # | Item | Status |
 |---|---|---|
@@ -24,7 +26,7 @@ Follow-ups outside this plan: etl bronze/silver ABS triggers are hard-coded `run
 
 | Phase | State |
 |---|---|
-| 0 Spike | Done; pins `apache/ossie@01a5488d`. Description-diff sign-off (user) and prod protection still open |
+| 0 Spike | Done; pins `apache/ossie@01a5488d`. Description-diff sign-off closed (user, 2026-11-08); prod protection is a go-to-prod step |
 | 1 Infra | Test only; prod not set up |
 | 2 Foundation + seed | Done (test) |
 | 3 Catalog governance-only | Done |
@@ -39,6 +41,16 @@ Follow-ups outside this plan: etl bronze/silver ABS triggers are hard-coded `run
 ## Phase 0 — decide and spike
 
 Spike complete (2026-10-25): both pilots load and round-trip in the pinned upstream package; the validator is callable as a library; upstream has no standalone ontology/mapping model (schema-only validation). Findings and rerun instructions: `semantics/README.md`.
+
+## Future work
+
+Not scheduled; each needs a user go-ahead (and an ADR where §0.2 steer 2 applies).
+
+- **Held-out eval set:** on hold, including for prod (user, 2026-11-07). Until it exists, every result claim rests on the visible cases only.
+- Prod rollout: `engineering/go-to-prod.md`.
+- Phase 7b drill-across / roll-ups (DQ-0030/31/33/76, DH-0001-3).
+- Profile after ingestion: trigger `semantic-drift.yml` when bronze finishes (steer 8 follow-up).
+- Move `run_probes` off etl, dropping the etl App Actions-write grant (needs an ADR amending ADR-0004 decision 4).
 
 ## Known limitations
 

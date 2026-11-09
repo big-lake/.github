@@ -1,4 +1,4 @@
-# BigLake Platform — Org-Wide TODO
+﻿# BigLake Platform — Org-Wide TODO
 
 Last updated 2026-10-31. This is the single source of truth for cross-repo planning. Repo-local TODOs should only cover repo-internal task tracking; anything that crosses repo boundaries lives here.
 

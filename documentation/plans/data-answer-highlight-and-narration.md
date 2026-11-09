@@ -1,7 +1,7 @@
 # Implementation Plan — Data Answers: Context Table, Answer Highlighting, Narration
 
-**Status:** phases 1–3 built and deployed to test 2026-11-08 (intelligence ADR-0032); prod not deployed, eval A/B not yet run.
-**Prod gate:** do not deploy intelligence/api to prod until the eval A/B (widening on vs off, plus the OPP-044 router/SQL temperature change) has run, or deploy with `ENABLE_CONTEXT_WIDENING=false` and `ENABLE_DATA_NARRATION=false` and flip them after.
+**Status:** phases 1–3 built and deployed to test 2026-11-08 (intelligence ADR-0032); prod not deployed. Official eval 2026-11-09 (run 42541560625, intelligence `a85ffea`, api `394a499`): 79/87 correct on every repeat, 0 invalid, 0 regressions vs the 73/81 baseline.
+**Prod gate:** eval gate met (above); widening on vs off was not isolated. Before prod, deploy with `ENABLE_CONTEXT_WIDENING=false` and `ENABLE_DATA_NARRATION=false` and flip them after, or accept the defaults (both on).
 **Date:** 2026-11-08
 **Repos touched:** intelligence, api, ui (evaluation later, semantics none)
 

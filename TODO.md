@@ -1,4 +1,4 @@
-﻿# BigLake Platform — Org-Wide TODO
+# BigLake Platform — Org-Wide TODO
 
 Last updated 2026-10-31. This is the single source of truth for cross-repo planning. Repo-local TODOs should only cover repo-internal task tracking; anything that crosses repo boundaries lives here.
 
@@ -54,7 +54,7 @@ Not evidenced anywhere in recent work — treat as still open until confirmed ot
 - [ ] Run all `knowledge` pipelines against prod to populate prod pgvector + Neo4j.
 - [ ] Deploy `catalog` (OM ingestion + curation) to prod.
 - [ ] Deploy `api` + `ui` + `intelligence` to prod via GHA.
-- [ ] **Prod gate for the data-answer features** — before deploying `intelligence`/`api` to prod, run the eval A/B (context widening on vs off, plus the OPP-044 router/`data_query` `temperature=0` change), or deploy with `ENABLE_CONTEXT_WIDENING=false` and `ENABLE_DATA_NARRATION=false` and flip them after. Both default ON in code. [Plan](documentation/plans/data-answer-highlight-and-narration.md). (`intelligence`, `api`, `evaluation`)
+- [ ] **Prod decision for the data-answer features** — eval gate met: official run `20261109-004459-42541560625` on intelligence `a85ffea` / api `394a499` scored 79/87 correct on every repeat (0 invalid, 0 regressions vs the 73/81 baseline; 6 new derived cases all pass). Not run: widening on vs off in isolation (needs a flag-off redeploy via infra). Still your call before prod: both `ENABLE_CONTEXT_WIDENING` and `ENABLE_DATA_NARRATION` default ON; deploy with them `false` if you want to flip them after. [Plan](documentation/plans/data-answer-highlight-and-narration.md). (`intelligence`, `api`, `evaluation`)
 - [ ] Smoke-test end-to-end in prod: login → catalog browse → query → chat.
 - [ ] See `environment-copy-plan` repo memory for the (currently undecided) question of copying expensive-to-recompute artefacts (embeddings, enriched chunks) test→prod vs. re-running pipelines from scratch. No code written yet — needs a decision before Stage C if re-running everything from raw landing files in prod is too slow/costly.
 

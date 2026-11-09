@@ -1,6 +1,6 @@
 # Cross-publisher unified intelligence — plan
 
-**Status: Phase 0 complete (2026-11-10); Phase 1 approved by the user and in progress.** Coverage verified, anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)), mixed case kind + per-kind site shipped (evaluation ADR-0003), and the official baseline is public (see [Phase 0 result](#phase-0-result-official-baseline-2026-11-10)). No GitHub `vocabulary` repo, bucket, SA or deploy workflow exists yet; a local repo is built and committed (see [Phase 1 progress](#phase-1-progress)). Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
+**Status: Phase 0 complete (2026-11-10); Phase 1 approved by the user and in progress.** Coverage verified, anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)), mixed case kind + per-kind site shipped (evaluation ADR-0003), and the official baseline is public (see [Phase 0 result](#phase-0-result-official-baseline-2026-11-10)). No bucket, SA or deploy workflow exists yet (Phase 1 bundle publication is code-only so far; see [Phase 1 progress](#phase-1-progress)). Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
 
 - **Why:** answer cross-publisher questions using compatible, traceable evidence from structured datasets and unstructured documents. Vocabulary supports discovery and interpretation; building a concept layer is not the end goal. The first functional milestone is one complete mixed answer, without a graph database, an agent framework, or an LLM-invented ontology.
 - **Shaped by:** iterative design reviews and the user's cross-publisher priority (2026-11-09). The corrections are binding and recorded in [Design corrections](#design-corrections-binding).
@@ -123,9 +123,9 @@ Started 2026-11-10. All Phase 1 commits are pushed (`big-lake/vocabulary` create
 | `/health` reports `semantic_bundle_id` (intelligence `37ca7dc`) and eval records it (evaluation `73e937b`) | pushed; takes effect after an intelligence deploy |
 | ABS commenced / completed / under construction / dwelling / dwelling-unit counting definitions | sourced verbatim from the Building Activity methodology page's Glossary section. Every ABS release has such a methodology page, so a deterministic Glossary parser is the Phase 4 generalisation |
 | Knowledge snapshot/applicability contract (knowledge ADR-0023) and binding pin contract (org ADR-0006) | written, `proposed`, awaiting user review |
-| Bundle publication (GCS bucket, SA, workflow in `infra/` + GHA) | not started; needs go-ahead |
-| Irrelevant-same-topic-passage negative case | not started |
-| Document-only retrieval baseline (before vocabulary boosts) | not measured |
+| Bundle publication (GCS bucket, SA, workflow in `infra/` + GHA) | **in progress, nothing deployed.** Uncommitted draft in `vocabulary`: `bundle.py`, `publish.py` (atomic `bundles/current.json` switch, `--rollback-to`) and `.github/workflows/publish.yml`; these have no tests yet. No `infra/` Terraform (bucket, SA, WIF binding) written; the `infra` checkout is on an unrelated branch. Both remain to do, then a GHA deploy |
+| Irrelevant-same-topic-passage negative case | done: `MH-0007` (hand-written, coverage-gap: no annual Accord target in the Budget Papers), pushed in evaluation `80fdd40`. It joins the mixed suite, so the mixed baseline above (10 cases) predates it and is re-baselined on the next official run |
+| Document-only retrieval baseline (before vocabulary boosts) | suite and runner built and pushed (evaluation `d95d2ce`): knowledge kind `KQ-0001..0004` (Budget Paper facts + one expected decline until the ABS methodology is onboarded), wired into the official workflow with a per-kind site section. **Not yet measured:** needs an official CI run dispatch (user confirmation required) |
 
 ## Architecture
 

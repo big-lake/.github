@@ -1,0 +1,218 @@
+# Cross-publisher unified intelligence — plan
+
+**Status: proposed (2026-11-09).** Nothing in this plan is built. No repo, SA, bucket or workflow exists yet. Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
+
+- **Why:** answer cross-publisher questions using compatible, traceable evidence from structured datasets and unstructured documents. Vocabulary supports discovery and interpretation; building a concept layer is not the end goal. The first functional milestone is one complete mixed answer, without a graph database, an agent framework, or an LLM-invented ontology.
+- **Shaped by:** iterative design reviews and the user's cross-publisher priority (2026-11-09). The corrections are binding and recorded in [Design corrections](#design-corrections-binding).
+- **Standing constraints:** `.github/TODO.md` is not edited without user confirmation; infra changes only via Terraform + GHA; prod/destructive actions need explicit user OK; eval-first — a phase ships only when its named eval gate moves.
+
+## Decisions (user, 2026-11-09)
+
+| # | Decision |
+|---|---|
+| 1 | New **`vocabulary` repo** — not a module inside `semantics`. Needs an org ADR superseding/amending org ADR-0001's "no central reference artifact" decision (see Phase 1). |
+| 2 | **SKOS/XKOS** vocabulary model; **no Ossie ontology/mapping documents in v1** (no consumer; field bindings via existing `BIGLAKE` custom extensions instead). |
+| 3 | **Retire Neo4j** and the triple extraction output (parallel track, own ADRs in knowledge + infra). |
+| 4 | **Full automation, review-only humans.** We have no subject-matter experts — recorded as a standing limitation, mitigated by provenance rules, not by pretending review is curation. |
+| 5 | External resource intake reuses the **knowledge inbox front door** (PR/GCS only, no UI upload). Quality over volume — enforced by validators, not convention. |
+| 6 | Runtime storage reuses the **existing knowledge_db Postgres** (new schema); no new database instance. knowledge remains the single writer. |
+| 7 | Prove cross-publisher retrieval and grounded mixed synthesis first. Start with ABS datasets and Treasury documents; introduce only the vocabulary needed for the slice. Publisher boundaries and missing concept mappings must not block retrieval. |
+
+## Current state (repository review, 2026-11-09)
+
+- Ossie ontology/mapping schemas sit unused in `semantics/_spec/`; the bundle publishes `ontology: null, mappings: []`. Plan phases 8–9 were demoted for having no consumer — this plan is the consumer-naming exercise done properly.
+- knowledge extracts entities + free-form-predicate triples per chunk (one Gemini call also producing context prefixes and propositions — `configuration/pipeline.yaml` `enrich:`), with GCS outputs. Neo4j writing defaults off and no reviewed config enables it; infrastructure defines a container, but its deployed state, contents and actual memory use have not been verified. No intelligence graph consumer was found.
+- intelligence: router (7 classes) → three tools (`knowledge_retrieval`, `data_discovery`, `data_query`); Ossie bundle grounds the data path only. The combined path writes knowledge prose **before** SQL exists and never sees executed rows; the BFF intercepts `data_sql_ready` and executes. `narrate` (intelligence ADR-0031/0032) is the only place a model sees real rows — rows only, no documents.
+- OM has no Glossary; no dataset↔document links. Eval: 133 cases, all `kind: data`; definition/knowledge/mixed ability is unmeasured.
+- Assets ready to reuse: 191 SDMX codelists with hierarchies, `generators/abs.py` already parses ConceptSchemes + `ASGS_LOCI_URI`, evaluation's page-snapshot pattern, knowledge's sha256-pinned inbox→promote flow.
+
+## Design corrections (binding)
+
+Earlier drafts of this design made claims the reviews struck down. They are recorded here so no phase quietly resurrects them.
+
+1. **A shared concept does not make a join or roll-up safe.** Field bindings state *meaning + coding scheme/version + representation*. Scope and comparability checks are required in the first mixed slice; executable joins/roll-ups additionally require grain, cardinality and aggregation constraints owned by `semantics` and remain outside this plan. "One annotation unlocks joins" was wrong.
+2. **A verbatim quote proves text exists, not that an inferred link is true.** Tier C (LLM-proposed links, § Intake) is never authoritative: suggestions improve retrieval ranking only, are never cited as definitions, never become dataset-wide caveats, and carry `status: suggested` forever unless a source states the link explicitly.
+3. **Unified retrieval ≠ one undifferentiated index.** One search *interface* over typed candidate pools with bounded per-type retrieval; document chunks must not crowd out dataset/definition cards, and concept links are ranking boosts, never mandatory filters that hide unlinked content.
+4. **Resolution returns candidates, not answers.** "Geelong" legitimately matches multiple ASGS codes; `resolve_value` returns ranked candidates scoped to the active dataset's schemes and the caller (planner or clarify flow) decides.
+5. **Topical similarity is not applicability.** A methodology paper *mentioning* CPI ≠ *changing* a CPI series. Doc→dataset links carry a typed relation (`mentions` | `defines` | `changes`) with effective dates; only explicitly stated `defines`/`changes` links produce caveats.
+6. **"YAML with SKOS-ish field names" is not standards compliance.** The schema defines an explicit mapping to SKOS/XKOS terms, keeps language tags and IRIs, and CI round-trips a sample export through `rdflib`. No RDF store or reasoner at runtime.
+7. **Independent bundles need compatible activation.** semantics pins the vocabulary release its bindings reference; the runtime loader validates references before activating and keeps the last good release on failure. "Record bundle IDs in traces" alone was insufficient.
+8. **Ossie ontology docs are not trivially derivable later.** If they're ever wanted, that's a real piece of work needing its own ADR — the earlier "generate them in an afternoon" claim is retracted.
+9. **Framework alignment is not concept equivalence.** A Treasury statement that it follows an ABS accounting framework is evidence about its basis, not permission to generate `exactMatch` links or assume identical measures. Preserve the statement and scope; do not infer equivalence from it.
+10. **Unification need not produce one combined number.** Compatible evidence can support a joint conclusion; incompatible figures must be separated and explained. Never sum transfers and recipient spending, equate estimates with actuals, or substitute Commonwealth spending for all-government spending without explicit justification.
+
+## First acceptance slice
+
+Anchor question: **"How much does Australia spend on public healthcare?"** The target is a user-facing answer, not a preselected dataset query or a glossary lookup.
+
+Phase 0 verifies what the deployed ABS tables and Treasury documents actually cover before selecting numeric gold answers. No particular healthcare table is assumed present. If coverage is missing, record a bounded onboarding prerequisite or an expected coverage-gap answer; do not silently substitute a nearby measure. Another publisher such as AIHW may be appropriate, but adding it is an explicit scope decision, not a requirement to force ABS and Treasury to answer everything.
+
+| Case | Expected behaviour |
+|---|---|
+| Unqualified anchor question | Discover data and documents, then clarify material ambiguity or explicitly state a supported scope; do not silently choose Commonwealth-only spending. |
+| All-government actual expenditure in a specified financial year | Select evidence with the required coverage and accounting basis, execute validated SQL, and cite the figure and relevant documentary explanation. |
+| Commonwealth healthcare spending in a specified budget year | Distinguish budget estimates/forecasts from actuals and explain the government's coverage. |
+| Compare an ABS result with Treasury budget discussion | Use both sources substantively when relevant; identify agreement or explain differences rather than merely attaching two citations. |
+| Incompatible bases, transfers, or missing coverage | Explain why figures cannot be added or directly compared, avoid double-counting, or report the evidence gap. |
+
+Each answerable mixed case must require both a structured result and documentary evidence. Include absent concept links, an irrelevant same-topic passage, and an outdated release as negative tests. Published sources establish the gold facts; the extraction model's interpretation is not its own scoring oracle. Source-backed automated case generation is allowed, but cases without independently checkable expectations do not become release gates.
+
+### Scope and comparability
+
+Maintain a small evidence record, not a new ontology or general rules engine. Dataset attributes live in `semantics`; document attributes are attached to the relevant passage/release in `knowledge`. Each attribute carries provenance and may be unknown. Intelligence checks them for the requested operation before SQL planning and again before final synthesis.
+
+| Attribute | Required distinction for this slice |
+|---|---|
+| Government coverage and population | Commonwealth, states/territories, or consolidated all-government; populations/services covered |
+| Expenditure definition | Public funding versus public providers/hospitals; functional classification and inclusions/exclusions |
+| Accounting basis | Cash payments versus accrual expenses |
+| Observation status and vintage | Actual, estimate or forecast; publication/revision date versus the period measured |
+| Period and units | Financial/calendar year, currency scale, nominal/real price basis |
+| Consolidation and grain | Transfers versus final spending, overlapping totals and components |
+
+An unknown required attribute blocks a claim of comparability, not retrieval. It triggers at most one targeted evidence retrieval, then clarification, a qualified side-by-side answer or abstention. LLM extraction can locate evidence but cannot establish missing compatibility. Automatic cross-dataset joins, roll-ups and weighted conversions remain outside this slice.
+
+## Architecture
+
+This is the target component map, not the build order. The first mixed slice reuses existing dataset discovery and document retrieval; the complete lexicon, discovery-card index and entity linking below are not prerequisites.
+
+```
+ SOURCES        ABS SDMX API      glossaries/standards (HTML)     PDFs/papers      other publishers
+                     |                      |                          |            (same front door)
+                     |                      +-----------+--------------+------------------+
+                     |                                  v
+                     |                 knowledge INBOX (PR/GCS, sha256, licence, kind)
+                     |                                  |
+                     |              +-------------------+--------------------+
+                     |              | kind: vocabulary / both                | kind: knowledge
+                     v              v                                       v
+ vocabulary    harvest (tier A) + extract (tier B) [+ suggest (tier C)]   parse -> chunk -> enrich
+ repo          SKOS/XKOS YAML in git, validators, PR audit trail           (entity mentions -> vocab IRIs;
+                     |                                                      triples/Neo4j RETIRED)
+                     v                                                            |
+               vocabulary bundle -> GCS  (pinned by semantics)                    |
+                     |                                                            |
+       +-------------+--------------------+                                      |
+       v                                  v                                      v
+ semantics: field bindings         knowledge indexer loads vocab -> Postgres (vocabulary schema,
+ (BIGLAKE ext: concept +           lexicon, concept links) + typed discovery cards -> pgvector
+  scheme@version)                                 |
+       |                                          v
+       v                        intelligence tools: search (typed pools) | define_term |
+ semantic bundle ------------->  resolve_value (candidates) | get_caveats | data_query
+ (grounding + compiler)                           |
+                                                  v
+                      discover across publishers -> establish scope -> retrieve methodology ->
+                      plan validated SQL -> BFF executes -> returns capped rows + provenance ->
+                      check comparability -> synthesise rows + passages with claim-level citations
+                                                  |
+                      evaluation: definition / knowledge / mixed / caveat cases gate every phase
+```
+
+### Ownership boundaries (what each repo must not become)
+
+| Repo | Owns | Must not become |
+|---|---|---|
+| `vocabulary` | Publisher-scoped concept schemes, definitions, classifications, explicit correspondences; the bundle | A hand-curated universal ontology; a subject-taxonomy monopoly (ADR-0001 consumers migrate only by their own choice, later) |
+| `semantics` | Dataset field bindings, metrics, executable query constraints | A duplicate glossary |
+| `knowledge` | Intake, snapshots, chunks, evidence indexes, the Postgres loader | An authority that promotes LLM guesses into facts |
+| `catalog` | Governance + browseable projections (OM Glossary later) | A runtime dependency for definition lookups |
+| `intelligence` + `api` | Evidence selection, validated execution, grounded synthesis | An unrestricted agent loop |
+
+**Repo descriptions stay in sync:** each phase that changes a repo's role updates that repo's description — GitHub repo "About" text, `README.md` opening, and `.github/copilot-instructions.md` — to state both what the repo *is* and what it *is not* (per this table), plus the org repo map in `.github/copilot-instructions.md` and `ARCHITECTURE.md`. The `vocabulary` repo gets this at creation (Phase 1); `knowledge`, `intelligence`, `api` and `semantics` get theirs when the relevant phase lands; the Neo4j/graph mention is removed from descriptions in Phase R. This is part of each phase's definition of done, not a cleanup pass at the end.
+
+## Vocabulary document model
+
+YAML files in `vocabulary/` git, one scheme per file tree, mirroring SKOS/XKOS semantics with an explicit term mapping committed as `_spec/mapping-to-skos.md` + JSON Schema:
+
+- **Scheme** (`skos:ConceptScheme`, XKOS classification fields where applicable): `id` (IRI — ABS URL where one exists, e.g. ASGS LOCI URIs), `publisher`, `version`, `licence`, `source` (snapshot ref + fetched date), `levels`/`notationPattern` for classifications.
+- **Concept**: `prefLabel`, `altLabel[]`, `hiddenLabel[]`, `definition` (+ mandatory `source.url` + `source.quote` for tier B), `scopeNote`/`inclusionNote`/`exclusionNote`, `notation` (the code), `broader`, `validity` (`dcterms:valid` dates), `changeNote[]`, `status: authoritative | extracted | suggested`.
+- **Correspondence** (`xkos:Correspondence`): only from published correspondence tables (tier A) or explicit source statements. Cross-publisher `exactMatch` is **never** emitted by similarity — `exactMatch` is transitive in SKOS and a wrong one poisons every scheme it touches; similarity produces `status: suggested` `relatedMatch` hints at most.
+- Versioning: scheme files are `{scheme}@{version}`, matching the existing codelist convention; new versions are new files; `xkos:supersedes` links them; nothing is overwritten.
+
+Publisher scoping preserves provenance and differing definitions: "Inflation (RBA)" and "Inflation (ABS)" remain distinct unless evidence establishes a specific relationship. It is not a retrieval boundary. Search all eligible publishers; prefer definitions applicable to the measure, not publisher identity alone, and attribute alternatives. Framework alignment alone does not establish equivalence. The model never forces non-ABS sources into ABS shapes.
+
+## Intake (front door)
+
+Knowledge inbox extended, PR/GCS only:
+
+- Registry YAML gains `kind: knowledge | vocabulary | both` and a **mandatory `licence`** field. Open licence → full ingestion; unknown/restrictive → metadata + link only, no stored text (the eval site is public).
+- `kind: vocabulary` resources route to a reserved `_inbox/_vocabulary/{publisher}/` segment — the ABS *subject* taxonomy is wrong for classifications that span subjects. `kind: both` (e.g. an ABS standard) registers once, feeds both consumers.
+- **HTML snapshots are the one new ingestion capability** (promote-flow extension; borrow evaluation's snapshot pattern). Linked URLs are fetched once, stored immutably with sha256; every extracted statement references the snapshot. Scheduled re-fetch diffs produce a drift PR; a changed snapshot marks both the knowledge artefacts (existing cascade-stale) and the vocabulary extraction (hash comparison in vocabulary's drift run — no eventing) stale.
+- Fetching is SSRF-guarded (https only, no private ranges, size/content-type caps); ids obey the ADR-0001 slug rule; extracted text gets the SEC-002 prompt wrapping like bundle text.
+
+**Extraction tiers** (quality-over-volume is enforced here):
+
+| Tier | Input | Method | Output status |
+|---|---|---|---|
+| A | SKOS/RDF, SDMX, classification CSV/XLSX with a declared column mapping | Code only (`rdflib`/`openpyxl`); auto-merge when validators pass | `authoritative` |
+| B | Glossary pages, standard appendices | Structural parse (LLM fallback for messy markup); **definition must match a verbatim quote in the snapshot or the term is dropped** | `extracted` |
+| C | Definitional sentences in prose | LLM detection + quote check | `suggested` — retrieval hints only, never cited, no approval path to authoritative |
+
+Validators gating merge: quote-verified definitions, licence present, stable unique concept IDs, language-tagged label validity, per-source term caps and slug/IRI validity. Repeated labels across distinct concepts are allowed and must preserve ambiguity. Each new source PR includes source-grounded evaluation fixtures exercising its terms and a rejection/ambiguity case; generators may produce them, but expected facts must be independently checkable against publisher evidence, not accepted on an LLM's assertion.
+
+Rejected proposals (tier B/C) are recorded (overrides-file pattern) so generators never re-propose them.
+
+## Runtime
+
+- **Postgres (existing knowledge_db instance, new `vocabulary` schema):** concept/label/hierarchy tables, a **lexicon** table (label + synonym + notation + scheme, trigram/FTS indexed) for value resolution, and doc→dataset/concept link tables. Loaded by the **knowledge indexer** from the vocabulary bundle; intelligence stays read-only. Reuse existing storage first and measure capacity. Prefer manifest-addressed object reads: no bucket-list permission is needed unless an actual list operation is required. Prefix-scoped object grants cannot authorize such a list operation.
+- **Typed discovery cards** in the existing pgvector: dataset cards (from the semantic bundle) and concept/definition cards (from vocabulary), each a distinct `kind` searched as **separate candidate pools** with bounded top-k per type, merged after rerank. Document chunk retrieval is unchanged.
+- **Capabilities introduced only as needed:** `define_term` returns attributed, scope-relevant definitions across publishers; `resolve_value` returns ranked code candidates scoped to dataset schemes; methodology retrieval uses explicit applicable links where available and ordinary hybrid retrieval otherwise. Missing links never suppress evidence. Implement these inside the existing services rather than requiring three new public endpoints. Dataset cards and lexicon expansion follow measured discovery/resolution failures; they are not prerequisites for the first mixed answer.
+- **Bundle activation:** semantics' bindings pin `vocabulary_bundle_id`; the indexer validates every referenced IRI resolves before switching the active release; traces record both bundle ids.
+
+## Grounded mixed synthesis (the actual unification)
+
+Today's combined path emits prose and a SQL artifact that never meet. Closing that gap is the first functional milestone (Phase 2), not the last integration step:
+
+discover datasets and documents across publishers → establish scope → retrieve applicable methodology/definitions → generate/validate SQL → **BFF executes (execution stays in the BFF, ADR-0004 boundary intact)** → capped rows + provenance return to intelligence → check comparability → one synthesis grounded in rows **and** evidence.
+
+Reuse the post-execution `narrate` call pattern, not its rows-only verification unchanged. A request-scoped evidence envelope carries the question/scope, source and snapshot IDs, cited passages, SQL/query ID, capped rows with units/periods and truncation status, and bundle versions. Preserve provenance for each numerical and documentary claim. Number membership alone does not verify that a figure refers to the right measure, period or population. Comparisons and arithmetic require explicit compatible inputs and deterministic computation, never model-invented calculations.
+
+The BFF sends trusted execution results to intelligence in a second bounded call; no result round-trip through user-editable client state. Evidence and results remain under the request's authorization scope. Define SSE ordering and duplicate/cancellation behaviour in the contract before implementation. Do not stream a final mixed conclusion before execution succeeds. On SQL or evidence failure, return a clearly labelled partial answer or coverage gap rather than a fabricated complete answer. The first slice allows at most one targeted follow-up retrieval, with explicit time/token/row limits; no open-ended planning loop or new persistent job service.
+
+This changes mixed-path orchestration while retaining the existing router and tools. Existing single-source paths remain available behind a feature flag. The bounded general agent loop stays a non-plan until the static workflow demonstrably caps out on eval.
+
+### Latency (mixed path)
+
+The mixed path adds sequential steps (methodology before planning, execution, a second synthesis call), so mixed answers will have a later final conclusion than today's stream-immediately combined path. Measures to keep perceived wait minimal, built into Phase 2 rather than retrofitted:
+
+- **Parallelise independent steps:** dataset discovery and document retrieval run concurrently; SQL generation may start once scope is established, overlapping with evidence retrieval where inputs allow.
+- **Progressive streaming:** emit intermediate results as they become available — sources found, scope/clarification, the executed data table — before the final synthesis. Only the *conclusion* waits for execution + comparability; the user is never watching a blank stream.
+- **Bounded work:** at most one targeted follow-up retrieval, with explicit time/token/row limits (above). Comparability checks are code, not model calls.
+- **No regression elsewhere:** data-only and document-only paths are untouched; the mixed workflow sits behind its feature flag.
+- **Measured, not assumed:** the Phase 2 latency/cost budget covers both time-to-first-useful-output and time-to-final-answer, set before implementation and reported per eval run.
+
+## Phases
+
+Each phase: user go-ahead → ADRs → build → eval gate → stop. One change-class per eval run. Later phases may be re-ordered or dropped on evidence; none starts implicitly.
+
+| Phase | Scope | ADRs to write | Eval gate |
+|---|---|---|---|
+| **0 — coverage and acceptance baseline** | Verify actual ABS/Treasury coverage for the healthcare case family above. Start with a small mixed/negative suite, including free-form discovery without injected datasets. Record bounded onboarding prerequisites. Fix expected scope, facts and citations from independent source evidence. | evaluation ADR for mixed-case scoring, only if existing kinds cannot represent it | Reproducible baseline, answerable versus coverage-gap cases distinguished; numeric, scope, comparability and citation checks defined before feature work |
+| **1 — minimum evidence and vocabulary** | Onboard only the ABS/Treasury releases, methodology and definitions needed by the slice through PR/GCS. Bootstrap `vocabulary` with SKOS/XKOS schema, a narrow SDMX import, source-backed definitions and versioned publication. Add HTML snapshots if those sources require them. Keep existing codelist copies; no bulk migration. | org ADR for vocabulary publication amending/superseding ADR-0001's central-artifact decision; vocabulary model and knowledge snapshot/applicability contracts; name retired duplication per the Ossie plan's perimeter rule | Required source facts and definitions available with provenance; compatible bindings validate; standards export checked. Document-only retrieval baseline measured before vocabulary boosts |
+| **2 — first cross-publisher mixed answer** | Use existing discovery/retrieval, scoped vocabulary bindings and comparability records; retrieve methodology before planning. Implement the BFF execution-return contract and joint synthesis behind a flag. Add only discovery/resolution changes demonstrated necessary by Phase 0. No pre-linked concept requirement. | intelligence + api ADRs for bounded mixed workflow and execution-return contract; semantics binding/constraint contract | Healthcare mixed cases use executed data and relevant Treasury evidence; ambiguous cases clarify/state scope; incompatible figures stay separate; zero unsupported equivalences, double-counting or unsupported caveats in negative cases; current data-suite regression gate met; latency budget (time-to-first-useful-output and time-to-final-answer) and cost budget met |
+| **3 — measured discovery and resolution improvements** | Expand typed dataset/definition candidate pools and the Postgres lexicon only for observed failures. Add candidate-based resolution and source-backed applicable links; run ablations with boosts off/on. | intelligence retrieval/resolution ADR and infra schema permissions as needed | Free-form recall and wrong-code rates improve on a failure class, with no hiding of unlinked documents or mixed/data regressions; ambiguous labels are not forced to match a gold interpretation |
+| **4 — generalise intake and coverage** | Complete reusable `kind`/licence routing, glossary extraction and drift/hash invalidation beyond the pilot sources. Prove a second domain or publisher combination without changing the core schema/workflow. Quality over volume; full automation, no SME curation dependency. | Remaining knowledge intake and vocabulary adapter decisions, only where the pilot contract needs extension | New cross-publisher cases and extraction negatives pass; resource updates preserve provenance and last-good compatible activation; existing suites remain stable |
+| **R — Neo4j retirement** (parallel, independent) | Remove unused triple output and graph writer/config dependencies after auditing consumers; the enrichment call serving other outputs remains. Verify deployed state/data before container removal via Terraform. Entity linking is separate and not a retirement prerequisite. | knowledge + infra retirement decisions | Existing retrieval unaffected; runtime/container absence verified after approved deployment; retain data or obtain explicit deletion consent |
+
+For every behavioural phase, use the latest reproducible deployed baseline with service commits and bundle IDs, not a frozen 73-pass subset. The historical Ossie result is 73/81 pass^3 ([run 42437018692](https://github.com/big-lake/evaluation/actions/runs/42437018692)); it is context, not the current release gate. Score discovery recall, scope correctness, code selection, compatibility decisions, claim-level citations, supported abstention, latency and cost separately. Compare the existing baseline, document ingestion alone, vocabulary-assisted retrieval/resolution, and joint synthesis one change-class at a time. Set budgets before running each phase; report repeat variability and the visible-case limitation rather than tuning indefinitely.
+
+**Non-plans** (each needs a new ADR with a named consumer + failing eval class): automatic cross-dataset joins/roll-ups (7b), bounded general agent loop, Ossie ontology/mapping documents, OM Glossary projection, ADR-0001 taxonomy-consumer migration, tier C at scale, exhaustive entity linking, UI upload channel. Neither broad harvesting nor a new graph/runtime service is a prerequisite for the first mixed answer.
+
+## Risks & limitations
+
+- **No SMEs** (standing): review catches structural errors, not statistical ones. Mitigations: provenance rules above + eval as backstop + publisher scoping limiting blast radius of a bad definition to its scheme.
+- **Licensing:** verify permissions per resource, including third-party material, rather than assuming an agency-wide licence. Unknown/restrictive resources remain metadata-only under the intake policy; attribution and public-eval publication rules apply separately.
+- **Injection/SSRF/paths:** SEC-002 wrapping for all vocabulary text entering prompts; fetch guards; slug validation. Register rows in each repo's `documentation/security/risks.md` at build time.
+- **Volume crowding:** per-source caps + status-aware ranking (validator-enforced).
+- **Two-bundle drift:** pinning + pre-activation validation (correction 7). Failure mode is "stale but consistent", never "dangling".
+- **Capacity unverified:** reuse shared Postgres initially; measure index size, query latency and ingestion contention during the pilot. Do not promise capacity from code counts or nominal Neo4j memory settings alone.
+- **False reconciliation:** a shared label, framework or publisher cannot establish compatible spending measures. Preserve unknowns and differences; a supported side-by-side explanation is a successful mixed answer.
+
+## Open questions (decide at the owning phase)
+
+1. Phase 1: exact IRI minting rules for publishers without linked-data URIs (ABS glossary terms have page anchors; RBA may not).
+2. Phase 2: reuse existing `clarify.request` for material scope/code ambiguity where possible; decide the exact UI contract with a browser check before adding a new card type.
+3. Phase 2: capped-rows/evidence return endpoint, SSE ordering, authorization, truncation and partial-failure behaviour; settle before implementation, keeping SQL execution in the BFF.
+4. Phase 0: which ABS tables and Treasury releases cover the healthcare slice? Any missing ingestion or additional publisher needs an explicit bounded scope decision.
+5. Phase R timing: independent of vocabulary delivery; inspect deployed state and retained data before scheduling removal.

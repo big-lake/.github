@@ -1,6 +1,6 @@
 # ADR-0001 — ABS SDMX category scheme is the canonical subject taxonomy: fetch live, consistently, per repo
 
-- **Status:** accepted
+- **Status:** accepted; amended by [ADR-0005](0005-vocabulary-repo-and-published-bundle.md) (central artifact now exists for vocabulary, not for this subject taxonomy)
 - **Date:** 2026-09-12
 - **Tags:** taxonomy, abs, sdmx, cross-repo, convention, security
 

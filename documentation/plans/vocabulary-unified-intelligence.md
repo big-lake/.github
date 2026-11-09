@@ -1,6 +1,6 @@
 # Cross-publisher unified intelligence — plan
 
-**Status: Phase 0 in progress (2026-11-09).** Coverage verified and the anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)); coverage probe scripts are in `evaluation/scripts/`. The mixed case kind, site uplift and baseline run are still to do. No vocabulary repo, SA, bucket or workflow exists yet. Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
+**Status: Phase 0 complete (2026-11-10); Phase 1 approved by the user and in progress.** Coverage verified, anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)), mixed case kind + per-kind site shipped (evaluation ADR-0003), and the official baseline is public (see [Phase 0 result](#phase-0-result-official-baseline-2026-11-10)). No vocabulary repo, SA, bucket or workflow exists yet. Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
 
 - **Why:** answer cross-publisher questions using compatible, traceable evidence from structured datasets and unstructured documents. Vocabulary supports discovery and interpretation; building a concept layer is not the end goal. The first functional milestone is one complete mixed answer, without a graph database, an agent framework, or an LLM-invented ontology.
 - **Shaped by:** iterative design reviews and the user's cross-publisher priority (2026-11-09). The corrections are binding and recorded in [Design corrections](#design-corrections-binding).
@@ -92,6 +92,25 @@ Maintain a small evidence record, not a new ontology or general rules engine. Da
 | Geography and grain | Australia versus state; totals versus components (no summing a total with its parts) |
 
 An unknown required attribute blocks a claim of comparability, not retrieval. It triggers at most one targeted evidence retrieval, then clarification, a qualified side-by-side answer or abstention. LLM extraction can locate evidence but cannot establish missing compatibility. Automatic cross-dataset joins, roll-ups and weighted conversions remain outside this slice.
+
+### Phase 0 result (official baseline, 2026-11-10)
+
+Evaluation run `20261109-222123-1` ([CI run 42676098866](https://github.com/big-lake/evaluation/actions/runs/42676098866)), official, identity stable; intelligence `a85ffea`, api `394a499`, knowledge index `v1`. Per-kind headline scores are published separately.
+
+| Kind | Result |
+|---|---|
+| data | 79/87 pass (90.8%), 0 invalid — unchanged |
+| mixed (10 cases: 4 `MQ-`, 6 `MH-`) | **0/10 pass** (1 flaky, 7 fail, 2 incomparable from judge 429s) |
+
+Mixed checks (passed of scored): numeric 0/8, scope 6/28, citation 5/22, comparability 3/28. By behaviour: side_by_side 4 fail; answer 1 fail; clarify 1 fail; coverage_gap 4 (1 flaky `MH-0002`, 3 fail). This is the number Phases 1–2 must move.
+
+Findings carried forward:
+
+- `abs.building_activity` "dwelling units completed" in dollars (M7 × Total Work × Total Sectors, SA/Trend) is an upstream ABS quirk (present in the ABS Data API), not an etl bug; encoded as a trap in `MQ-0003`.
+- Vintages differ: the Mar-2026 ABS page matches the lakehouse exactly; Sep-2024 and Jun-2026 pages differ by revision. Gold pins the lakehouse vintage. `MH-0004` retires when `abs.building_activity` is re-ingested past 2026-Q1.
+- Gap against the Phase 0 gate: `semantic_bundles` is empty in run records because `/health` does not report the semantic bundle id. Phase 1 adds it (intelligence change, own commit) before any vocabulary pinning relies on it.
+- Still missing from the suite: an irrelevant-same-topic-passage negative case (added in Phase 1).
+- The Langfuse mirror covers data runs only (relevant to the Phase 2 trace decision).
 
 ## Architecture
 
@@ -209,7 +228,7 @@ Each phase: user go-ahead → ADRs → build → eval gate → stop. One change-
 
 | Phase | Scope | ADRs to write | Eval gate |
 |---|---|---|---|
-| **0 — coverage and acceptance baseline** | ~~Verify ABS/Treasury coverage~~ (done: healthcare recorded as a coverage gap, anchor moved to housing construction). Resolve the `building_activity` completions anomaly (data bug vs trap). Add the `mixed` case kind + validator, uplift the site to all kinds with per-kind scores and licence-enforced quotes ([Evaluation and the public site](#evaluation-and-the-public-site)). Then a small mixed/negative suite, including free-form discovery without injected datasets and healthcare coverage-gap cases. Fix expected scope, facts and citations from independent source evidence. | evaluation ADR (required — existing kinds cannot represent mixed cases): mixed kind + gold shape + scoring, per-kind site sections, licence rule for published quotes, and the §5.2 knowledge-eval decisions | Reproducible official baseline visible on the public site per kind; answerable versus coverage-gap cases distinguished; numeric, scope, comparability and citation checks defined before feature work; existing data-case pages unchanged |
+| **0 — coverage and acceptance baseline — DONE 2026-11-10** | ~~Verify ABS/Treasury coverage~~ (done: healthcare recorded as a coverage gap, anchor moved to housing construction). Resolve the `building_activity` completions anomaly (data bug vs trap). Add the `mixed` case kind + validator, uplift the site to all kinds with per-kind scores and licence-enforced quotes ([Evaluation and the public site](#evaluation-and-the-public-site)). Then a small mixed/negative suite, including free-form discovery without injected datasets and healthcare coverage-gap cases. Fix expected scope, facts and citations from independent source evidence. | evaluation ADR (required — existing kinds cannot represent mixed cases): mixed kind + gold shape + scoring, per-kind site sections, licence rule for published quotes, and the §5.2 knowledge-eval decisions | Reproducible official baseline visible on the public site per kind; answerable versus coverage-gap cases distinguished; numeric, scope, comparability and citation checks defined before feature work; existing data-case pages unchanged |
 | **1 — minimum evidence and vocabulary** | Onboard only the ABS/Treasury releases, methodology and definitions needed by the slice through PR/GCS. Bootstrap `vocabulary` with SKOS/XKOS schema, a narrow SDMX import, source-backed definitions and versioned publication. Add HTML snapshots if those sources require them. Keep existing codelist copies; no bulk migration. | org ADR for vocabulary publication amending/superseding ADR-0001's central-artifact decision; vocabulary model and knowledge snapshot/applicability contracts; name retired duplication per the Ossie plan's perimeter rule | Required source facts and definitions available with provenance; compatible bindings validate; standards export checked. Document-only retrieval baseline measured before vocabulary boosts |
 | **2 — first cross-publisher mixed answer** | Use existing discovery/retrieval, scoped vocabulary bindings and comparability records; retrieve methodology before planning. Implement the BFF execution-return contract and joint synthesis behind a flag. Add only discovery/resolution changes demonstrated necessary by Phase 0. No pre-linked concept requirement. | intelligence + api ADRs for bounded mixed workflow and execution-return contract; semantics binding/constraint contract | Housing construction mixed cases use executed data and relevant Treasury evidence; ambiguous cases clarify/state scope; incompatible figures stay separate; zero unsupported equivalences, double-counting or unsupported caveats in negative cases; current data-suite regression gate met; latency budget (time-to-first-useful-output and time-to-final-answer) and cost budget met |
 | **3 — measured discovery and resolution improvements** | Expand typed dataset/definition candidate pools and the Postgres lexicon only for observed failures. Add candidate-based resolution and source-backed applicable links; run ablations with boosts off/on. | intelligence retrieval/resolution ADR and infra schema permissions as needed | Free-form recall and wrong-code rates improve on a failure class, with no hiding of unlinked documents or mixed/data regressions; ambiguous labels are not forced to match a gold interpretation |

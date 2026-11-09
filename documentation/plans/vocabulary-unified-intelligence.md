@@ -114,14 +114,14 @@ Findings carried forward:
 
 ## Phase 1 progress
 
-Started 2026-11-10. Local commits only; nothing pushed, no repo created on GitHub, no infra.
+Started 2026-11-10. All Phase 1 commits are pushed (`big-lake/vocabulary` created by the user); no infra yet.
 
 | Item | State |
 |---|---|
-| Org ADR-0005 (vocabulary repo + bundle; amends ADR-0001; answers open question 1 on IRI minting) | written, accepted, uncommitted to remote |
-| `vocabulary` repo (local): schema, `_spec/mapping-to-skos.md`, tier A SDMX import (6 `building_activity` codelists), tier B glossaries (ABS methodology 8 terms, Treasury BP1 2 terms), verbatim-quote validators, `rdflib` round-trip, SSRF-guarded snapshots, CI workflow, risks register | done, 12 tests pass |
-| `/health` reports `semantic_bundle_id` (intelligence `37ca7dc`) and eval records it (evaluation `73e937b`) | committed locally; takes effect after an intelligence deploy |
-| ABS "dwelling unit", "commenced", "completed" definitions | **not sourced**: absent from the fetched ABS pages, dropped under the tier B rule; needs a page that states them |
+| Org ADR-0005 (vocabulary repo + bundle; amends ADR-0001; answers open question 1 on IRI minting) | accepted, pushed |
+| `vocabulary` repo: schema, `_spec/mapping-to-skos.md`, tier A SDMX import (6 `building_activity` codelists), tier B glossaries (ABS methodology 19 terms, Treasury BP1 2 terms), verbatim-quote validators, `rdflib` round-trip, SSRF-guarded snapshots, CI workflow, risks register | done, 12 tests pass |
+| `/health` reports `semantic_bundle_id` (intelligence `37ca7dc`) and eval records it (evaluation `73e937b`) | pushed; takes effect after an intelligence deploy |
+| ABS commenced / completed / under construction / dwelling / dwelling-unit counting definitions | sourced verbatim from the Building Activity methodology page's Glossary section. Every ABS release has such a methodology page, so a deterministic Glossary parser is the Phase 4 generalisation |
 | Knowledge snapshot/applicability contract (knowledge ADR-0023) and binding pin contract (org ADR-0006) | written, `proposed`, awaiting user review |
 | Bundle publication (GCS bucket, SA, workflow in `infra/` + GHA) | not started; needs go-ahead |
 | Irrelevant-same-topic-passage negative case | not started |

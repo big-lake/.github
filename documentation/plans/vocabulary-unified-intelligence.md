@@ -122,7 +122,7 @@ Started 2026-11-10. Local commits only; nothing pushed, no repo created on GitHu
 | `vocabulary` repo (local): schema, `_spec/mapping-to-skos.md`, tier A SDMX import (6 `building_activity` codelists), tier B glossaries (ABS methodology 8 terms, Treasury BP1 2 terms), verbatim-quote validators, `rdflib` round-trip, SSRF-guarded snapshots, CI workflow, risks register | done, 12 tests pass |
 | `/health` reports `semantic_bundle_id` (intelligence `37ca7dc`) and eval records it (evaluation `73e937b`) | committed locally; takes effect after an intelligence deploy |
 | ABS "dwelling unit", "commenced", "completed" definitions | **not sourced**: absent from the fetched ABS pages, dropped under the tier B rule; needs a page that states them |
-| Knowledge snapshot/applicability contract ADR; semantics `vocabulary_bundle_id` binding contract ADR | not started |
+| Knowledge snapshot/applicability contract (knowledge ADR-0023) and binding pin contract (org ADR-0006) | written, `proposed`, awaiting user review |
 | Bundle publication (GCS bucket, SA, workflow in `infra/` + GHA) | not started; needs go-ahead |
 | Irrelevant-same-topic-passage negative case | not started |
 | Document-only retrieval baseline (before vocabulary boosts) | not measured |

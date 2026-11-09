@@ -1,6 +1,6 @@
 # Cross-publisher unified intelligence — plan
 
-**Status: Phase 0 complete (2026-11-10); Phase 1 approved by the user and in progress.** Coverage verified, anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)), mixed case kind + per-kind site shipped (evaluation ADR-0003), and the official baseline is public (see [Phase 0 result](#phase-0-result-official-baseline-2026-11-10)). No vocabulary repo, SA, bucket or workflow exists yet. Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
+**Status: Phase 0 complete (2026-11-10); Phase 1 approved by the user and in progress.** Coverage verified, anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)), mixed case kind + per-kind site shipped (evaluation ADR-0003), and the official baseline is public (see [Phase 0 result](#phase-0-result-official-baseline-2026-11-10)). No GitHub `vocabulary` repo, bucket, SA or deploy workflow exists yet; a local repo is built and committed (see [Phase 1 progress](#phase-1-progress)). Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
 
 - **Why:** answer cross-publisher questions using compatible, traceable evidence from structured datasets and unstructured documents. Vocabulary supports discovery and interpretation; building a concept layer is not the end goal. The first functional milestone is one complete mixed answer, without a graph database, an agent framework, or an LLM-invented ontology.
 - **Shaped by:** iterative design reviews and the user's cross-publisher priority (2026-11-09). The corrections are binding and recorded in [Design corrections](#design-corrections-binding).
@@ -111,6 +111,21 @@ Findings carried forward:
 - Gap against the Phase 0 gate: `semantic_bundles` is empty in run records because `/health` does not report the semantic bundle id. Phase 1 adds it (intelligence change, own commit) before any vocabulary pinning relies on it.
 - Still missing from the suite: an irrelevant-same-topic-passage negative case (added in Phase 1).
 - The Langfuse mirror covers data runs only (relevant to the Phase 2 trace decision).
+
+## Phase 1 progress
+
+Started 2026-11-10. Local commits only; nothing pushed, no repo created on GitHub, no infra.
+
+| Item | State |
+|---|---|
+| Org ADR-0005 (vocabulary repo + bundle; amends ADR-0001; answers open question 1 on IRI minting) | written, accepted, uncommitted to remote |
+| `vocabulary` repo (local): schema, `_spec/mapping-to-skos.md`, tier A SDMX import (6 `building_activity` codelists), tier B glossaries (ABS methodology 8 terms, Treasury BP1 2 terms), verbatim-quote validators, `rdflib` round-trip, SSRF-guarded snapshots, CI workflow, risks register | done, 12 tests pass |
+| `/health` reports `semantic_bundle_id` (intelligence `37ca7dc`) and eval records it (evaluation `73e937b`) | committed locally; takes effect after an intelligence deploy |
+| ABS "dwelling unit", "commenced", "completed" definitions | **not sourced**: absent from the fetched ABS pages, dropped under the tier B rule; needs a page that states them |
+| Knowledge snapshot/applicability contract ADR; semantics `vocabulary_bundle_id` binding contract ADR | not started |
+| Bundle publication (GCS bucket, SA, workflow in `infra/` + GHA) | not started; needs go-ahead |
+| Irrelevant-same-topic-passage negative case | not started |
+| Document-only retrieval baseline (before vocabulary boosts) | not measured |
 
 ## Architecture
 

@@ -1,6 +1,6 @@
 # ADR-0006 — Dataset field bindings pin a vocabulary release; consumers validate before activating
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-10
 - **Tags:** vocabulary, semantics, bundle, activation
 - **Builds on:** [ADR-0003](0003-ossie-semantic-layer-source-of-truth.md), [ADR-0005](0005-vocabulary-repo-and-published-bundle.md)

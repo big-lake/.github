@@ -64,4 +64,4 @@ they are not rules. Any ADR, `accepted` included, can be challenged:
 | [0003](0003-ossie-semantic-layer-source-of-truth.md) | Apache Ossie, in a dedicated `semantics` repo, is the source of truth for semantic content; catalog keeps governance only | accepted; amended by ADR-0004 |
 | [0004](0004-profile-in-the-semantics-runner.md) | Profile in the semantics runner, not through the etl dispatch chain (amends ADR-0003 decision 7) | accepted |
 | [0005](0005-vocabulary-repo-and-published-bundle.md) | A `vocabulary` repo publishes source-backed concept schemes as a versioned bundle (amends ADR-0001) | accepted |
-| [0006](0006-dataset-bindings-pin-vocabulary-release.md) | Dataset field bindings pin a vocabulary release; consumers validate before activating | proposed |
+| [0006](0006-dataset-bindings-pin-vocabulary-release.md) | Dataset field bindings pin a vocabulary release; consumers validate before activating | accepted |

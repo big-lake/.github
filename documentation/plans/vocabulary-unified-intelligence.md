@@ -139,6 +139,15 @@ All records official, identity stable; intelligence `37ca7dc`, api `394a499`, se
 
 Reading: the methodology is retrievable and answerable as a document (Phase 1's evidence goal); the mixed baseline is unchanged within variance, as expected, because nothing in Phase 1 reaches the mixed path (no runtime consumer of the vocabulary; joint synthesis is Phase 2). The Phase 1 gate items are met except the retrieval miss carried as the Phase 2 entry item.
 
+## Phase 2 progress
+
+Approved by the user 2026-11-11.
+
+| Item | State |
+|---|---|
+| Entry item: BP1 p.25 retrieval miss | Diagnosed with `/retrieve` probes on test: the passage is indexed (BP1 parent `p_0038`, child `c_00093`, page 25) but (1) the BM25 leg returned nothing for natural-language questions because `plainto_tsquery` ANDs every lexeme, so retrieval was dense-only; (2) 21% of BP1 child chunks are degenerate fragments (axis labels, page headers, empty table grids) that outrank real passages on embeddings. Fix 1 = intelligence OPP-047 (`19e23ae`, deployed to test): p.25 now ranks #1 for the KQ-0001 question and #7 of top-8 for KQ-0003 (absent before). Official run [42908854992](https://github.com/big-lake/evaluation/actions/runs/42908854992) measures it as the only change-class. Fix 2 = OPP-048 (knowledge re-chunk + re-index), a separate change-class, only if the run shows it is still needed |
+| intelligence + api ADRs (bounded mixed workflow, execution-return contract) | not started; after the entry item |
+
 Started 2026-11-10. All Phase 1 commits are pushed (`big-lake/vocabulary` created by the user); infra#78 deployed to test 2026-11-10.
 
 | Item | State |

@@ -112,6 +112,15 @@ Findings carried forward:
 - Still missing from the suite: an irrelevant-same-topic-passage negative case (added in Phase 1).
 - The Langfuse mirror covers data runs only (relevant to the Phase 2 trace decision).
 
+### Re-baseline with MH-0007 and fleet identity (official run 42772124301, 2026-11-10)
+
+| Kind | Result |
+|---|---|
+| data | 78/87 pass, 2 flaky, 7 fail (was 79/87; within repeat variance, same intelligence 85ffea) |
+| mixed (11 cases) | 1/11 pass: MH-0002 now passes (was flaky); MH-0007 (the same-topic negative) fails as expected; all side_by_side, nswer and clarify cases still fail |
+
+Mixed checks (passed of scored): numeric 0/9, scope 6/33, citation 3/27, comparability 4/33; no incomparable repeats this time (judge 429s did not recur). semantic_bundles now populated from traces (20261108T052050Z-68a32f2); the /health field arrives after an intelligence deploy.
+
 ## Phase 1 progress
 
 Started 2026-11-10. All Phase 1 commits are pushed (`big-lake/vocabulary` created by the user); no infra yet.
@@ -125,7 +134,7 @@ Started 2026-11-10. All Phase 1 commits are pushed (`big-lake/vocabulary` create
 | Knowledge snapshot/applicability contract (knowledge ADR-0023) and binding pin contract (org ADR-0006) | written, `proposed`, awaiting user review |
 | Bundle publication (GCS bucket, SA, workflow in `infra/` + GHA) | code done: vocabulary `bbf325f` (builder, atomic `current.json` publish, `--rollback-to`, `publish.yml` gated by `PUBLISH_ENABLED`, SETUP.md, 17 tests). Infra written on branch `feat/vocabulary-bundle-bucket` (`ff75746`, **local, not pushed**; fmt + validate pass): versioned `{project}-vocabulary` bucket, `biglake-sa-vocabulary-{env}` with `bundles/`-conditioned objectAdmin, environment-scoped WIF binding. **Nothing deployed**; needs the infra PR/GHA deploy, then the GitHub environments/secrets in SETUP.md. No consumer read grants yet |
 | Irrelevant-same-topic-passage negative case | done: `MH-0007` (hand-written, coverage-gap: no annual Accord target in the Budget Papers), pushed in evaluation `80fdd40`. It joins the mixed suite, so the mixed baseline above (10 cases) predates it and is re-baselined on the next official run |
-| Document-only retrieval baseline (before vocabulary boosts) | suite and runner pushed (evaluation `d95d2ce`; `KQ-0001..0004`). First dispatch [42696729271](https://github.com/big-lake/evaluation/actions/runs/42696729271) coincided with the overnight fleet shutdown: intelligence died 5 min in, 50 data cases incomparable, mixed/knowledge never ran, and the publisher **correctly refused** the unstable records (officialness guard validated in anger). Re-dispatched as [42772124301](https://github.com/big-lake/evaluation/actions/runs/42772124301) after the fleet came back; results to be recorded here |
+| Document-only retrieval baseline (before vocabulary boosts) | suite and runner pushed (evaluation `d95d2ce`; `KQ-0001..0004`). First dispatch [42696729271](https://github.com/big-lake/evaluation/actions/runs/42696729271) hit the overnight fleet shutdown and was correctly refused by the publisher. Second dispatch [42772124301](https://github.com/big-lake/evaluation/actions/runs/42772124301) published data and mixed but the **knowledge runner crashed** (`KeyError: trap_violations`, a bug in the new runner that unit tests missed; fixed with a regression test in evaluation `b16a356`). **Still not measured**: needs one more official dispatch (data and mixed would re-run) |
 
 ## Architecture
 

@@ -1,4 +1,4 @@
-﻿# BigLake Platform Architecture
+# BigLake Platform Architecture
 
 ## Overview
 
@@ -17,6 +17,7 @@ biglake/
 ├── intelligence/    # RAG orchestration & agent logic
 ├── semantics/       # Semantic layer (Ossie models) — descriptions, metrics, structure
 ├── evaluation/      # Outside-in answer-quality evaluation + public results site
+├── vocabulary/      # Source-backed concept schemes (SKOS/XKOS) + bundle
 └── .github/         # Org-level docs, architecture, Copilot instructions
 ```
 
@@ -105,6 +106,14 @@ biglake/
 - Apache Ossie model per dataset: descriptions, fields, temporal coverage, metrics; ABS SDMX extracts and codelists
 - Publishes a versioned bundle to GCS; catalog projects its descriptions into OpenMetadata
 - Bot-authored, human-reviewed PRs; never writes to OM directly
+
+### vocabulary
+
+**Role:** Publisher-scoped concept schemes, definitions and classifications, each with provenance and licence, published as a versioned bundle ([ADR-0005](documentation/adr/0005-vocabulary-repo-and-published-bundle.md)).
+
+- Tier A: code-only import of machine-readable standards (SDMX codelists); tier B: definitions kept only if the quote is verbatim in a pinned source snapshot
+- `semantics` pins a release and verifies its bindings resolve ([ADR-0006](documentation/adr/0006-dataset-bindings-pin-vocabulary-release.md), [ADR-0007](documentation/adr/0007-vocabulary-bindings-derive-from-sdmx.md))
+- **Is not:** a universal ontology, a subject taxonomy (ADR-0001 stays), a duplicate of `semantics` bindings, or a runtime service
 
 ### evaluation
 

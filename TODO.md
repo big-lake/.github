@@ -1,6 +1,6 @@
 ﻿# BigLake Platform — Org-Wide TODO
 
-Last updated 2026-10-31. This is the single source of truth for cross-repo planning. Repo-local TODOs should only cover repo-internal task tracking; anything that crosses repo boundaries lives here.
+Last updated 2026-11-10. This is the single source of truth for cross-repo planning. Repo-local TODOs should only cover repo-internal task tracking; anything that crosses repo boundaries lives here.
 
 **Intelligence RAG-quality work has its own live register — don't duplicate it here.** `intelligence/evaluation/results/OPPORTUNITIES.md` (open/in-progress rows) + `OPPORTUNITIES-ARCHIVE.md` (closed rows) is the authoritative, actively-maintained backlog for retrieval/routing/generation/eval quality opportunities, produced by the `/intelligence-scan` + `/intelligence-improve` loop. This file only summarises the handful of rows that are cross-repo or currently blocked on a human decision — see "Intelligence quality backlog" below.
 
@@ -17,8 +17,9 @@ Last updated 2026-10-31. This is the single source of truth for cross-repo plann
 | **ui** | Live end-to-end against `api` for catalog, knowledge, query, chat tabs, notebooks (CRUD + publish + share), agent. Remaining mocked surfaces: Sponsorship/Stripe checkout, metadata-only "donate to unlock" flow, dataset lineage view (API exists, no UI), knowledge-document PDF preview. |
 | **knowledge** | Production through indexing (Flows 1–4) plus a `search_summaries` retrieval tier (OPP-027, done). `search_questions` tier designed but not built (OPP-029, open). Eval harness built; blocked on a human curating the golden set (OPP-005). |
 | **intelligence** | Chat + agent surfaces live: hybrid retrieval + Cohere rerank + Gemini synthesis, real `thought` SSE events, gated query decomposition (multi-artifact chat responses, phase 2a), class-based Pro/Flash model routing, per-turn LLM budget, classifier confidence from logprobs. See `evaluation/results/OPPORTUNITIES.md` for the live quality backlog. |
-| **semantics** | **On hold (2026-10-31)** pending the evaluation workstream. Bundles publish to test; generators, drift and evidence flows built. See plan `documentation/plans/ossie-semantic-layer.md` §0. |
+| **semantics** | Active for the cross-publisher unified intelligence plan (Phase 1: vocabulary pin, [semantics#51](https://github.com/big-lake/semantics/pull/51)); the wider Ossie programme stays on hold pending evaluation (2026-10-31). See "Semantic layer (Ossie)" below. |
 | **evaluation** | New repo (2026-10-31), phase 0: skeleton + ADR-0001 done; `/health` commit reporting in review (api#1, intelligence#2). |
+| **vocabulary** | New repo (2026-11-10): source-backed SKOS/XKOS concept schemes (ABS `building_activity` codelists + ABS/Treasury definitions) with verbatim-quote validators; bundle publication written, not deployed. Not a universal ontology or subject taxonomy. Plan below. |
 
 ---
 
@@ -68,6 +69,13 @@ Public, outside-in measurement of answer quality; the gate for intelligence and 
 - [ ] **Phase 1 — data eval** on ABS datasets with methodology links (`config/datasets.yaml`), gold from ABS published figures, baseline run on test. (`evaluation`)
 - [ ] **Phase 2 — official runs in CI** (eval service account + WIF + IAP). (`evaluation`, `infra`)
 - [ ] **Phase 3 — public site** on GitHub Pages; **phase 4** knowledge eval; **phase 5** optional Langfuse trial. (`evaluation`)
+
+## Cross-publisher unified intelligence (new workstream, 2026-11-09)
+
+Answer cross-publisher questions with compatible, traceable evidence from datasets and documents. The plan owns phases, gates and status: [`documentation/plans/vocabulary-unified-intelligence.md`](documentation/plans/vocabulary-unified-intelligence.md) (org ADR-0005/0006/0007). Phase 0 (coverage + mixed eval baseline) is done; Phase 1 (minimum evidence and vocabulary) is in progress.
+
+- [ ] **Phase 1 — minimum evidence and vocabulary.** Knowledge HTML-snapshot onboarding of the slice sources, vocabulary bundle consumer wiring, document-only baseline, semantics pin in CI. (`vocabulary`, `knowledge`, `semantics`, `infra`, `evaluation`)
+- [ ] **Phase 2 — first cross-publisher mixed answer** behind a flag; **Phase 3** measured discovery/resolution; **Phase 4** generalised intake; **Phase R** Neo4j retirement (independent). Each needs a user go-ahead. (`intelligence`, `api`, `knowledge`, `infra`)
 
 ## Semantic layer (Ossie) — on hold
 

@@ -19,6 +19,7 @@ BigLake is a GCP-hosted data platform for Australian government datasets. See `A
 | **intelligence** | RAG orchestration & agent logic | Python, LLM APIs, vector DB client |
 | **semantics** | Semantic layer (Ossie models, SDMX extracts) — on hold pending evaluation | Python, Apache Ossie, GCS |
 | **evaluation** | Outside-in answer-quality evals + public results site | Python, GitHub Actions, GitHub Pages |
+| **vocabulary** | Source-backed concept schemes (SKOS/XKOS) and the vocabulary bundle; not an ontology or subject taxonomy | Python, YAML, rdflib, GCS |
 | **.github** | Org-level docs & Copilot config | Markdown |
 
 ## Cross-repo TODO tracking (`.github/TODO.md`)

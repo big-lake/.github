@@ -74,7 +74,7 @@ Public, outside-in measurement of answer quality; the gate for intelligence and 
 
 Answer cross-publisher questions with compatible, traceable evidence from datasets and documents. The plan owns phases, gates and status: [`documentation/plans/vocabulary-unified-intelligence.md`](documentation/plans/vocabulary-unified-intelligence.md) (org ADR-0005/0006/0007). Phase 0 (coverage + mixed eval baseline) is done; Phase 1 (minimum evidence and vocabulary) is in progress.
 
-- [ ] **Phase 1 — minimum evidence and vocabulary.** Onboard the slice web pages to knowledge via the PDF front door (human upload + registry PR), document-only baseline, semantics pin in CI (human App grant + variable). (`vocabulary`, `knowledge`, `semantics`, `infra`, `evaluation`)
+- [ ] **Phase 1 — minimum evidence and vocabulary.** Automated source intake + extraction (plan course correction 2026-11-10): knowledge ADR superseding ADR-0024; URL fetch step in `open-inbox-pr.yml`, HTML kept as fetched, `kind: knowledge | vocabulary | all`; tier B extractor + vocabulary `extract.yml` scheme PR (first case: Building Activity methodology, `all`); document-only baseline; semantics pin in CI (human App grant + variable). (`vocabulary`, `knowledge`, `semantics`, `infra`, `evaluation`)
 - [ ] **Phase 2 — first cross-publisher mixed answer** behind a flag; **Phase 3** measured discovery/resolution; **Phase 4** generalised intake; **Phase R** Neo4j retirement (independent). Each needs a user go-ahead. (`intelligence`, `api`, `knowledge`, `infra`)
 
 ## Semantic layer (Ossie) — on hold

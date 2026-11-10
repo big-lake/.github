@@ -66,3 +66,4 @@ they are not rules. Any ADR, `accepted` included, can be challenged:
 | [0005](0005-vocabulary-repo-and-published-bundle.md) | A `vocabulary` repo publishes source-backed concept schemes as a versioned bundle (amends ADR-0001) | accepted |
 | [0006](0006-dataset-bindings-pin-vocabulary-release.md) | Dataset field bindings pin a vocabulary release; consumers validate before activating | accepted; amended by ADR-0007 |
 | [0007](0007-vocabulary-bindings-derive-from-sdmx.md) | Vocabulary bindings are derived from `sdmx.yaml`; `vocabulary.yaml` pins the release (amends ADR-0006 decision 1) | accepted |
+| [0008](0008-dataset-scope-and-comparability-records.md) | Dataset scope and comparability records for the mixed workflow (housing slice) | proposed |

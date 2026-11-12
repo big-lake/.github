@@ -129,6 +129,102 @@ Mixed checks (passed of scored): numeric 0/9, scope 6/33, citation 3/27, compara
 
 ### Phase 1 result (official run 42897354117, 2026-11-10)
 
+### Local Checkpoint (2026-11-12, Not Released)
+
+**Resume here (end of session 2026-11-12).** Nothing committed or pushed in any repo; all work below
+is uncommitted in `intelligence`, `api`, `evaluation`, `ui` and `.github` (untracked: intelligence
+`app/services/mixed.py`, `tests/test_mixed_workflow.py`, ADR-0034; api `scripts/check_mixed_relay.py`;
+evaluation `tests/test_mixed_bff.py`; org ADR-0009). Both mixed flags off. Offline checks: intelligence
+15 mixed + suite green, api relay 9, evaluation 121, Newman 60 scripts compile. Org
+[ADR-0009](../adr/0009-document-claim-records-and-attribute-vocabulary.md) (document claim records,
+closed attribute values, per-row dataset resolution, per-operation rules) accepted 2026-11-12; amends ADR-0008.
+
+Next actions, in order:
+1. ~~`semantics`: `comparability.yaml` + `python -m semantics.comparability` + bundle publication~~ done
+   2026-11-13 (branch `feat/comparability-records`): `facet_columns` (incl. the M7 dollar-trap exclusion),
+   `dataset_facets` (tenure `not_distinguished`, status `actual`), `parts` (total residential, total sector);
+   quotes checked against a copy of the pinned ABS methodology snapshot; bundle `comparability/{table}.json`
+   with its sha256 in `index.json`.
+2. ~~`knowledge`: claim sidecar schema, CI quote validation, `claims/v1/claims.json`~~ done 2026-11-13
+   (branch `feat/claim-sidecars`). **Waiting on the user:** review the five drafted BP1 claims in
+   `configuration/treasury/federal/budget_release_papers/2025_2026/bp1_2025_26.claims.yaml`
+   (c-0001 target, c-0002 Accord Q1, c-0003 55,000 social/affordable, c-0004 18,000 expected, c-0005
+   dwelling investment). All are `review.status: proposed`; nothing publishes until a human approves.
+   Judgement calls to check: "new homes" -> `build_type: new`; "national" -> `geography: AUS`;
+   c-0005's growth rate has no unit enum (unknown). Target start stays unknown (duration P5Y).
+3. Assumptions checked 2026-11-13: (a) **does not hold as written** - the router's scope output is
+   only the class label (plus a clarify question for `broad`), so code picks the operation from the
+   claims' status, the row count and explicit "add up" wording (intelligence ADR-0035); (b) holds -
+   intelligence's bucket-wide read on the knowledge bucket covers `claims/v1/claims.json`.
+4. ~~`intelligence`: facet columns kept, per-row resolution, operation choice, code computation~~ done
+   locally 2026-11-13 (`app/services/comparability.py`, ADR-0035). Claim-backed conclusions make no
+   model call. API `AgentConclusionEvent` now has `operation` and `ComparabilityRecord` items; OpenAPI,
+   Newman and the UI renderer updated.
+   Finding: MQ-0003's gold SQL uses Total Work (`new_and_alterations`) while c-0001 says "new" homes,
+   so the pace is computed only when the planner picks new work; with Total Work the answer is a
+   side-by-side naming the build-type difference. Decide whether the gold or the claim changes.
+
+The accepted correction is implemented as an initial, default-off transport slice:
+intelligence retrieves evidence before SQL planning, relays a bounded envelope to
+the BFF, and accepts only the configured BFF identity at `/agent/mixed/conclude`.
+The BFF executes SQL, emits the exact table, then returns at most 50 rows for one
+checked conclusion. Duplicate mixed artifacts are suppressed within a stream;
+callback failure preserves the table and yields an explicit partial. OpenAPI,
+Newman assertions and the browser consumer are updated locally. The UI renders
+quotes as plain text with a partial label and expandable comparability records.
+
+The mixed eval has an explicit `--transport bff` path using cookie-backed source
+resends and the BFF's executed rows, not generated-SQL re-execution. Product timing
+is separate from judging; internal SQL-ready events do not satisfy first output,
+and an interrupted stream does not receive a completion time. The historical
+direct-intelligence transport remains the default diagnostic.
+
+**Still open before enablement or gate claims:** implementing the accepted ADR-0009
+claim/comparability contracts (dataset records, document claims, comparison code), and measured
+flag-off/flag-on housing, negative, latency and usage results. Actual token usage
+is now reported per stream (terminal events, narration, conclusion) and summed by
+the BFF and eval; any unreadable call makes the total null, never zero. The return call now
+has a 25-second BFF wall-clock deadline (auth included) and is abandoned on browser
+disconnect; the intelligence model call is capped at 20 seconds so it can return
+its own partial. In-flight sockets and Vertex calls still run to their own timeouts
+(bounded by the budget), because Python cannot kill them. The conclusion is
+currently extractive and always partial/unknown, not full compatible arithmetic.
+`MIXED_CONCLUSION_CALLER_SA` must be configured by an approved infra deployment;
+missing configuration fails closed. No flags, deployments, CI runs, pushes or
+merges were performed. TODO is unchanged. The older resume below is historical.
+
+### Accepted review correction (2026-11-12)
+
+This update supersedes the older resume sequence below. Phase 2 remains in progress;
+its housing acceptance cases and safety gate are unchanged.
+
+1. Fix the budgets and measurement contract before implementation (intelligence
+      ADR-0034 amends ADR-0033). Product latency excludes judge and scoring work;
+      internal SQL-ready events do not count as user-visible output. Record actual
+      model usage before claiming the token-cost gate is met.
+2. Build the flag-gated mixed workflow and BFF execution-return path, with an
+      outside-in BFF eval consumer of `conclusion` and a browser-checked UI consumer.
+      Direct-intelligence SQL scoring remains a baseline, not evidence that the new
+      execution-return workflow works.
+3. Add the minimum dataset comparability records and knowledge-side document claim
+      contract before claiming compatible arithmetic. Unknown attributes permit a
+      qualified side-by-side answer, not an unsupported numeric comparison. OPP-050
+      remains eligible for a separately measured, narrow discovery fix when it blocks
+      these acceptance cases; do not silently exclude those cases from the gate.
+
+Budgets accepted with this correction: first useful output p50 <= 30 s; final
+answer p50 <= 60 s and p90 <= 90 s; conclusion call <= 25 s without retry; mixed
+model tokens <= 2x a measured flag-off baseline. Older published `latency_ms`
+includes eval work and is not that baseline. Missing usage is unknown, never zero.
+No push, merge, dispatch or deployment is authorised by this sequencing update.
+
+Factual corrections to the older progress rows: the tier B extractor is merged
+and has produced the reviewed 37-term ABS scheme; hand ABS/Treasury seeds have
+been removed; the methodology catalog entry is merged; the mixed trigger is
+decided in ADR-0033; infra#78 was merged whole. Publication remains disabled and
+the bundle bucket still has no runtime consumer. The stale rows below retain
+their historical detail, not current blockers. TODO status updates remain pending.
+
 All records official, identity stable; intelligence `37ca7dc`, api `394a499`, semantic bundle `20261110T202449Z-0b557f2` (pins vocabulary `voc-6fc8fa64a77e`).
 
 | Kind | Result |

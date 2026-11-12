@@ -1,6 +1,8 @@
 # ADR-0008 — Dataset scope and comparability records for the mixed workflow (housing slice)
 
-- **Status:** accepted (2026-11-11)
+- **Status:** accepted (2026-11-11); amended by [ADR-0009](0009-document-claim-records-and-attribute-vocabulary.md) (decision 5's equality and arithmetic rule, decision 6's document side)
+
+> Read with ADR-0009: closed attribute values, per-row dataset resolution, and per-operation rules replace decision 5.
 - **Date:** 2026-11-11
 - **Plan:** [vocabulary-unified-intelligence.md](../plans/vocabulary-unified-intelligence.md), "Scope and comparability" and Phase 2
 - **Pairs with:** intelligence ADR-0033 (the workflow that consumes it), api ADR-0028

@@ -1,6 +1,6 @@
 # Cross-publisher unified intelligence — plan
 
-**Status: Phase 0 complete (2026-11-10); Phase 1 complete (2026-11-10); Phase 2 approved by the user 2026-11-11 and in progress (see [Phase 2 progress](#phase-2-progress)).** Coverage verified, anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)), mixed case kind + per-kind site shipped (evaluation ADR-0003), and the official baseline is public (see [Phase 0 result](#phase-0-result-official-baseline-2026-11-10)). The vocabulary bucket, SA and WIF binding are deployed to test (infra#78, `9eedd10`), but no bundle has been published (`PUBLISH_ENABLED` unset; no consumer; see [Phase 1 progress](#phase-1-progress)). **Course correction 2026-11-10:** definitions must come from an automated, repeatable intake + extraction loop built on the existing knowledge inbox automation, not hand transcription or print-to-PDF uploads (see [Course correction](#course-correction-2026-11-10-automated-source-intake-and-extraction)). **As of 2026-11-11** that loop is merged, deployed to test and has run once end to end: [knowledge#8](https://github.com/big-lake/knowledge/pull/8), [vocabulary#1](https://github.com/big-lake/vocabulary/pull/1), [infra#78](https://github.com/big-lake/infra/pull/78); the methodology is onboarded and its extracted scheme merged ([vocabulary#2](https://github.com/big-lake/vocabulary/pull/2)). The Phase 1 eval is complete (see [Phase 1 result](#phase-1-result-official-run-42897354117-2026-11-10)); Phase 2's entry item is done (knowledge suite 5/5, run 42908854992) and the mixed-workflow ADRs are accepted (intelligence ADR-0033, api ADR-0028, org ADR-0008). The trigger is decided: a `mixed` router class, merged and on in test (run 42949194242: mixed still 0/11; the mixed workflow itself is not built). Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
+**Status: Phase 0 complete (2026-11-10); Phase 1 complete (2026-11-10); Phase 2 approved by the user 2026-11-11 and in progress (see [Phase 2 progress](#phase-2-progress)).** Coverage verified, anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)), mixed case kind + per-kind site shipped (evaluation ADR-0003), and the official baseline is public (see [Phase 0 result](#phase-0-result-official-baseline-2026-11-10)). The vocabulary bucket, SA and WIF binding are deployed to test (infra#78, `9eedd10`), and semantics publishes bundles to test (`PUBLISH_ENABLED` and `VOCABULARY_CHECK` are `true`; the latest publish, after semantics#52, carries the vocabulary pin and the comparability records; there is still no runtime vocabulary consumer; see [Phase 1 progress](#phase-1-progress)). **As of 2026-11-13** the claim/comparability contracts and the code-only comparison are merged with both mixed flags off; the five BP1 claims await user approval (see [Checkpoint (2026-11-13)](#checkpoint-2026-11-13-merged-to-main-deployed-to-test-flags-off)). **Course correction 2026-11-10:** definitions must come from an automated, repeatable intake + extraction loop built on the existing knowledge inbox automation, not hand transcription or print-to-PDF uploads (see [Course correction](#course-correction-2026-11-10-automated-source-intake-and-extraction)). **As of 2026-11-11** that loop is merged, deployed to test and has run once end to end: [knowledge#8](https://github.com/big-lake/knowledge/pull/8), [vocabulary#1](https://github.com/big-lake/vocabulary/pull/1), [infra#78](https://github.com/big-lake/infra/pull/78); the methodology is onboarded and its extracted scheme merged ([vocabulary#2](https://github.com/big-lake/vocabulary/pull/2)). The Phase 1 eval is complete (see [Phase 1 result](#phase-1-result-official-run-42897354117-2026-11-10)); Phase 2's entry item is done (knowledge suite 5/5, run 42908854992) and the mixed-workflow ADRs are accepted (intelligence ADR-0033, api ADR-0028, org ADR-0008). The trigger is decided: a `mixed` router class, merged and on in test (run 42949194242: mixed still 0/11; the mixed workflow itself is not built). Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
 
 - **Why:** answer cross-publisher questions using compatible, traceable evidence from structured datasets and unstructured documents. Vocabulary supports discovery and interpretation; building a concept layer is not the end goal. The first functional milestone is one complete mixed answer, without a graph database, an agent framework, or an LLM-invented ontology.
 - **Shaped by:** iterative design reviews and the user's cross-publisher priority (2026-11-09). The corrections are binding and recorded in [Design corrections](#design-corrections-binding).
@@ -129,70 +129,79 @@ Mixed checks (passed of scored): numeric 0/9, scope 6/33, citation 3/27, compara
 
 ### Phase 1 result (official run 42897354117, 2026-11-10)
 
-### Local Checkpoint (2026-11-12, Not Released)
+### Checkpoint (2026-11-13, merged to `main`, deployed to test, flags off)
 
-**Resume here (end of session 2026-11-12).** Nothing committed or pushed in any repo; all work below
-is uncommitted in `intelligence`, `api`, `evaluation`, `ui` and `.github` (untracked: intelligence
-`app/services/mixed.py`, `tests/test_mixed_workflow.py`, ADR-0034; api `scripts/check_mixed_relay.py`;
-evaluation `tests/test_mixed_bff.py`; org ADR-0009). Both mixed flags off. Offline checks: intelligence
-15 mixed + suite green, api relay 9, evaluation 121, Newman 60 scripts compile. Org
-[ADR-0009](../adr/0009-document-claim-records-and-attribute-vocabulary.md) (document claim records,
-closed attribute values, per-row dataset resolution, per-operation rules) accepted 2026-11-12; amends ADR-0008.
+**Resume here (end of session 2026-11-13).** Everything below is merged and pushed:
+semantics#52 (`dda5132`), knowledge#10 (`e8c5dd7`), intelligence#25 (`75b1e19`), api#6 (`ba076ec`),
+ui#5 (`1e67aee`), evaluation#6 (`c4908a2`), .github#1 (`14cee98`). PR CI was green; post-merge the
+semantics Publish job succeeded and intelligence and UI deployed to test (the intelligence `/health`
+was not checked: the :8001 tunnel was stale). No official eval run was in progress at merge time and none
+has been run on this code. `ENABLE_MIXED_WORKFLOW` (intelligence) and `ENABLE_MIXED_CONCLUSION` (api) are
+off, so user-facing behaviour is unchanged. Org
+[ADR-0009](../adr/0009-document-claim-records-and-attribute-vocabulary.md) (accepted 2026-11-12, amends
+ADR-0008) defines the contracts; intelligence ADR-0034 (budgets) and ADR-0035 (operation choice and
+code-only comparability) are accepted. Offline checks at merge: intelligence 25 mixed tests and 68
+overall (ad-hoc runner, no pytest), api relay 10, Newman 60 scripts compile, evaluation 121,
+semantics 72 plus 14 comparability, knowledge 98.
 
-Next actions, in order:
-1. ~~`semantics`: `comparability.yaml` + `python -m semantics.comparability` + bundle publication~~ done
-   2026-11-13 (branch `feat/comparability-records`): `facet_columns` (incl. the M7 dollar-trap exclusion),
-   `dataset_facets` (tenure `not_distinguished`, status `actual`), `parts` (total residential, total sector);
-   quotes checked against a copy of the pinned ABS methodology snapshot; bundle `comparability/{table}.json`
-   with its sha256 in `index.json`.
-2. ~~`knowledge`: claim sidecar schema, CI quote validation, `claims/v1/claims.json`~~ done 2026-11-13
-   (branch `feat/claim-sidecars`). **Waiting on the user:** review the five drafted BP1 claims in
-   `configuration/treasury/federal/budget_release_papers/2025_2026/bp1_2025_26.claims.yaml`
-   (c-0001 target, c-0002 Accord Q1, c-0003 55,000 social/affordable, c-0004 18,000 expected, c-0005
-   dwelling investment). All are `review.status: proposed`; nothing publishes until a human approves.
-   Judgement calls to check: "new homes" -> `build_type: new`; "national" -> `geography: AUS`;
-   c-0005's growth rate has no unit enum (unknown). Target start stays unknown (duration P5Y).
-3. Assumptions checked 2026-11-13: (a) **does not hold as written** - the router's scope output is
-   only the class label (plus a clarify question for `broad`), so code picks the operation from the
-   claims' status, the row count and explicit "add up" wording (intelligence ADR-0035); (b) holds -
-   intelligence's bucket-wide read on the knowledge bucket covers `claims/v1/claims.json`.
-4. ~~`intelligence`: facet columns kept, per-row resolution, operation choice, code computation~~ done
-   locally 2026-11-13 (`app/services/comparability.py`, ADR-0035). Claim-backed conclusions make no
-   model call. API `AgentConclusionEvent` now has `operation` and `ComparabilityRecord` items; OpenAPI,
-   Newman and the UI renderer updated.
-   Finding: MQ-0003's gold SQL uses Total Work (`new_and_alterations`) while c-0001 says "new" homes,
-   so the pace is computed only when the planner picks new work; with Total Work the answer is a
-   side-by-side naming the build-type difference. Decide whether the gold or the claim changes.
+What exists now:
 
-The accepted correction is implemented as an initial, default-off transport slice:
-intelligence retrieves evidence before SQL planning, relays a bounded envelope to
-the BFF, and accepts only the configured BFF identity at `/agent/mixed/conclude`.
-The BFF executes SQL, emits the exact table, then returns at most 50 rows for one
-checked conclusion. Duplicate mixed artifacts are suppressed within a stream;
-callback failure preserves the table and yields an explicit partial. OpenAPI,
-Newman assertions and the browser consumer are updated locally. The UI renders
-quotes as plain text with a partial label and expandable comparability records.
+- **semantics:** `datasets/abs/building_activity/comparability.yaml` (`facet_columns` including the M7
+  dollar-trap exclusion, `dataset_facets` tenure `not_distinguished` and status `actual`, `period`, `parts`),
+  quotes verified against `reference/abs/snapshots/building-activity-methodology@mar-2026.txt` (LF-normalised
+  sha256); `python -m semantics.comparability` runs in `validate.yml` and `publish.yml`; the bundle carries
+  `comparability/{table}.json` with its hash in `index.json`.
+- **knowledge:** `{document_key}.claims.yaml` sidecars (`shared/claims.py`), CI quote check against a committed
+  page snapshot (`bp1_2025_26.pages.txt`), `claims/v1/claims.json` written by `embed_and_index` with
+  `{path, sha256, n_claims}` in the manifest. Five BP1 claims are drafted, all `review.status: proposed`.
+- **intelligence:** `app/services/comparability.py` resolves dataset facets per returned row, attaches claims
+  to a passage only when the quote is inside it, picks the operation in code and computes the result with no
+  model call; the planners keep the facet code columns (`data_query(keep_columns=...)`); `/health` reports
+  `claims_sha256`. Without an attached approved claim the old extractive partial path runs.
+- **api / ui / evaluation:** `AgentConclusionEvent` has `operation` and `ComparabilityRecord` items (OpenAPI,
+  Newman and the chat renderer updated); the 25 s return call, heartbeats, disconnect abandon, per-stream usage
+  and the `--transport bff` eval runner from the 2026-11-12 work are all merged.
 
-The mixed eval has an explicit `--transport bff` path using cookie-backed source
-resends and the BFF's executed rows, not generated-SQL re-execution. Product timing
-is separate from judging; internal SQL-ready events do not satisfy first output,
-and an interrupted stream does not receive a completion time. The historical
-direct-intelligence transport remains the default diagnostic.
+Decisions and findings:
 
-**Still open before enablement or gate claims:** implementing the accepted ADR-0009
-claim/comparability contracts (dataset records, document claims, comparison code), and measured
-flag-off/flag-on housing, negative, latency and usage results. Actual token usage
-is now reported per stream (terminal events, narration, conclusion) and summed by
-the BFF and eval; any unreadable call makes the total null, never zero. The return call now
-has a 25-second BFF wall-clock deadline (auth included) and is abandoned on browser
-disconnect; the intelligence model call is capped at 20 seconds so it can return
-its own partial. In-flight sockets and Vertex calls still run to their own timeouts
-(bounded by the budget), because Python cannot kill them. The conclusion is
-currently extractive and always partial/unknown, not full compatible arithmetic.
-`MIXED_CONCLUSION_CALLER_SA` must be configured by an approved infra deployment;
-missing configuration fails closed. No flags, deployments, CI runs, pushes or
-merges were performed. TODO is unchanged. The older resume below is historical.
+- ADR-0009's assumption that the operation comes from the router's scope output **did not hold**: the router
+  emits only a class label. Operation is chosen from the claim's status, the row count and explicit "add up"
+  wording (ADR-0035); ADR-0009 carries a pointer. Claims loading beside the manifest holds (intelligence's
+  bucket-wide read on the knowledge bucket covers it).
+- MQ-0003's gold SQL uses Total Work (`new_and_alterations`) while claim c-0001 says "new" homes, so the pace
+  is computed only when the planner selects new work; with Total Work the answer is a side-by-side naming the
+  build-type difference. Either the gold or the claim must change (user decision).
 
+Next actions, in order (each needs the user unless noted):
+
+1. **Review and approve the five drafted BP1 claims** in
+   `knowledge/configuration/treasury/federal/budget_release_papers/2025_2026/bp1_2025_26.claims.yaml`
+   (c-0001 target, c-0002 Accord Q1, c-0003 55,000 social/affordable, c-0004 18,000 expected, c-0005 dwelling
+   investment): set `review: {status: approved, by: ...}`. Check "new homes" -> `build_type: new`, "national" ->
+   `geography: AUS`, and that c-0005's growth rate has no unit enum (left unknown). The target start date stays
+   unknown (BP1 says "over five years" only; duration `P5Y`).
+2. Decide the MQ-0003 gold-versus-claim mismatch above.
+3. Approved infra deploy that sets `MIXED_CONCLUSION_CALLER_SA` (Terraform + GitHub Actions only); a missing
+   value fails closed.
+4. Run knowledge `embed_and_index` so the approved claims publish; confirm `/health` shows `claims_sha256`
+   (restart the stale :8001 tunnel first).
+5. Measured runs: flag-off baseline, then flag-on housing, negative, latency (first output p50 <= 30 s, final
+   p50 <= 60 s / p90 <= 90 s, conclusion call <= 25 s) and token usage (<= 2x the flag-off baseline), one
+   change class per official run, with no merge to semantics, intelligence, api or knowledge while a run is
+   in progress. Only then consider enabling the flags.
+6. `.github/TODO.md` is unchanged and needs user confirmation before any edit; the stale infra comment
+   "revert after" on `ENABLE_MIXED_ROUTE` is still pending for the next infra change.
+
+Mechanics of the shipped transport (unchanged from 2026-11-12): intelligence retrieves evidence before SQL
+planning, relays a bounded (32 KiB) envelope to the BFF, and accepts only the configured BFF identity at
+`/agent/mixed/conclude`. The BFF executes SQL, emits the exact table, returns at most 50 rows for one checked
+conclusion, suppresses duplicate mixed artifacts and preserves the table on callback failure. The 25 s
+wall-clock deadline covers ID-token minting; the intelligence model call is capped at 20 s; Python cannot kill
+in-flight sockets or Vertex calls, so abandoned work runs to its own timeout. Token usage is reported per
+stream and summed by the BFF and eval; any unreadable call makes the total null, never zero. The eval's
+`--transport bff` path uses cookie-backed source resends and the BFF's executed rows; internal SQL-ready events
+do not count as first output. The direct-intelligence transport remains the default diagnostic. The older
+resume sections below are historical.
 ### Accepted review correction (2026-11-12)
 
 This update supersedes the older resume sequence below. Phase 2 remains in progress;

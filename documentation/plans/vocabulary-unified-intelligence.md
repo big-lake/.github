@@ -1,6 +1,6 @@
 # Cross-publisher unified intelligence — plan
 
-**Status: Phase 0 complete (2026-11-10); Phase 1 complete (2026-11-10); Phase 2 approved by the user 2026-11-11 and in progress (see [Phase 2 progress](#phase-2-progress)).** Coverage verified, anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)), mixed case kind + per-kind site shipped (evaluation ADR-0003), and the official baseline is public (see [Phase 0 result](#phase-0-result-official-baseline-2026-11-10)). The vocabulary bucket, SA and WIF binding are deployed to test (infra#78, `9eedd10`), and semantics publishes bundles to test (`PUBLISH_ENABLED` and `VOCABULARY_CHECK` are `true`; the latest publish, after semantics#52, carries the vocabulary pin and the comparability records; there is still no runtime vocabulary consumer; see [Phase 1 progress](#phase-1-progress)). **As of 2026-11-13** the claim/comparability contracts and the code-only comparison are merged with both mixed flags off; the five BP1 claims await user approval (see [Checkpoint (2026-11-13)](#checkpoint-2026-11-13-merged-to-main-deployed-to-test-flags-off)). **Course correction 2026-11-10:** definitions must come from an automated, repeatable intake + extraction loop built on the existing knowledge inbox automation, not hand transcription or print-to-PDF uploads (see [Course correction](#course-correction-2026-11-10-automated-source-intake-and-extraction)). **As of 2026-11-11** that loop is merged, deployed to test and has run once end to end: [knowledge#8](https://github.com/big-lake/knowledge/pull/8), [vocabulary#1](https://github.com/big-lake/vocabulary/pull/1), [infra#78](https://github.com/big-lake/infra/pull/78); the methodology is onboarded and its extracted scheme merged ([vocabulary#2](https://github.com/big-lake/vocabulary/pull/2)). The Phase 1 eval is complete (see [Phase 1 result](#phase-1-result-official-run-42897354117-2026-11-10)); Phase 2's entry item is done (knowledge suite 5/5, run 42908854992) and the mixed-workflow ADRs are accepted (intelligence ADR-0033, api ADR-0028, org ADR-0008). The trigger is decided: a `mixed` router class, merged and on in test (run 42949194242: mixed still 0/11; the mixed workflow itself is not built). Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
+**Status: Phase 0 complete (2026-11-10); Phase 1 complete (2026-11-10); Phase 2 approved by the user 2026-11-11 and in progress (see [Phase 2 progress](#phase-2-progress)).** Coverage verified, anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)), mixed case kind + per-kind site shipped (evaluation ADR-0003), and the official baseline is public (see [Phase 0 result](#phase-0-result-official-baseline-2026-11-10)). The vocabulary bucket, SA and WIF binding are deployed to test (infra#78, `9eedd10`), and semantics publishes bundles to test (`PUBLISH_ENABLED` and `VOCABULARY_CHECK` are `true`; the latest publish, after semantics#52, carries the vocabulary pin and the comparability records; there is still no runtime vocabulary consumer; see [Phase 1 progress](#phase-1-progress)). **As of 2026-11-13** the claim/comparability contracts and the code-only comparison are merged with both mixed flags off by default; application deployment is pending and the five BP1 claims await user approval (see [Checkpoint (2026-11-13)](#checkpoint-2026-11-13-merged-to-main-deployed-to-test-flags-off)). **Course correction 2026-11-10:** definitions must come from an automated, repeatable intake + extraction loop built on the existing knowledge inbox automation, not hand transcription or print-to-PDF uploads (see [Course correction](#course-correction-2026-11-10-automated-source-intake-and-extraction)). **As of 2026-11-11** that loop is merged, deployed to test and has run once end to end: [knowledge#8](https://github.com/big-lake/knowledge/pull/8), [vocabulary#1](https://github.com/big-lake/vocabulary/pull/1), [infra#78](https://github.com/big-lake/infra/pull/78); the methodology is onboarded and its extracted scheme merged ([vocabulary#2](https://github.com/big-lake/vocabulary/pull/2)). The Phase 1 eval is complete (see [Phase 1 result](#phase-1-result-official-run-42897354117-2026-11-10)); Phase 2's entry item is done (knowledge suite 5/5, run 42908854992) and the mixed-workflow ADRs are accepted (intelligence ADR-0033, api ADR-0028, org ADR-0008). The trigger is decided: a `mixed` router class, merged and on in test (run 42949194242: mixed still 0/11 at that checkpoint; the mixed workflow is now built but not deployed). Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
 
 - **Why:** answer cross-publisher questions using compatible, traceable evidence from structured datasets and unstructured documents. Vocabulary supports discovery and interpretation; building a concept layer is not the end goal. The first functional milestone is one complete mixed answer, without a graph database, an agent framework, or an LLM-invented ontology.
 - **Shaped by:** iterative design reviews and the user's cross-publisher priority (2026-11-09). The corrections are binding and recorded in [Design corrections](#design-corrections-binding).
@@ -129,15 +129,24 @@ Mixed checks (passed of scored): numeric 0/9, scope 6/33, citation 3/27, compara
 
 ### Phase 1 result (official run 42897354117, 2026-11-10)
 
-### Checkpoint (2026-11-13, merged to `main`, deployed to test, flags off)
+<a id="checkpoint-2026-11-13-merged-to-main-deployed-to-test-flags-off"></a>
+
+### Checkpoint (2026-11-13, merged to `main`, application deployment pending)
 
 **Resume here (end of session 2026-11-13).** Everything below is merged and pushed:
 semantics#52 (`dda5132`), knowledge#10 (`e8c5dd7`), intelligence#25 (`75b1e19`), api#6 (`ba076ec`),
 ui#5 (`1e67aee`), evaluation#6 (`c4908a2`), .github#1 (`14cee98`). PR CI was green; post-merge the
-semantics Publish job succeeded and intelligence and UI deployed to test (the intelligence `/health`
-was not checked: the :8001 tunnel was stale). No official eval run was in progress at merge time and none
+semantics Publish job succeeded: run 43291749559 published `20261112T193600Z-dda5132` to test.
+**Deployment correction (review 2026-11-13).**
+The mixed application code is merged but not deployed to test: the latest successful intelligence Deploy
+run is 42958670882 at `996c4c3`, and the latest UI Deploy run is 42783621410 at `54f00de`.
+Test API `/health` reports clean `394a499`, not main's `ba076ec`; intelligence `/health` could not be
+verified because the existing :8001 tunnel refused connections. Knowledge Flows deployment
+43291851958 succeeded at `e8c5dd7`, which does not prove the claims artifact has been published.
+No official eval run was in progress at merge time and none
 has been run on this code. `ENABLE_MIXED_WORKFLOW` (intelligence) and `ENABLE_MIXED_CONCLUSION` (api) are
-off, so user-facing behaviour is unchanged. Org
+off by default in the merged code and absent from infra main; their deployed values were not verified.
+The new mixed workflow is not evidenced as active. Org
 [ADR-0009](../adr/0009-document-claim-records-and-attribute-vocabulary.md) (accepted 2026-11-12, amends
 ADR-0008) defines the contracts; intelligence ADR-0034 (budgets) and ADR-0035 (operation choice and
 code-only comparability) are accepted. Offline checks at merge: intelligence 25 mixed tests and 68
@@ -172,6 +181,8 @@ Decisions and findings:
   is computed only when the planner selects new work; with Total Work the answer is a side-by-side naming the
   build-type difference. Either the gold or the claim must change (user decision).
 
+The sequence below is superseded by the approved 2026-11-13 correction immediately after it.
+
 Next actions, in order (each needs the user unless noted):
 
 1. **Review and approve the five drafted BP1 claims** in
@@ -191,6 +202,44 @@ Next actions, in order (each needs the user unless noted):
    in progress. Only then consider enabling the flags.
 6. `.github/TODO.md` is unchanged and needs user confirmation before any edit; the stale infra comment
    "revert after" on `ENABLE_MIXED_ROUTE` is still pending for the next infra change.
+
+### Accepted review correction (2026-11-13)
+
+Approved by the user: "approved, lets do it". Phase 2's scope, budgets and safety
+gate remain unchanged. The review's deployment correction above stands; code
+release and CI success are not runtime activation or a passed acceptance gate.
+
+1. Close the gate-integrity gaps before a measured run: record and compare
+  `claims_sha256` (including public run records), expose `transport: bff` in
+  official CI, select operations from the request with one unambiguous claim,
+  and refuse sums without explicit disjoint parts. Intelligence ADR-0036 amends
+  ADR-0035; the original ADR body is preserved.
+2. Resolve MQ-0003 without rewriting a source-backed claim to match gold. The
+  2026-11-13 read-only test query confirms Total Work / All Buildings = 43,816
+  (the independently published figure), while New / Total Residential = 43,666.
+  MQ-0003 keeps its numeric gold and becomes an explicit side-by-side scope
+  case. A source-backed New Residential pace case is still required to meet
+  the Phase 2 compatible-pace gate; the probe alone does not establish gold.
+3. Prepare test caller identity through Terraform's existing intelligence
+  `extra_env` map, preserving mixed routing and keeping `ENABLE_MIXED_WORKFLOW=false`.
+  API's conclusion flag stays false. Deployments and trial activation remain
+  separate from offline validation. No prod change or new service is needed.
+4. Review the five BP1 claims individually, publish approved claims through
+  knowledge `embed_and_index`, and verify deployed commits, semantic bundle
+  and `claims_sha256` before recording a baseline. Correction approval is not
+  blanket approval of the draft attributes.
+5. Measure an official BFF flag-off baseline, then the approved paired-flag
+  trial with housing, negatives, regression, latency and token measurements.
+  Direct-intelligence runs remain diagnostics, not the BFF gate. Preserve the
+  no-merge/deploy freeze during official evals. Only consider normal enablement
+  after every existing Phase 2 gate passes.
+
+**Local implementation checkpoint (2026-11-13):** corrections in intelligence,
+semantics, evaluation, infra and this plan are uncommitted and not deployed.
+Offline validation: evaluation 127 passed; intelligence mixed 28 passed;
+semantics 87 tests, one existing skip; test Terraform `validate` and `fmt -check`
+passed. All 149 cases validate. The BFF transport has only offline cookie/resend
+validation; there is no new official baseline or budget result. TODO is unchanged.
 
 Mechanics of the shipped transport (unchanged from 2026-11-12): intelligence retrieves evidence before SQL
 planning, relays a bounded (32 KiB) envelope to the BFF, and accepts only the configured BFF identity at
@@ -230,8 +279,10 @@ No push, merge, dispatch or deployment is authorised by this sequencing update.
 Factual corrections to the older progress rows: the tier B extractor is merged
 and has produced the reviewed 37-term ABS scheme; hand ABS/Treasury seeds have
 been removed; the methodology catalog entry is merged; the mixed trigger is
-decided in ADR-0033; infra#78 was merged whole. Publication remains disabled and
-the bundle bucket still has no runtime consumer. The stale rows below retain
+decided in ADR-0033; infra#78 was merged whole. Vocabulary publication remains disabled and
+the vocabulary bundle bucket still has no runtime consumer; semantics publication is enabled
+(`PUBLISH_ENABLED=true`, `VOCABULARY_CHECK=true`, verified 2026-11-13).
+The stale rows below retain
 their historical detail, not current blockers. TODO status updates remain pending.
 
 All records official, identity stable; intelligence `37ca7dc`, api `394a499`, semantic bundle `20261110T202449Z-0b557f2` (pins vocabulary `voc-6fc8fa64a77e`).

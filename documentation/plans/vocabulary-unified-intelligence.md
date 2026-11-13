@@ -134,17 +134,31 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   answerable with citations (knowledge 5/5, run 42908854992). No user can yet receive a mixed answer that joins
   ABS rows with Treasury evidence: the last official mixed score is 1/11 (run 42958997358, old combined path).
 - **Deployed to test:** intelligence `a54a017` (mixed route on, mixed workflow off), api `ba076ec`
-  (`ENABLE_MIXED_CONCLUSION` off), semantic bundle `20261113T082957Z-96038f5`, claims `76b5a4fb...`, data
-  through June 2026. The UI serves `54f00de`; ui#5 (`1e67aee`, mixed-conclusion renderer) is merged but not
-  deployed.
-- **Running:** flag-off BFF official baseline, evaluation run 43495860904. Merge/deploy freeze on semantics,
-  intelligence, api and knowledge until it ends. Read mixed with `MH-0004` excluded (stale).
+  (`ENABLE_MIXED_CONCLUSION` off; api#7 merged 2026-11-14 so the next Deploy API reads the flag from VM
+  metadata, default off), semantic bundle `20261113T082957Z-96038f5`, claims `76b5a4fb...`, data
+  through June 2026. The UI serves `1e67aee` (mixed-conclusion renderer; Deploy UI run 43507297797).
+- **Flag-off BFF official baseline (run 43495860904, official, identity stable, intelligence `a54a017`, api
+  `ba076ec`, published on `results`):** data 79/87 (1 flaky, 7 fail; unchanged); knowledge 5/5; mixed 2/12 with
+  `MH-0004` included (excluding it: 2 pass, 1 flaky, 7 fail, 1 invalid of 11). Mixed checks: numeric 0/10,
+  scope 10/30, citation 16/23, comparability 7/26. Six of 36 mixed repeats were errors, five of them
+  `HTTP 503: no healthy upstream` (MH-0002 x2, MH-0003 x3 incl. one 196 s) and one a stream interruption
+  (MH-0007), so the score understates the flag-off path. Latency (all repeats): mixed p50 37 s, p90 240 s,
+  first output p50 20 s; data p50 4.6 s, p90 14 s; knowledge p50 22 s, p90 239 s. Mixed tokens: 504,043 over 28
+  repeats with usage (mean 18,002); 8 unknown (not zero). No conclusion calls (flag off). The data and
+  knowledge records carry no usage. Measured against the Why: still no user receives a joined ABS + Treasury
+  answer; every `side_by_side` case fails (numeric 0/10: the SQL is not reaching the gold value).
+- **MH-0004 retired** (evaluation#9, id never reused). The Phase 4 methodology-release item (Jun-2026
+  methodology as a new document with `supersedes`) is still due.
 - **Budgets (intelligence ADR-0034):** first useful output p50 <= 30 s; final answer p50 <= 60 s, p90 <= 90 s;
-  conclusion call <= 25 s without retry; mixed tokens <= 2x the flag-off baseline. Missing usage is unknown,
-  never zero.
-- **Next, in order:** (1) read the baseline; (2) retire `MH-0004` and deploy the UI (`1e67aee`) to test;
-  (3) paired-flag trial: one infra PR enabling both flags on test, deploy plus VM restart, one official BFF run,
-  browser-check the conclusion render, revert both flags in the same session if any gate fails; (4) Phase 4a.
+  conclusion call <= 25 s without retry; mixed tokens <= 2x the flag-off baseline (2 x 18,002 per repeat). Missing
+  usage is unknown, never zero. The flag-off p90 (240 s) already exceeds the final-answer budget; the 503s must
+  be explained before the trial's p90 is read.
+- **Next, in order:** (1) infra#81 (adds `enable_mixed_conclusion` to `modules/api`, default false) needs a
+  review/approval before it merges; (2) then one infra PR setting the api variable true and intelligence
+  `extra_env` `ENABLE_MIXED_WORKFLOW = "true"` on test only, Terraform Deploy, Deploy API, intelligence VM
+  stop/start, one official BFF run, browser-check the conclusion render, revert both flags in the same session
+  if any gate fails; (3) Phase 4a. Explain the 503 window first (check that the api/intelligence VMs were not
+  restarting at 19:50-20:30 UTC on 2026-11-13).
 - **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
   one Budget Paper). Phase 4b addresses it.
 

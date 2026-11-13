@@ -268,12 +268,23 @@ No official eval run was in progress at any merge or deploy.
   site-wide CC BY 4.0, accepted by the owner) is `verified`, but its expected behaviour is `side_by_side`:
   c-0001 leaves the target's counting measure and start date unknown by design, so no pace ratio can be
   asserted. The Phase 2 "compatible pace" gate therefore has a verified source-backed case but still no case
-  that demonstrates a computed pace; whether the gate needs one, and on which claim, is a user decision.
-- **Not yet done:** confirmation that the intelligence VM was stopped/started after the Terraform deploy (the
-  `extra-env` metadata applies at boot only; `/health` does not expose `MIXED_CONCLUSION_CALLER_SA`); the
-  flag-off BFF official baseline (`transport: bff`); the approved paired-flag trial against the budgets. Both
-  `ENABLE_MIXED_WORKFLOW` and `ENABLE_MIXED_CONCLUSION` remain off. The `.github/TODO.md` Phase 2 bullet was
-  updated with the owner's confirmation (.github#4).
+  that demonstrates a computed pace.
+- **Pace gate decision (owner accepted the recommendation, 2026-11-14):** the gate is met by correct behaviour,
+  not by forcing a number. For Phase 2, MQ-0005 passes only as a qualified side-by-side that states the
+  target's measure is unknown and asserts no ratio; any computed pace on it fails. A computed-pace case is added
+  only when a source document itself states how the target is counted (for example a Housing Accord publication
+  naming ABS new dwelling completions), captured as a new reviewed claim. No existing claim is edited to make
+  arithmetic possible.
+- **Intelligence VM** was stopped/started by the owner on 2026-11-14 after the Terraform deploy; `/health`
+  afterwards: `a54a017` clean, bundle `20261113T082957Z-96038f5`, `claims_sha256` `76b5a4fb...`, mixed route
+  on, mixed workflow off (`MIXED_CONCLUSION_CALLER_SA` is not exposed by `/health`).
+- **Flag-off BFF official baseline:** dispatched 2026-11-14 (evaluation run 43495860904, all suites, mixed
+  `transport: bff`, 3 repeats). No merge or deploy to semantics, intelligence, api or knowledge until it ends.
+- **Next:** read the baseline (latency p50/p90, conclusion-call time, token totals as the 2x reference), then the
+  paired-flag trial: one PR enabling `ENABLE_MIXED_WORKFLOW` (intelligence, Terraform `extra_env`) and
+  `ENABLE_MIXED_CONCLUSION` (api) on test only, deploy plus VM restart, one official BFF run, compare against the
+  budgets, and revert both flags in the same session if any gate fails. Both flags remain off until then.
+  The `.github/TODO.md` Phase 2 bullet was updated with the owner's confirmation (.github#4).
 
 Mechanics of the shipped transport (unchanged from 2026-11-12): intelligence retrieves evidence before SQL
 planning, relays a bounded (32 KiB) envelope to the BFF, and accepts only the configured BFF identity at

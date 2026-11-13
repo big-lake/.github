@@ -131,7 +131,10 @@ Mixed checks (passed of scored): numeric 0/9, scope 6/33, citation 3/27, compara
 
 <a id="checkpoint-2026-11-13-merged-to-main-deployed-to-test-flags-off"></a>
 
-### Checkpoint (2026-11-13, merged to `main`, application deployment pending)
+### Checkpoint (2026-11-13, deployed to test, flags off)
+
+**Current status (end of 2026-11-13): see "Deployment and activation status" under the accepted correction
+below; the paragraphs that follow are the earlier merge-time snapshot.**
 
 **Resume here (end of session 2026-11-13).** Everything below is merged and pushed:
 semantics#52 (`dda5132`), knowledge#10 (`e8c5dd7`), intelligence#25 (`75b1e19`), api#6 (`ba076ec`),
@@ -162,7 +165,8 @@ What exists now:
   `comparability/{table}.json` with its hash in `index.json`.
 - **knowledge:** `{document_key}.claims.yaml` sidecars (`shared/claims.py`), CI quote check against a committed
   page snapshot (`bp1_2025_26.pages.txt`), `claims/v1/claims.json` written by `embed_and_index` with
-  `{path, sha256, n_claims}` in the manifest. Five BP1 claims are drafted, all `review.status: proposed`.
+  `{path, sha256, n_claims}` in the manifest. Five BP1 claims were drafted; they are now approved and published
+  (see the deployment status below).
 - **intelligence:** `app/services/comparability.py` resolves dataset facets per returned row, attaches claims
   to a passage only when the quote is inside it, picks the operation in code and computes the result with no
   model call; the planners keep the facet code columns (`data_query(keep_columns=...)`); `/health` reports
@@ -181,7 +185,8 @@ Decisions and findings:
   is computed only when the planner selects new work; with Total Work the answer is a side-by-side naming the
   build-type difference. Either the gold or the claim must change (user decision).
 
-The sequence below is superseded by the approved 2026-11-13 correction immediately after it.
+The sequence below is superseded by the approved 2026-11-13 correction immediately after it
+(its steps 1-4 are done and TODO was updated; see the deployment status).
 
 Next actions, in order (each needs the user unless noted):
 
@@ -235,11 +240,40 @@ release and CI success are not runtime activation or a passed acceptance gate.
   after every existing Phase 2 gate passes.
 
 **Local implementation checkpoint (2026-11-13):** corrections in intelligence,
-semantics, evaluation, infra and this plan are uncommitted and not deployed.
-Offline validation: evaluation 127 passed; intelligence mixed 28 passed;
-semantics 87 tests, one existing skip; test Terraform `validate` and `fmt -check`
-passed. All 149 cases validate. The BFF transport has only offline cookie/resend
-validation; there is no new official baseline or budget result. TODO is unchanged.
+semantics, evaluation, infra and this plan were validated offline before merge: evaluation 127 passed;
+intelligence mixed 28 passed; semantics 87 tests, one existing skip; test Terraform `validate` and `fmt -check`
+passed; all 149 cases validated.
+
+#### Deployment and activation status (2026-11-13, evening)
+
+No official eval run was in progress at any merge or deploy.
+
+- **Merged to `main`:** semantics#53, intelligence#26 (ADR-0036), evaluation#7 and #8, knowledge#11 and #12,
+  infra#80 (reviewed, merged and Terraform-deployed by the user; Terraform Deploy succeeded 09:24 UTC), .github#3
+  and #4.
+- **Deployed to test:** API (Deploy API run 43393951296), intelligence (runs 43393958741 and 43399770487),
+  knowledge flows (run 43397639068). The UI was not redeployed (no change). Intelligence `/health`: commit
+  `a54a017` clean (= `main`), semantic bundle `20261113T082957Z-96038f5`, `claims_sha256` `76b5a4fb...`,
+  `enable_mixed_route` true, `enable_mixed_workflow` false.
+- **Claims:** c-0001..c-0005 approved by `jezchaves` 2026-11-13 and published to `claims/v1/claims.json`. The first
+  `embed_and_index` publish failed: unquoted commas inside YAML flow-mapping quotes split them into stray keys and
+  broke `json.dumps(sort_keys=True)`; fixed by quoting (knowledge#12, with a serialisation regression test) and
+  republished. `embed_and_index` only reaches the publish step when a document is selected, so a claims-only
+  change needs `only_keys` plus `force`.
+- **Data vintage:** `abs.building_activity` was re-ingested through the June 2026 release (ingest, bronze, silver
+  via the Prefect REST API). The API pins its DuckDB views per worker, so it showed the old snapshot until the
+  Deploy API restart. MQ-0001/0002/0003 gold was repointed to the June 2026 vintage (45,499, 45,499, 44,592; the
+  March release showed 45,410 and 43,816). `PUBLISHER_HOSTS` now allows `data.api.abs.gov.au`.
+- **Pace case:** MQ-0005 (New / Total Residential completions, Jun-26 = 47,010, from the ABS Data API under the
+  site-wide CC BY 4.0, accepted by the owner) is `verified`, but its expected behaviour is `side_by_side`:
+  c-0001 leaves the target's counting measure and start date unknown by design, so no pace ratio can be
+  asserted. The Phase 2 "compatible pace" gate therefore has a verified source-backed case but still no case
+  that demonstrates a computed pace; whether the gate needs one, and on which claim, is a user decision.
+- **Not yet done:** confirmation that the intelligence VM was stopped/started after the Terraform deploy (the
+  `extra-env` metadata applies at boot only; `/health` does not expose `MIXED_CONCLUSION_CALLER_SA`); the
+  flag-off BFF official baseline (`transport: bff`); the approved paired-flag trial against the budgets. Both
+  `ENABLE_MIXED_WORKFLOW` and `ENABLE_MIXED_CONCLUSION` remain off. The `.github/TODO.md` Phase 2 bullet was
+  updated with the owner's confirmation (.github#4).
 
 Mechanics of the shipped transport (unchanged from 2026-11-12): intelligence retrieves evidence before SQL
 planning, relays a bounded (32 KiB) envelope to the BFF, and accepts only the configured BFF identity at

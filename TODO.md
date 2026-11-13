@@ -1,6 +1,6 @@
 ﻿# BigLake Platform — Org-Wide TODO
 
-Last updated 2026-11-10. This is the single source of truth for cross-repo planning. Repo-local TODOs should only cover repo-internal task tracking; anything that crosses repo boundaries lives here.
+Last updated 2026-11-14. This is the single source of truth for cross-repo planning. Repo-local TODOs should only cover repo-internal task tracking; anything that crosses repo boundaries lives here.
 
 **Intelligence RAG-quality work has its own live register — don't duplicate it here.** `intelligence/evaluation/results/OPPORTUNITIES.md` (open/in-progress rows) + `OPPORTUNITIES-ARCHIVE.md` (closed rows) is the authoritative, actively-maintained backlog for retrieval/routing/generation/eval quality opportunities, produced by the `/intelligence-scan` + `/intelligence-improve` loop. This file only summarises the handful of rows that are cross-repo or currently blocked on a human decision — see "Intelligence quality backlog" below.
 
@@ -19,7 +19,7 @@ Last updated 2026-11-10. This is the single source of truth for cross-repo plann
 | **intelligence** | Chat + agent surfaces live: hybrid retrieval + Cohere rerank + Gemini synthesis, real `thought` SSE events, gated query decomposition (multi-artifact chat responses, phase 2a), class-based Pro/Flash model routing, per-turn LLM budget, classifier confidence from logprobs. See `evaluation/results/OPPORTUNITIES.md` for the live quality backlog. |
 | **semantics** | Active for the cross-publisher unified intelligence plan (Phase 1: vocabulary pin, [semantics#51](https://github.com/big-lake/semantics/pull/51)); the wider Ossie programme stays on hold pending evaluation (2026-10-31). See "Semantic layer (Ossie)" below. |
 | **evaluation** | New repo (2026-10-31), phase 0: skeleton + ADR-0001 done; `/health` commit reporting in review (api#1, intelligence#2). |
-| **vocabulary** | New repo (2026-11-10): source-backed SKOS/XKOS concept schemes (ABS `building_activity` codelists + ABS/Treasury definitions) with verbatim-quote validators; bundle publication written, not deployed. Not a universal ontology or subject taxonomy. Plan below. |
+| **vocabulary** | New repo (2026-11-10): source-backed SKOS/XKOS concept schemes (ABS `building_activity` codelists + the extracted 37-term ABS Building Activity methodology glossary; the hand-transcribed Treasury terms were removed in vocabulary#2) with verbatim-quote validators. Bundle publication is off and nothing reads the bundle at runtime; further vocabulary work is on hold until a measured failure needs it (plan review 2026-11-14). Not a universal ontology or subject taxonomy. Plan below. |
 
 ---
 
@@ -52,7 +52,7 @@ Not evidenced anywhere in recent work — treat as still open until confirmed ot
 - [ ] Verify `infra` prod env is provisioned to parity with test (Prefect VM, OM VM, intelligence VM, knowledge_db, storage, IAM).
 - [ ] Populate prod Secret Manager values via GCP Console UI (Cohere API key, pgvector DSN, OM admin, etc.). (human)
 - [ ] Run all `etl` pipelines against prod to seed gold-layer datasets in `gs://{prod_project}-lakehouse`.
-- [ ] Run all `knowledge` pipelines against prod to populate prod pgvector + Neo4j.
+- [ ] Run all `knowledge` pipelines against prod to populate prod pgvector. ~~+ Neo4j~~ (Neo4j is being retired: cross-publisher plan decision 3, Phase R; do not populate it in prod.)
 - [ ] Deploy `catalog` (OM ingestion + curation) to prod.
 - [ ] Deploy `api` + `ui` + `intelligence` to prod via GHA.
 - [ ] **Prod decision for the data-answer features** — eval gate met: official run `20261109-004459-42541560625` on intelligence `a85ffea` / api `394a499` scored 79/87 correct on every repeat (0 invalid, 0 regressions vs the 73/81 baseline; 6 new derived cases all pass). Not run: widening on vs off in isolation (needs a flag-off redeploy via infra). Still your call before prod: both `ENABLE_CONTEXT_WIDENING` and `ENABLE_DATA_NARRATION` default ON; deploy with them `false` if you want to flip them after. [Plan](documentation/plans/data-answer-highlight-and-narration.md). (`intelligence`, `api`, `evaluation`)
@@ -72,10 +72,10 @@ Public, outside-in measurement of answer quality; the gate for intelligence and 
 
 ## Cross-publisher unified intelligence (new workstream, 2026-11-09)
 
-Answer cross-publisher questions with compatible, traceable evidence from datasets and documents. The plan owns phases, gates and status: [`documentation/plans/vocabulary-unified-intelligence.md`](documentation/plans/vocabulary-unified-intelligence.md) (org ADR-0005/0006/0007). Phase 0 (coverage + mixed eval baseline) is done; Phase 1 (minimum evidence and vocabulary) is in progress.
+Answer cross-publisher questions with compatible, traceable evidence from datasets and documents. The plan owns phases, gates and status: [`documentation/plans/vocabulary-unified-intelligence.md`](documentation/plans/vocabulary-unified-intelligence.md) (org ADR-0005/0006/0007). Phase 0 (coverage + mixed eval baseline) and Phase 1 (minimum evidence and vocabulary) are done; Phase 2 is in progress.
 
-- [ ] **Phase 1 — minimum evidence and vocabulary.** Automated source intake + extraction (plan course correction 2026-11-10): knowledge ADR superseding ADR-0024; URL fetch step in `open-inbox-pr.yml`, HTML kept as fetched, `kind: knowledge | vocabulary | all`; tier B extractor + vocabulary `extract.yml` scheme PR (first case: Building Activity methodology, `all`); document-only baseline; semantics pin in CI (human App grant + variable). (`vocabulary`, `knowledge`, `semantics`, `infra`, `evaluation`)
-- [ ] **Phase 2 — first cross-publisher mixed answer** behind a flag (2026-11-13: BP1 claims c-0001..c-0005 approved and published, comparability + request-led operation choice + disjoint-sum safety deployed to test, MQ-0005 pace case verified; `ENABLE_MIXED_WORKFLOW`/`ENABLE_MIXED_CONCLUSION` still off). Remaining: intelligence VM stop/start so Terraform `extra-env` applies, flag-off BFF official baseline (`transport: bff`), then an approved paired-flag trial against the plan's latency/token budgets. **Phase 3** measured discovery/resolution; **Phase 4** generalised intake; **Phase R** Neo4j retirement (independent). Each needs a user go-ahead. (`intelligence`, `api`, `knowledge`, `infra`)
+- [x] **Phase 1 — minimum evidence and vocabulary** (done 2026-11-10, official run 42897354117). Automated source intake + extraction (plan course correction 2026-11-10): knowledge ADR superseding ADR-0024; URL fetch step in `open-inbox-pr.yml`, HTML kept as fetched, `kind: knowledge | vocabulary | all`; tier B extractor + vocabulary `extract.yml` scheme PR (first case: Building Activity methodology, `all`); document-only baseline; semantics pin in CI (human App grant + variable). (`vocabulary`, `knowledge`, `semantics`, `infra`, `evaluation`)
+- [ ] **Phase 2 — first cross-publisher mixed answer** behind a flag (2026-11-13: BP1 claims c-0001..c-0005 approved and published, comparability + request-led operation choice + disjoint-sum safety deployed to test, MQ-0005 pace case verified; `ENABLE_MIXED_WORKFLOW`/`ENABLE_MIXED_CONCLUSION` still off). Remaining: read the flag-off BFF official baseline (run 43495860904), retire `MH-0004`, deploy the UI (`1e67aee`), then an approved paired-flag trial against the plan's latency/token budgets. **Phase 4a** (Jun-2026 methodology as a knowledge document) is pulled forward; **Phase 4b** automated claim drafting is added; **Phase 3** measured discovery/resolution; **Phase 4** generalised intake; **Phase R** Neo4j retirement (independent). Each needs a user go-ahead. (`intelligence`, `api`, `ui`, `knowledge`, `infra`)
 
 ## Semantic layer (Ossie) — on hold
 

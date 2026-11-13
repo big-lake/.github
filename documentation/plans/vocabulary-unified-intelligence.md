@@ -1,6 +1,6 @@
 # Cross-publisher unified intelligence — plan
 
-**Status: Phase 0 complete (2026-11-10); Phase 1 complete (2026-11-10); Phase 2 approved by the user 2026-11-11 and in progress (see [Phase 2 progress](#phase-2-progress)).** Coverage verified, anchor moved to housing construction (see [First acceptance slice](#first-acceptance-slice)), mixed case kind + per-kind site shipped (evaluation ADR-0003), and the official baseline is public (see [Phase 0 result](#phase-0-result-official-baseline-2026-11-10)). The vocabulary bucket, SA and WIF binding are deployed to test (infra#78, `9eedd10`), and semantics publishes bundles to test (`PUBLISH_ENABLED` and `VOCABULARY_CHECK` are `true`; the latest publish, after semantics#52, carries the vocabulary pin and the comparability records; there is still no runtime vocabulary consumer; see [Phase 1 progress](#phase-1-progress)). **As of 2026-11-14** the claim/comparability contracts, the code-only comparison and the 2026-11-13 review correction are merged and deployed to test with both mixed flags off; the five BP1 claims are approved and published; `abs.building_activity` holds the June 2026 release; the flag-off BFF official baseline (evaluation run 43495860904) is running, and the paired-flag trial follows it (see [Deployment and activation status](#deployment-and-activation-status-2026-11-13-evening)). **Course correction 2026-11-10:** definitions must come from an automated, repeatable intake + extraction loop built on the existing knowledge inbox automation, not hand transcription or print-to-PDF uploads (see [Course correction](#course-correction-2026-11-10-automated-source-intake-and-extraction)). **As of 2026-11-11** that loop is merged, deployed to test and has run once end to end: [knowledge#8](https://github.com/big-lake/knowledge/pull/8), [vocabulary#1](https://github.com/big-lake/vocabulary/pull/1), [infra#78](https://github.com/big-lake/infra/pull/78); the methodology is onboarded and its extracted scheme merged ([vocabulary#2](https://github.com/big-lake/vocabulary/pull/2)). The Phase 1 eval is complete (see [Phase 1 result](#phase-1-result-official-run-42897354117-2026-11-10)); Phase 2's entry item is done (knowledge suite 5/5, run 42908854992) and the mixed-workflow ADRs are accepted (intelligence ADR-0033, api ADR-0028, org ADR-0008). The trigger is decided: a `mixed` router class, merged and on in test (run 42949194242: mixed still 0/11 at that checkpoint; the mixed workflow is now built but not deployed). Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
+**Status: Phase 0 done (2026-11-10); Phase 1 done (2026-11-10); Phase 2 in progress (approved 2026-11-11). See [Current status](#current-status-2026-11-14).** Each phase needs a user go-ahead; the ADRs named per phase are written when that phase starts, not up front.
 
 - **Why:** answer cross-publisher questions using compatible, traceable evidence from structured datasets and unstructured documents. Vocabulary supports discovery and interpretation; building a concept layer is not the end goal. The first functional milestone is one complete mixed answer, without a graph database, an agent framework, or an LLM-invented ontology.
 - **Shaped by:** iterative design reviews and the user's cross-publisher priority (2026-11-09). The corrections are binding and recorded in [Design corrections](#design-corrections-binding).
@@ -125,90 +125,46 @@ Findings carried forward:
 
 Mixed checks (passed of scored): numeric 0/9, scope 6/33, citation 3/27, comparability 4/33; no incomparable repeats this time (judge 429s did not recur). semantic_bundles now populated from traces (20261108T052050Z-68a32f2); the /health field arrives after an intelligence deploy.
 
+## Current status (2026-11-14)
+
+The single place to resume from. Superseded resume snapshots are archived (see [Archive](#archive)).
+
+- **Phases:** 0 and 1 done; 2 in progress (about 70%); 3, 4 and R not started. Phase 4's trigger has fired.
+- **User value so far:** definitions from the ABS Building Activity methodology and the BP1 housing passages are
+  answerable with citations (knowledge 5/5, run 42908854992). No user can yet receive a mixed answer that joins
+  ABS rows with Treasury evidence: the last official mixed score is 1/11 (run 42958997358, old combined path).
+- **Deployed to test:** intelligence `a54a017` (mixed route on, mixed workflow off), api `ba076ec`
+  (`ENABLE_MIXED_CONCLUSION` off), semantic bundle `20261113T082957Z-96038f5`, claims `76b5a4fb...`, data
+  through June 2026. The UI serves `54f00de`; ui#5 (`1e67aee`, mixed-conclusion renderer) is merged but not
+  deployed.
+- **Running:** flag-off BFF official baseline, evaluation run 43495860904. Merge/deploy freeze on semantics,
+  intelligence, api and knowledge until it ends. Read mixed with `MH-0004` excluded (stale).
+- **Budgets (intelligence ADR-0034):** first useful output p50 <= 30 s; final answer p50 <= 60 s, p90 <= 90 s;
+  conclusion call <= 25 s without retry; mixed tokens <= 2x the flag-off baseline. Missing usage is unknown,
+  never zero.
+- **Next, in order:** (1) read the baseline; (2) retire `MH-0004` and deploy the UI (`1e67aee`) to test;
+  (3) paired-flag trial: one infra PR enabling both flags on test, deploy plus VM restart, one official BFF run,
+  browser-check the conclusion render, revert both flags in the same session if any gate fails; (4) Phase 4a.
+- **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
+  one Budget Paper). Phase 4b addresses it.
+
 ## Phase 1 progress
 
 ### Phase 1 result (official run 42897354117, 2026-11-10)
 
-<a id="checkpoint-2026-11-13-merged-to-main-deployed-to-test-flags-off"></a>
+All records official, identity stable; intelligence `37ca7dc`, api `394a499`, semantic bundle `20261110T202449Z-0b557f2` (pins vocabulary `voc-6fc8fa64a77e`).
 
-### Checkpoint (2026-11-13, deployed to test, flags off)
+| Kind | Result |
+|---|---|
+| data | 79/87 pass, 1 flaky, 7 fail (within repeat variance of 78–80) |
+| knowledge (first official baseline) | 3/5 pass: `KQ-0002`, `KQ-0004`, `KQ-0005` 3/3; `KQ-0001` flaky 2/3; `KQ-0003` 0/3 (BP1 p.25 not retrieved; Phase 2 entry item) |
+| mixed (11 cases) | 0/11 pass, 1 flaky (`MH-0002` 2/3, was 3/3), 10 fail. Checks: numeric 0/9, scope 7/33, citation 4/27, comparability 3/33 (was 0/9, 6/33, 3/27, 4/33) |
 
-**Current status (end of 2026-11-13): see "Deployment and activation status" under the accepted correction
-below; the paragraphs that follow are the earlier merge-time snapshot.**
+Reading: the methodology is retrievable and answerable as a document (Phase 1's evidence goal); the mixed baseline is unchanged within variance, as expected, because nothing in Phase 1 reaches the mixed path (no runtime consumer of the vocabulary; joint synthesis is Phase 2). The Phase 1 gate items are met except the retrieval miss carried as the Phase 2 entry item.
 
-**Resume here (end of session 2026-11-13).** Everything below is merged and pushed:
-semantics#52 (`dda5132`), knowledge#10 (`e8c5dd7`), intelligence#25 (`75b1e19`), api#6 (`ba076ec`),
-ui#5 (`1e67aee`), evaluation#6 (`c4908a2`), .github#1 (`14cee98`). PR CI was green; post-merge the
-semantics Publish job succeeded: run 43291749559 published `20261112T193600Z-dda5132` to test.
-**Deployment correction (review 2026-11-13).**
-The mixed application code is merged but not deployed to test: the latest successful intelligence Deploy
-run is 42958670882 at `996c4c3`, and the latest UI Deploy run is 42783621410 at `54f00de`.
-Test API `/health` reports clean `394a499`, not main's `ba076ec`; intelligence `/health` could not be
-verified because the existing :8001 tunnel refused connections. Knowledge Flows deployment
-43291851958 succeeded at `e8c5dd7`, which does not prove the claims artifact has been published.
-No official eval run was in progress at merge time and none
-has been run on this code. `ENABLE_MIXED_WORKFLOW` (intelligence) and `ENABLE_MIXED_CONCLUSION` (api) are
-off by default in the merged code and absent from infra main; their deployed values were not verified.
-The new mixed workflow is not evidenced as active. Org
-[ADR-0009](../adr/0009-document-claim-records-and-attribute-vocabulary.md) (accepted 2026-11-12, amends
-ADR-0008) defines the contracts; intelligence ADR-0034 (budgets) and ADR-0035 (operation choice and
-code-only comparability) are accepted. Offline checks at merge: intelligence 25 mixed tests and 68
-overall (ad-hoc runner, no pytest), api relay 10, Newman 60 scripts compile, evaluation 121,
-semantics 72 plus 14 comparability, knowledge 98.
+Phase 1 item detail is under [Phase 1 progress detail](#phase-1-progress-detail).
 
-What exists now:
-
-- **semantics:** `datasets/abs/building_activity/comparability.yaml` (`facet_columns` including the M7
-  dollar-trap exclusion, `dataset_facets` tenure `not_distinguished` and status `actual`, `period`, `parts`),
-  quotes verified against `reference/abs/snapshots/building-activity-methodology@mar-2026.txt` (LF-normalised
-  sha256); `python -m semantics.comparability` runs in `validate.yml` and `publish.yml`; the bundle carries
-  `comparability/{table}.json` with its hash in `index.json`.
-- **knowledge:** `{document_key}.claims.yaml` sidecars (`shared/claims.py`), CI quote check against a committed
-  page snapshot (`bp1_2025_26.pages.txt`), `claims/v1/claims.json` written by `embed_and_index` with
-  `{path, sha256, n_claims}` in the manifest. Five BP1 claims were drafted; they are now approved and published
-  (see the deployment status below).
-- **intelligence:** `app/services/comparability.py` resolves dataset facets per returned row, attaches claims
-  to a passage only when the quote is inside it, picks the operation in code and computes the result with no
-  model call; the planners keep the facet code columns (`data_query(keep_columns=...)`); `/health` reports
-  `claims_sha256`. Without an attached approved claim the old extractive partial path runs.
-- **api / ui / evaluation:** `AgentConclusionEvent` has `operation` and `ComparabilityRecord` items (OpenAPI,
-  Newman and the chat renderer updated); the 25 s return call, heartbeats, disconnect abandon, per-stream usage
-  and the `--transport bff` eval runner from the 2026-11-12 work are all merged.
-
-Decisions and findings:
-
-- ADR-0009's assumption that the operation comes from the router's scope output **did not hold**: the router
-  emits only a class label. Operation is chosen from the claim's status, the row count and explicit "add up"
-  wording (ADR-0035); ADR-0009 carries a pointer. Claims loading beside the manifest holds (intelligence's
-  bucket-wide read on the knowledge bucket covers it).
-- MQ-0003's gold SQL uses Total Work (`new_and_alterations`) while claim c-0001 says "new" homes, so the pace
-  is computed only when the planner selects new work; with Total Work the answer is a side-by-side naming the
-  build-type difference. Either the gold or the claim must change (user decision; resolved 2026-11-13: MQ-0003
-  became a side-by-side case and the New Residential pace case is MQ-0005).
-
-The sequence below is superseded by the approved 2026-11-13 correction immediately after it
-(its steps 1-4 are done and TODO was updated; see the deployment status).
-
-Next actions, in order (each needs the user unless noted):
-
-1. **Review and approve the five drafted BP1 claims** in
-   `knowledge/configuration/treasury/federal/budget_release_papers/2025_2026/bp1_2025_26.claims.yaml`
-   (c-0001 target, c-0002 Accord Q1, c-0003 55,000 social/affordable, c-0004 18,000 expected, c-0005 dwelling
-   investment): set `review: {status: approved, by: ...}`. Check "new homes" -> `build_type: new`, "national" ->
-   `geography: AUS`, and that c-0005's growth rate has no unit enum (left unknown). The target start date stays
-   unknown (BP1 says "over five years" only; duration `P5Y`).
-2. Decide the MQ-0003 gold-versus-claim mismatch above.
-3. Approved infra deploy that sets `MIXED_CONCLUSION_CALLER_SA` (Terraform + GitHub Actions only); a missing
-   value fails closed.
-4. Run knowledge `embed_and_index` so the approved claims publish; confirm `/health` shows `claims_sha256`
-   (restart the stale :8001 tunnel first).
-5. Measured runs: flag-off baseline, then flag-on housing, negative, latency (first output p50 <= 30 s, final
-   p50 <= 60 s / p90 <= 90 s, conclusion call <= 25 s) and token usage (<= 2x the flag-off baseline), one
-   change class per official run, with no merge to semantics, intelligence, api or knowledge while a run is
-   in progress. Only then consider enabling the flags.
-6. `.github/TODO.md` is unchanged and needs user confirmation before any edit; the stale infra comment
-   "revert after" on `ENABLE_MIXED_ROUTE` is still pending for the next infra change (done in infra#80; the
-   remaining "revert after" comment belongs to `enable_semantic_grounding`, a separate ADR-0028 arm).
+## Phase 2 progress
 
 ### Accepted review correction (2026-11-13)
 
@@ -255,7 +211,8 @@ No official eval run was in progress at any merge or deploy.
   infra#80 (reviewed, merged and Terraform-deployed by the user; Terraform Deploy succeeded 09:24 UTC), .github#3
   and #4.
 - **Deployed to test:** API (Deploy API run 43393951296), intelligence (runs 43393958741 and 43399770487),
-  knowledge flows (run 43397639068). The UI was not redeployed (no change). Intelligence `/health`: commit
+  knowledge flows (run 43397639068). The UI was not redeployed: test still serves `54f00de` (Deploy run 2026-11-10),
+  so ui#5's mixed-conclusion renderer (`1e67aee`) is merged but not deployed (review 2026-11-14). Intelligence `/health`: commit
   `a54a017` clean (= `main`), semantic bundle `20261113T082957Z-96038f5`, `claims_sha256` `76b5a4fb...`,
   `enable_mixed_route` true, `enable_mixed_workflow` false.
 - **Claims:** c-0001..c-0005 approved by `jezchaves` 2026-11-13 and published to `claims/v1/claims.json`. The first
@@ -303,57 +260,18 @@ wall-clock deadline covers ID-token minting; the intelligence model call is capp
 in-flight sockets or Vertex calls, so abandoned work runs to its own timeout. Token usage is reported per
 stream and summed by the BFF and eval; any unreadable call makes the total null, never zero. The eval's
 `--transport bff` path uses cookie-backed source resends and the BFF's executed rows; internal SQL-ready events
-do not count as first output. The direct-intelligence transport remains the default diagnostic. The older
-resume sections below are historical.
-### Accepted review correction (2026-11-12)
+do not count as first output. The direct-intelligence transport remains the default diagnostic.
 
-This update supersedes the older resume sequence below. Phase 2 remains in progress;
-its housing acceptance cases and safety gate are unchanged.
+**Phase 2 arithmetic (review 2026-11-14):** after the pace gate decision no Phase 2 case requires a computed
+cross-publisher comparison, so the gate does not exercise compatible arithmetic. That is accepted for Phase 2
+and deferred: a computed case is added when a reviewed claim states a compatible measure (Phase 4b makes such
+claims cheap to produce).
 
-1. Fix the budgets and measurement contract before implementation (intelligence
-      ADR-0034 amends ADR-0033). Product latency excludes judge and scoring work;
-      internal SQL-ready events do not count as user-visible output. Record actual
-      model usage before claiming the token-cost gate is met.
-2. Build the flag-gated mixed workflow and BFF execution-return path, with an
-      outside-in BFF eval consumer of `conclusion` and a browser-checked UI consumer.
-      Direct-intelligence SQL scoring remains a baseline, not evidence that the new
-      execution-return workflow works.
-3. Add the minimum dataset comparability records and knowledge-side document claim
-      contract before claiming compatible arithmetic. Unknown attributes permit a
-      qualified side-by-side answer, not an unsupported numeric comparison. OPP-050
-      remains eligible for a separately measured, narrow discovery fix when it blocks
-      these acceptance cases; do not silently exclude those cases from the gate.
-
-Budgets accepted with this correction: first useful output p50 <= 30 s; final
-answer p50 <= 60 s and p90 <= 90 s; conclusion call <= 25 s without retry; mixed
-model tokens <= 2x a measured flag-off baseline. Older published `latency_ms`
-includes eval work and is not that baseline. Missing usage is unknown, never zero.
-No push, merge, dispatch or deployment is authorised by this sequencing update.
-
-Factual corrections to the older progress rows: the tier B extractor is merged
-and has produced the reviewed 37-term ABS scheme; hand ABS/Treasury seeds have
-been removed; the methodology catalog entry is merged; the mixed trigger is
-decided in ADR-0033; infra#78 was merged whole. Vocabulary publication remains disabled and
-the vocabulary bundle bucket still has no runtime consumer; semantics publication is enabled
-(`PUBLISH_ENABLED=true`, `VOCABULARY_CHECK=true`, verified 2026-11-13).
-The stale rows below retain
-their historical detail, not current blockers. TODO status updates remain pending (done 2026-11-13, .github#4).
-
-All records official, identity stable; intelligence `37ca7dc`, api `394a499`, semantic bundle `20261110T202449Z-0b557f2` (pins vocabulary `voc-6fc8fa64a77e`).
-
-| Kind | Result |
-|---|---|
-| data | 79/87 pass, 1 flaky, 7 fail (within repeat variance of 78–80) |
-| knowledge (first official baseline) | 3/5 pass: `KQ-0002`, `KQ-0004`, `KQ-0005` 3/3; `KQ-0001` flaky 2/3; `KQ-0003` 0/3 (BP1 p.25 not retrieved; Phase 2 entry item) |
-| mixed (11 cases) | 0/11 pass, 1 flaky (`MH-0002` 2/3, was 3/3), 10 fail. Checks: numeric 0/9, scope 7/33, citation 4/27, comparability 3/33 (was 0/9, 6/33, 3/27, 4/33) |
-
-Reading: the methodology is retrievable and answerable as a document (Phase 1's evidence goal); the mixed baseline is unchanged within variance, as expected, because nothing in Phase 1 reaches the mixed path (no runtime consumer of the vocabulary; joint synthesis is Phase 2). The Phase 1 gate items are met except the retrieval miss carried as the Phase 2 entry item.
-
-## Phase 2 progress
+### Phase 2 log (2026-11-11, historical)
 
 Approved by the user 2026-11-11.
 
-**Resume here (end of session 2026-11-11).** State: no eval run in progress; no open PRs; all repos on `main` and pushed (local `infra` is parked on the merged `feat/vocabulary-bundle-bucket` branch and `catalog` is 1 commit behind; both are only stale checkouts). Deployed on test: intelligence `996c4c3` (`ENABLE_MIXED_ROUTE=true`), api `394a499`, semantic bundle `20261110T202449Z-0b557f2`. Latest official baselines: run [42958997358](https://github.com/big-lake/evaluation/actions/runs/42958997358): data 78/87 (2 flaky), knowledge 5/5, mixed 1/11 (see the "Next action" row below for the numbers and latency). Decisions waiting on the user: (1) accept or change the ADR-0033 proposed budgets (first output p50 ≤ 30 s, final p50 ≤ 60 s and p90 ≤ 90 s, conclusion call ≤ 25 s, ≤ 2x tokens) before the workflow build starts; (2) whether the stale infra comment "revert after" on `ENABLE_MIXED_ROUTE` is fixed in the next infra change (the flag stays on). Next steps in order: fix the budgets in ADR-0033 -> build the mixed workflow and BFF conclude call behind `ENABLE_MIXED_WORKFLOW` / `ENABLE_MIXED_CONCLUSION` (intelligence + api, one change-class each per official run) -> `comparability.yaml` -> claim-record ADR only if needed. Parked, not in this phase: OPP-050 (`MH-0003` / `MH-0004` table-selection declines, same class as OPP-043); the four ABS collection `TODO(curation)` placeholders (one catalog PR); the Phase 4 Jun-2026 methodology release case. Tooling: `run-eval.yml` has per-suite jobs (sequential by design, for comparable latency) with targeted `data_cases` / `mixed_cases` / `knowledge_cases` inputs that are never published; the offline router check is `evaluation/build/classify_offline.py` (git-ignored; run with `PYTHONPATH=src`, needs ADC). The IAP tunnel to `localhost:8001` goes stale: if `/health` times out, kill the old gcloud python process and re-run the tunnel task.
+**Historical resume point (end of session 2026-11-11; superseded by [Current status](#current-status-2026-11-14)).** State: no eval run in progress; no open PRs; all repos on `main` and pushed (local `infra` is parked on the merged `feat/vocabulary-bundle-bucket` branch and `catalog` is 1 commit behind; both are only stale checkouts). Deployed on test: intelligence `996c4c3` (`ENABLE_MIXED_ROUTE=true`), api `394a499`, semantic bundle `20261110T202449Z-0b557f2`. Latest official baselines: run [42958997358](https://github.com/big-lake/evaluation/actions/runs/42958997358): data 78/87 (2 flaky), knowledge 5/5, mixed 1/11 (see the "Next action" row below for the numbers and latency). Decisions waiting on the user: (1) accept or change the ADR-0033 proposed budgets (first output p50 ≤ 30 s, final p50 ≤ 60 s and p90 ≤ 90 s, conclusion call ≤ 25 s, ≤ 2x tokens) before the workflow build starts; (2) whether the stale infra comment "revert after" on `ENABLE_MIXED_ROUTE` is fixed in the next infra change (the flag stays on). Next steps in order: fix the budgets in ADR-0033 -> build the mixed workflow and BFF conclude call behind `ENABLE_MIXED_WORKFLOW` / `ENABLE_MIXED_CONCLUSION` (intelligence + api, one change-class each per official run) -> `comparability.yaml` -> claim-record ADR only if needed. Parked, not in this phase: OPP-050 (`MH-0003` / `MH-0004` table-selection declines, same class as OPP-043); the four ABS collection `TODO(curation)` placeholders (one catalog PR); the Phase 4 Jun-2026 methodology release case. Tooling: `run-eval.yml` has per-suite jobs (sequential by design, for comparable latency) with targeted `data_cases` / `mixed_cases` / `knowledge_cases` inputs that are never published; the offline router check is `evaluation/build/classify_offline.py` (git-ignored; run with `PYTHONPATH=src`, needs ADC). The IAP tunnel to `localhost:8001` goes stale: if `/health` times out, kill the old gcloud python process and re-run the tunnel task.
 
 | Item | State |
 |---|---|
@@ -362,6 +280,8 @@ Approved by the user 2026-11-11.
 | Catalog entry for `k-abs-building-activity-methodology` | merged 2026-11-11 ([catalog#11](https://github.com/big-lake/catalog/pull/11), `02aba12`); Sync to OpenMetadata dispatched for test (run 42918842484). Scaffold matches the other ABS collections (owner/tags/logo/links `TODO(curation)` left as in those; fill all four in one later pass). Licence verified 2026-11-11 against abs.gov.au/website-privacy-copyright-and-disclaimer: CC BY 4.0 for site material, excluding logos, trade marks, microdata and third-party content, none labelled on the page; registry comment updated (knowledge `3648127`). The page also shows "This is not the latest release" (Jun-2026 exists): the Phase 4 release-versioning case is live |
 | `mixed` router class on test (change-class 2 of Phase 2) | **Done 2026-11-11:** [intelligence#23](https://github.com/big-lake/intelligence/pull/23) merged (`7c59ec2`), deployed, `ENABLE_MIXED_ROUTE=true` on test via `extra_env` (infra `e4c4e9f`); **decided 2026-11-11 to keep it on** (the infra comment "revert after" is stale and is fixed with the next infra change). Official run [42949194242](https://github.com/big-lake/evaluation/actions/runs/42949194242) (flag the only change-class; all three records official and identity-stable): knowledge 5/5 (unchanged); data 78 pass / 2 flaky / 7 fail of 87 vs 80/0/7 (same 7 fail; new flaky `DQ-0033` and `DQ-0069`, both SQL-generation 20 s LLM timeouts plus one `tsest_code` typo; the record does not show the route taken, so a routing cause is not ruled out; not yet re-run to confirm); mixed 0/11 as expected because a `mixed` turn still runs the old combined path (numeric 0/9, scope 11/33, citation 12/25, comparability 4/31); `MH-0003`, `MH-0004` and `MQ-0004` end in `error` with no SQL and no citations, and `MH-0001` asks to clarify where an answer is expected. Latency baselines (ms): data p50 4,961 / p90 16,161 (no first-output); mixed p50 32,571 / p90 86,692, first output p50 23,914 / p90 35,085; knowledge p50 34,699 (p90 491,101 is one outlier of 15), first output p50 13,491 / p90 28,327 |
 | **Next action:** router prompt tuning for `MH-0003`, `MH-0004`, `MQ-0004` | **Done 2026-11-11** ([intelligence#24](https://github.com/big-lake/intelligence/pull/24) merged `996c4c3` and deployed to test, `/health` verified; OPP-049). Official run [42958997358](https://github.com/big-lake/evaluation/actions/runs/42958997358) (all three records official and identity-stable, intelligence `996c4c3`, bundle `20261110T202449Z-0b557f2`), router prompt the only change-class vs run 42949194242: knowledge 5/5 (unchanged); data 78 pass / 2 flaky / 7 fail (same 7 fail as before; flaky `DQ-0033`, a 20 s LLM timeout again, and `DQ-0050`, a "Goods credits" schema decline; within the 78 to 80 seen across runs, so the gate holds); mixed **1/11** (was 0/11: `MH-0002` 3/3) with 2 flaky (`MH-0007`, `MQ-0004`), checks numeric 0/9, scope 16/33 (was 11), citation 20/25 (was 12), comparability 9/31 (was 4). `MH-0004` and `MQ-0004` now route `mixed` and no longer error, but the `mixed` class still runs the old combined path so neither produces SQL (`MH-0004` fails scope 3/3; `MQ-0004` clarified once, which is the expected behaviour). Latency (ms): data p50 4,859 / p90 14,933; mixed p50 35,173 / p90 67,978, first output p50 23,332 / p90 30,227; knowledge p50 20,716 / p90 43,129, first output p50 12,444 / p90 24,269. The flag stays on. The merge/deploy freeze is lifted. Reordered 2026-11-11 (plan review, accepted by the user): `comparability.yaml` has no consumer until the mixed workflow exists, so it moves after the workflow. **Finding:** `MH-0003` is not a routing miss. It is a pure data question the router correctly sends to `data`, and it declines because discovery/SQL picks the wrong table ("dwelling stock, prices, transfers"); `MH-0004` also declines on "Building Approvals, not Completions". Filed as OPP-050 (same class as OPP-043), outside this change-class. The router change targets `MH-0004` and `MQ-0004` only (prompt-only, flag-gated): offline check over 6 runs of all 149 eval questions: both route `mixed` 6/6 (were `data`), no data or knowledge question is ever `mixed`, `MH-0002` moves `factoid` -> `mixed` 5/6 (watch it). Local harness: `evaluation/build/classify_offline.py` (git-ignored). Next: the ADR-0033 budgets and the workflow build (below); `MH-0003` and the `MH-0004` table-selection decline wait on OPP-050. Order after that: (1) a targeted re-run of `DQ-0033` / `DQ-0069` was done 2026-11-11 (run 42955363211, 3/3 each, so the data flakiness looks like noise; not published); (2) fix the ADR-0033 budgets, then build the mixed workflow and BFF conclude call behind `ENABLE_MIXED_WORKFLOW` / `ENABLE_MIXED_CONCLUSION`, with the comparability check returning `unknown` (a qualified side-by-side answer); (3) `semantics/datasets/abs/building_activity/comparability.yaml` per org [ADR-0008](../adr/0008-dataset-scope-and-comparability-records.md), its validator and CI, once the workflow can consume it; (4) the knowledge-side claim-record ADR (`proposed`), only if step 3's results show it is needed |
+
+## Phase 1 progress detail
 
 Started 2026-11-10. All Phase 1 commits are pushed (`big-lake/vocabulary` created by the user); infra#78 deployed to test 2026-11-10.
 
@@ -594,10 +514,14 @@ Each phase: user go-ahead → ADRs → build → eval gate → stop. One change-
 | **1 — minimum evidence and vocabulary** | Onboard only the ABS/Treasury releases, methodology and definitions needed by the slice through the existing inbox automation, extended with URL fetch and kept-as-fetched HTML snapshots. Bootstrap `vocabulary` with SKOS/XKOS schema, a narrow SDMX import, an automated tier B extractor (first case: the Building Activity methodology Glossary, `kind: all`) and versioned publication. Keep existing codelist copies; no bulk migration. | org ADR for vocabulary publication amending/superseding ADR-0001's central-artifact decision; vocabulary model and knowledge snapshot/applicability contracts; knowledge ADR superseding ADR-0024 (URL fetch in `open-inbox-pr.yml`, HTML kept, one shared capture); name retired duplication per the Ossie plan's perimeter rule | Required source facts and definitions available **to the answering system** (retrievable, not only stored) with provenance; the methodology's tier B scheme **generated by the extractor from the pinned snapshot** and merged via a reviewed PR (no hand-authored definitions in the gate; the Treasury BP1 scheme is dropped from the bundle until a PDF glossary adapter exists, Phase 4); compatible bindings validate against a pin that survives vocabulary merges; standards export checked. Document-only retrieval baseline measured before vocabulary boosts |
 | **2 — first cross-publisher mixed answer** | Entry item, before the mixed workflow: fix the BP1 p.25 retrieval miss (`KQ-0003` 0/3, `KQ-0001` flaky in the Phase 1 knowledge baseline) as its own change-class, measured on the knowledge suite. Use existing discovery/retrieval, scoped vocabulary bindings and comparability records; retrieve methodology before planning. Implement the BFF execution-return contract and joint synthesis behind a flag. Add only discovery/resolution changes demonstrated necessary by Phase 0. No pre-linked concept requirement. | intelligence + api ADRs for bounded mixed workflow and execution-return contract; semantics binding/constraint contract | Housing construction mixed cases use executed data and relevant Treasury evidence; ambiguous cases clarify/state scope; incompatible figures stay separate; zero unsupported equivalences, double-counting or unsupported caveats in negative cases; current data-suite regression gate met; latency budget (time-to-first-useful-output and time-to-final-answer) and cost budget met |
 | **3 — measured discovery and resolution improvements** | Expand typed dataset/definition candidate pools and the Postgres lexicon only for observed failures. Add candidate-based resolution and source-backed applicable links; run ablations with boosts off/on. | intelligence retrieval/resolution ADR and infra schema permissions as needed | Free-form recall and wrong-code rates improve on a failure class, with no hiding of unlinked documents or mixed/data regressions; ambiguous labels are not forced to match a gold interpretation |
+| **4a — current methodology release (pulled forward, review 2026-11-14)** | Register the Building Activity methodology Jun-2026 release through the existing URL intake as a knowledge document in the same collection, so answers cite the methodology matching the data vintage. No vocabulary work: `supersedes`, `applies_to` and release selection stay in Phase 4. | None (existing knowledge ADR-0025 intake) | The Jun-2026 methodology is retrievable; knowledge suite stays 5/5; one `KQ-` case cites the Jun-2026 release |
+| **4b — automated claim drafting (added, review 2026-11-14)** | Draft document claim records automatically from registered documents, quote-verified against the pinned snapshot like tier B, opened as a reviewed PR; humans approve, never transcribe. The compatible-answer path only works for documents with approved claims, so this is what scales the Why past one Budget Paper. Starts after Phase 2's gate. | knowledge ADR for claim drafting (amends org ADR-0009 only if the claim contract changes) | Claims drafted for a second document without hand authoring; every quote verifies; at least one new mixed case uses them; no unsupported equivalences in negatives |
 | **4 — generalise intake and coverage** | Extend the Phase 1 intake and extraction loop beyond the pilot sources: scheduled drift re-fetch, further page structures (new adapters only where structure differs), wider host allow-list. **Release versions of the same publication** (e.g. Building Activity methodology Jun-2026 after Mar-2026, a new URL rather than drift): register the new release as a new document in the same collection; the extractor writes the new scheme version with `supersedes` set to the previous one; `applies_to` (ADR-0023 decision 4) records the data period each release describes; retrieval prefers the release matching the queried data vintage and an outdated-release case becomes a negative test. Trigger: the next `abs.building_activity` ingestion past 2026-Q1 (Mar-2026 matches the data vintage until then; that ingestion also retires `MH-0004`). **Triggered 2026-11-13:** the table now holds the June 2026 release, so the Mar-2026 methodology no longer matches the data vintage and `MH-0004` must retire (see the deployment status). Prove a second domain or publisher combination without changing the core schema/workflow. Quality over volume; full automation, no SME curation dependency. | Remaining knowledge intake and vocabulary adapter decisions, only where the pilot contract needs extension | New cross-publisher cases and extraction negatives pass; resource updates preserve provenance and last-good compatible activation; existing suites remain stable |
 | **R — Neo4j retirement** (parallel, independent) | Remove unused triple output and graph writer/config dependencies after auditing consumers; the enrichment call serving other outputs remains. Verify deployed state/data before container removal via Terraform. Entity linking is separate and not a retirement prerequisite. | knowledge + infra retirement decisions | Existing retrieval unaffected; runtime/container absence verified after approved deployment; retain data or obtain explicit deletion consent |
 
 For every behavioural phase, use the latest reproducible deployed baseline with service commits and bundle IDs, not a frozen 73-pass subset. The historical Ossie result is 73/81 pass^3 ([run 42437018692](https://github.com/big-lake/evaluation/actions/runs/42437018692)); it is context, not the current release gate. Score discovery recall, scope correctness, code selection, compatibility decisions, claim-level citations, supported abstention, latency and cost separately. Compare the existing baseline, document ingestion alone, vocabulary-assisted retrieval/resolution, and joint synthesis one change-class at a time. Set budgets before running each phase; report repeat variability and the visible-case limitation rather than tuning indefinitely.
+
+**Vocabulary hold (review 2026-11-14):** the vocabulary bundle has no runtime consumer, and user-visible definition answers came from ordinary knowledge retrieval of the same methodology page. No further vocabulary work (new adapters, bundle publication, lexicon, `supersedes`) starts until a measured Phase 3 failure class names it as the fix. Existing CI, extraction and the semantics pin keep running.
 
 **Non-plans** (each needs a new ADR with a named consumer + failing eval class): automatic cross-dataset joins/roll-ups (7b), bounded general agent loop, Ossie ontology/mapping documents, OM Glossary projection, ADR-0001 taxonomy-consumer migration, tier C at scale, exhaustive entity linking, UI upload channel. Neither broad harvesting nor a new graph/runtime service is a prerequisite for the first mixed answer.
 
@@ -623,3 +547,7 @@ For every behavioural phase, use the latest reproducible deployed baseline with 
 6. ~~Phase 1: registry field name.~~ Decided 2026-11-10: `kind`, values `knowledge` (default) | `vocabulary` | `all`. The vocabulary scheme files' own `kind` (`glossary`/`codelist`) is a different file type and does not clash in practice.
 7. ~~Phase 1: hand-off from knowledge's snapshot to the vocabulary extractor, and its IAM.~~ Designed 2026-11-10 in [Course correction](#course-correction-2026-11-10-automated-source-intake-and-extraction): `extract.yml` pulls registry-addressed `documents/` objects and commits the snapshot with the scheme PR.
 8. ~~Phase 1: where vocabulary-only resources live.~~ Decided 2026-11-10: same registry folder and GCS layout as every other kind; `kind` only selects consumers.
+
+## Archive
+
+Superseded resume snapshots were removed on 2026-11-14 to keep this plan readable: the 2026-11-13 merge-time checkpoint (and its superseded next actions) and the accepted review correction of 2026-11-12 (its budgets now live in [Current status](#current-status-2026-11-14) and intelligence ADR-0034). Full text: [the plan as of `1fcbd91`](https://github.com/big-lake/.github/blob/1fcbd91/documentation/plans/vocabulary-unified-intelligence.md).

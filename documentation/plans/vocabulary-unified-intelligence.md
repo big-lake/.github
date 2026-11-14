@@ -170,15 +170,30 @@ The single place to resume from. Superseded resume snapshots are archived (see [
 - **Budgets (intelligence ADR-0034):** first useful output p50 <= 30 s; final answer p50 <= 60 s, p90 <= 90 s;
   conclusion call <= 25 s without retry; mixed tokens <= 2x the flag-off baseline. Missing usage is unknown,
   never zero.
-- **Next, in order:** (1) diagnose before a third trial: why the planner returns no valid query for `MQ-0002` and
-  `MQ-0005`, why discovery still misses completions for `MH-0003`, the 1 ms `conclusion_unavailable` on `MQ-0004`,
-  the `MQ-0001` vintage mismatch, and what drives the 161 s p90 tail. (2) Phase 4b (claim drafting for a second
-  document) only after the Phase 2 gate.
+- **Next, in order:**
+  1. Diagnose before a third trial. Each item needs service-side traces or logs, which the eval record does not
+     carry (it holds only answer, citations, usage, latency and conclusion). Trial 2 ran 2026-11-14 09:01-09:31 UTC
+     (mixed suite; start times per repeat are in the `results` record `runs/20261114-090104-43577405920-mixed.json`).
+     Pull intelligence logs (the `biglake-intelligence` service on `biglake-intelligence-test`) and API logs
+     (`biglake-api-test`) for that window and correlate by `X-Request-Id` and repeat start time:
+     - `MQ-0002`, `MQ-0005`, `MH-0001` "no valid query": intelligence logs for `data_query` (the planner's
+       validation failure reason and the dataset it was handed).
+     - `MH-0003` discovery: the OM query text after the stopword change, the candidate datasets returned, and
+       whether `abs.building_activity` is in them; then run the same discovery by hand through the tunnel
+       (localhost:8001).
+     - `MQ-0004` 1 ms `conclusion_unavailable` (2 of 3 repeats): API logs from `conclude_mixed`, to see which local
+       branch returned (evidence size or non-finite value, header/token build, or an upstream status).
+     - `MQ-0001` vintage: run the gold SQL against the dataset and compare with the 44,862 row (`published
+       2026-07-08`) to confirm whether the data or the case is stale.
+     - p90 tail (161 s): per-stage timings for the slowest repeats (retrieval, discovery, planning, narration).
+  2. Re-run `semantic-drift` (`profile_all=true`) and read its step-3 failure; re-run Validate on semantics `main`.
+  3. Phase 4b (claim drafting for a second document) only after the Phase 2 gate.
 - **MH-0004 retired** (evaluation#9, id never reused). **Phase 4a:** the June 2026 methodology is registered
   (knowledge#13) and retrievable; `KQ-0006` (evaluation#10, #11) is its gate case.
 - **Open:** `semantic-drift` with `profile_all=true` failed at step 3 (apply temporal coverage), run
   43539490997, job log unavailable, so other tables' `time_range` may be stale (only `building_activity` was
-  refreshed, locally). The baseline 503s ("no healthy upstream") are unexplained and did not recur in either trial.- **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
+  refreshed, locally). The baseline 503s ("no healthy upstream") are unexplained and did not recur in either trial.
+  Trial 2 is the last official run; no flag-on run is pending.- **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
   one Budget Paper). Phase 4b addresses it.
 
 ## Phase 1 progress

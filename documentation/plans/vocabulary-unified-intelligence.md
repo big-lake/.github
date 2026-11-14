@@ -138,15 +138,17 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   `20261114T081559Z-87fd49f` (semantics#54 defaults `building_activity` to seasonally adjusted; #55 extends its
   time range to 2026-Q2), claims `76b5a4fb...`, data through June 2026. **Both mixed flags are OFF** (explicit
   `"false"` for intelligence `ENABLE_MIXED_WORKFLOW`, api `enable_mixed_conclusion=false`; infra#86, Deploy API
-  and VM restart done; `/health` shows `workflow=False route=True`). semantics#55's Validate run reported
-  failure with no failed step; re-run Validate on `main` to confirm.
+  and VM restart done; `/health` shows `workflow=False route=True`). semantics#55's Validate run (43542347970)
+  never started: its annotation is GitHub's "recent account payments have failed or your spending limit needs to
+  be increased" (same for vocabulary Extract 43547278026 and semantic-drift 43539490997, 2026-11-14 01:15-02:40
+  UTC). Later runs succeeded; re-run Validate on `main` to confirm the code.
 - **Official BFF runs, MH-0004 excluded (11 mixed cases, 3 repeats):**
 
   | | flag-off (43495860904, int `a54a017`) | trial 1 (43512928825, int `a54a017`) | trial 2 (43577405920, int `0f17bf7`) |
   |---|---|---|---|
   | data | 79/87 (1 flaky, 7 fail) | 80/87 (7 fail) | 79/87 (1 flaky, 7 fail) |
   | knowledge | 5/5 | 5/5 | 5/6 (KQ-0006 fact format, fixed in evaluation#11) |
-  | mixed | 2 pass, 1 flaky, 7 fail, 1 invalid | 2 pass, 1 flaky, 7 fail, 1 invalid | 1 pass, 9 fail, 1 invalid |
+  | mixed | 2 pass, 1 flaky, 7 fail, 1 invalid | 2 pass, 1 flaky, 7 fail, 1 invalid | 1 pass, 9 fail, 1 invalid (6 repeats incomparable; the pass, `MH-0007`, is 2 of 2 scored) |
   | mixed numeric / scope / citation / comparability (passed) | 0/10, 10/30, 16/23, 7/26 | 0/12, 9/28, 6/20, 4/23 | 0/9, 5/27, 7/23, 3/25 |
   | mixed latency p50 / p90 | 37 s / 240 s | 37 s / 172 s | 42 s / 161 s |
   | mixed first output p50 | 20 s | 19 s | 22 s |
@@ -162,10 +164,13 @@ The single place to resume from. Superseded resume snapshots are archived (see [
     `conclusion_unavailable` at 1 ms, so rejected locally before the HTTP call, one `missing_rows_or_evidence`).
     Most other repeats stop earlier with "a validated data query could not be produced" (`MQ-0002`, `MQ-0005`,
     `MH-0001`), so the data-query step bounds how often it can fire.
-  - `MQ-0001` now picks the seasonally adjusted series, but returns 44,862 (vintage published 2026-07-08) against
-    gold 45,499 (June 2026 release). Likely a data vintage difference; not confirmed.
-  - `MH-0003` still fails discovery ("data is building approvals, not dwellings completed"), so intelligence#27 did
-    not fix it; the earlier inferred cause is not confirmed.
+  - `MQ-0001` now picks the seasonally adjusted series, but returns 44,862 against gold 45,499. Not a vintage
+    difference (checked 2026-11-15 from the record): the generated SQL filters `bld_work_type_code = '1'`,
+    `type_bldg_code = '100'` (New / Total Residential), the gold SQL `'TOT'` / `'TOT'` (Total Work / all
+    buildings). Even with matching rows, `level_compare` would block: c-0002 states only `build_type` and no
+    period dates, and `compare()` needs every facet present on either side stated on both (ADR-0009 decision 8).
+  - `MH-0003` answers "data is building approvals, not dwellings completed", so intelligence#27 did not fix it; all
+    3 repeats were scored invalid ("BFF stream failed or was interrupted"), not fail.
   - The June 2026 methodology is retrievable: `KQ-0006` answers cite the Jun-2026 document and state 7/10/2026.
 - **Budgets (intelligence ADR-0034):** first useful output p50 <= 30 s; final answer p50 <= 60 s, p90 <= 90 s;
   conclusion call <= 25 s without retry; mixed tokens <= 2x the flag-off baseline. Missing usage is unknown,
@@ -183,15 +188,25 @@ The single place to resume from. Superseded resume snapshots are archived (see [
        (localhost:8001).
      - `MQ-0004` 1 ms `conclusion_unavailable` (2 of 3 repeats): API logs from `conclude_mixed`, to see which local
        branch returned (evidence size or non-finite value, header/token build, or an upstream status).
-     - `MQ-0001` vintage: run the gold SQL against the dataset and compare with the 44,862 row (`published
-       2026-07-08`) to confirm whether the data or the case is stale.
+     - ~~`MQ-0001` vintage~~: answered from the record (dimension mismatch, not vintage; see above).
      - p90 tail (161 s): per-stage timings for the slowest repeats (retrieval, discovery, planning, narration).
-  2. Re-run `semantic-drift` (`profile_all=true`) and read its step-3 failure; re-run Validate on semantics `main`.
+  2. Re-run `semantic-drift` (`profile_all=true`) and Validate on semantics `main` (both were never started, billing).
   3. Phase 4b (claim drafting for a second document) only after the Phase 2 gate.
+  - **Course corrections approved by the user (2026-11-15, plan review):** (a) `MQ-0001`/`MQ-0002` gold accepts
+    either New / Total Residential or Total Work / all buildings, provided the answer states its scope; (b) the
+    mixed conclusion states period, series and scope in a sentence and lists only claims relevant to the question
+    (intelligence change behind the existing flag, its own change-class); (c) the ADR-0009 decision 8 rule is NOT
+    changed yet: first replay the trial 2 records through `comparability.evaluate` offline and count the repeats a
+    relaxed rule would change, and only then propose an amendment; (d) phase order, gates and the vocabulary hold
+    are unchanged. Also still open and the largest failure class by count: "no validated data query" repeats
+    (`MQ-0002`, `MQ-0005`, `MH-0001`) and the 161 s p90 tail, both needing service logs.
+  - **Order of work:** commit these plan corrections; check GitHub billing and re-run semantics Validate and
+    `semantic-drift`; pull service logs for the query failures; offline replay (c); implement (a) and (b); then
+    trial 3, which also closes Phase 4a with the `KQ-0006` fix.
 - **MH-0004 retired** (evaluation#9, id never reused). **Phase 4a:** the June 2026 methodology is registered
   (knowledge#13) and retrievable; `KQ-0006` (evaluation#10, #11) is its gate case.
 - **Open:** `semantic-drift` with `profile_all=true` failed at step 3 (apply temporal coverage), run
-  43539490997, job log unavailable, so other tables' `time_range` may be stale (only `building_activity` was
+  43539490997, job never started (GitHub billing/spending limit), so other tables' `time_range` may be stale (only `building_activity` was
   refreshed, locally). The baseline 503s ("no healthy upstream") are unexplained and did not recur in either trial.
   Trial 2 is the last official run; no flag-on run is pending.
 - **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,

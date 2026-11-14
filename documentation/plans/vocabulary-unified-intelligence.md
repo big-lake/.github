@@ -193,7 +193,8 @@ The single place to resume from. Superseded resume snapshots are archived (see [
 - **Open:** `semantic-drift` with `profile_all=true` failed at step 3 (apply temporal coverage), run
   43539490997, job log unavailable, so other tables' `time_range` may be stale (only `building_activity` was
   refreshed, locally). The baseline 503s ("no healthy upstream") are unexplained and did not recur in either trial.
-  Trial 2 is the last official run; no flag-on run is pending.- **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
+  Trial 2 is the last official run; no flag-on run is pending.
+- **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
   one Budget Paper). Phase 4b addresses it.
 
 ## Phase 1 progress

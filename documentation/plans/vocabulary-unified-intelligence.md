@@ -134,9 +134,8 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   answerable with citations (knowledge 5/5, run 42908854992). No user can yet receive a mixed answer that joins
   ABS rows with Treasury evidence: the last official mixed score is 1/11 (run 42958997358, old combined path).
 - **Deployed to test:** intelligence `a54a017`, api `a64b1c8`, UI `1e67aee`, semantic bundle
-  `20261113T082957Z-96038f5`, claims `76b5a4fb...`, data through June 2026. **Paired flags are ON** for the trial
-  (infra#82; `ENABLE_MIXED_WORKFLOW` and `enable_mixed_conclusion`); the revert is infra PR "Revert paired mixed
-  flags" and needs review before it merges, then Terraform Deploy, Deploy API and an intelligence VM stop/start.
+  `20261113T082957Z-96038f5`, claims `76b5a4fb...`, data through June 2026. Paired flags were trialled then
+  reverted (infra#83, #84): both off, `/health` shows `workflow=False route=True`.
 - **Official BFF runs, MH-0004 excluded (11 cases, 3 repeats, intelligence `a54a017`):**
 
   | | flag-off (43495860904, api `ba076ec`) | paired flags (43512928825, api `a64b1c8`) |
@@ -162,9 +161,9 @@ The single place to resume from. Superseded resume snapshots are archived (see [
 - **Budgets (intelligence ADR-0034):** first useful output p50 <= 30 s; final answer p50 <= 60 s, p90 <= 90 s;
   conclusion call <= 25 s without retry; mixed tokens <= 2x the flag-off baseline. Missing usage is unknown,
   never zero.
-- **Next, in order:** (1) merge the revert and redeploy (flags off); (2) diagnose why mixed turns rarely reach
-  the conclusion path and why SQL misses gold (`MQ-0001` series choice, `MQ-0005` no valid query, `MH-0003`
-  planner finds no completions table) before another flag trial; (3) Phase 4a.
+- **Next, in order:** (1) diagnose why mixed turns rarely reach the conclusion path and why SQL misses gold
+  (`MQ-0001` series choice, `MQ-0005` no valid query, `MH-0003` planner finds no completions table) before
+  another flag trial; (2) Phase 4a.
 - **MH-0004 retired** (evaluation#9, id never reused). The Phase 4 methodology-release item (Jun-2026
   methodology as a new document with `supersedes`) is still due.
 - **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,

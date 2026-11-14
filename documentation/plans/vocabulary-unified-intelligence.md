@@ -133,9 +133,15 @@ The single place to resume from. Superseded resume snapshots are archived (see [
 - **User value so far:** definitions from the ABS Building Activity methodology and the BP1 housing passages are
   answerable with citations (knowledge 5/5, run 42908854992). No user can yet receive a mixed answer that joins
   ABS rows with Treasury evidence: the last official mixed score is 1/11 (run 42958997358, old combined path).
-- **Deployed to test:** intelligence `a54a017`, api `a64b1c8`, UI `1e67aee`, semantic bundle
-  `20261113T082957Z-96038f5`, claims `76b5a4fb...`, data through June 2026. Paired flags were trialled then
-  reverted (infra#83, #84): both off, `/health` shows `workflow=False route=True`.
+- **Deployed to test (verified 2026-11-14 08:18 UTC):** intelligence `0f17bf7` (intelligence#27, discovery drops
+  function words from the OM OR query), api `a64b1c8`, UI `1e67aee`, semantic bundle `20261114T081559Z-87fd49f`
+  (semantics#54 defaults `building_activity` to seasonally adjusted; #55 extends its time range to 2026-Q2),
+  claims `76b5a4fb...`, data through June 2026. These three changes landed after the paired-flag trial as the
+  first fixes for next step (1) and are **not yet measured**; the trial and baseline below ran on intelligence
+  `a54a017` and bundle `20261113T082957Z-96038f5`. semantics#55 was merged while its Validate run was still
+  going (the run then reported failure with no failed step; Publish succeeded); re-run Validate on `main` to
+  confirm. Paired flags were trialled then reverted (infra#83, #84): both off, `/health` shows
+  `workflow=False route=True`.
 - **Official BFF runs, MH-0004 excluded (11 cases, 3 repeats, intelligence `a54a017`):**
 
   | | flag-off (43495860904, api `ba076ec`) | paired flags (43512928825, api `a64b1c8`) |
@@ -163,7 +169,9 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   never zero.
 - **Next, in order:** (1) diagnose why mixed turns rarely reach the conclusion path and why SQL misses gold
   (`MQ-0001` series choice, `MQ-0005` no valid query, `MH-0003` planner finds no completions table) before
-  another flag trial; (2) Phase 4a.
+  another flag trial. Fixes for all three have shipped together (semantics#54, #55, intelligence#27), so the next
+  official run cannot attribute a change to any one of them; measure them with a flag-off official BFF run before
+  the next flag trial, and accept or split the change-class explicitly. (2) Phase 4a.
 - **MH-0004 retired** (evaluation#9, id never reused). The Phase 4 methodology-release item (Jun-2026
   methodology as a new document with `supersedes`) is still due.
 - **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
@@ -232,8 +240,8 @@ No official eval run was in progress at any merge or deploy.
   infra#80 (reviewed, merged and Terraform-deployed by the user; Terraform Deploy succeeded 09:24 UTC), .github#3
   and #4.
 - **Deployed to test:** API (Deploy API run 43393951296), intelligence (runs 43393958741 and 43399770487),
-  knowledge flows (run 43397639068). The UI was not redeployed: test still serves `54f00de` (Deploy run 2026-11-10),
-  so ui#5's mixed-conclusion renderer (`1e67aee`) is merged but not deployed (review 2026-11-14). Intelligence `/health`: commit
+  knowledge flows (run 43397639068). The UI was not redeployed at that point (later deployed: `1e67aee`, Deploy UI
+  2026-11-13 21:04 UTC). Intelligence `/health`: commit
   `a54a017` clean (= `main`), semantic bundle `20261113T082957Z-96038f5`, `claims_sha256` `76b5a4fb...`,
   `enable_mixed_route` true, `enable_mixed_workflow` false.
 - **Claims:** c-0001..c-0005 approved by `jezchaves` 2026-11-13 and published to `claims/v1/claims.json`. The first
@@ -259,15 +267,10 @@ No official eval run was in progress at any merge or deploy.
 - **Intelligence VM** was stopped/started by the owner on 2026-11-14 after the Terraform deploy; `/health`
   afterwards: `a54a017` clean, bundle `20261113T082957Z-96038f5`, `claims_sha256` `76b5a4fb...`, mixed route
   on, mixed workflow off (`MIXED_CONCLUSION_CALLER_SA` is not exposed by `/health`).
-- **Flag-off BFF official baseline:** dispatched 2026-11-14 (evaluation run 43495860904, all suites, mixed
-  `transport: bff`, 3 repeats). No merge or deploy to semantics, intelligence, api or knowledge until it ends.
-- **MH-0004 is stale (found 2026-11-14):** it is a coverage-gap case premised on the table ending at 2026-Q1;
-  after the re-ingest the June 2026 figure is answerable, so its expected behaviour is wrong in the running
-  baseline. Its result in run 43495860904 is not a valid signal. After the run, retire MH-0004 (status
-  `retired`, never reuse the id) rather than rewriting it; a period-beyond-data gap case can be re-created later
-  against whatever quarter is then unpublished in the lakehouse. The Phase 4 methodology-release item (Jun-2026
-  methodology as a new document with `supersedes`) is now due as well.
-- **Next:** read the baseline (latency p50/p90, conclusion-call time, token totals as the 2x reference), then the
+- **Flag-off BFF official baseline:** run 43495860904 completed (all three records official, identity stable);
+  results and the paired-flag trial are under [Current status](#current-status-2026-11-14).
+- **MH-0004** was retired (evaluation#9); the Phase 4 methodology-release item is still due.
+- *(Superseded by Current status.)* Original next step: read the baseline, then the
   paired-flag trial: one PR enabling `ENABLE_MIXED_WORKFLOW` (intelligence, Terraform `extra_env`) and
   `ENABLE_MIXED_CONCLUSION` (api) on test only, deploy plus VM restart, one official BFF run, compare against the
   budgets, and revert both flags in the same session if any gate fails. Both flags remain off until then.

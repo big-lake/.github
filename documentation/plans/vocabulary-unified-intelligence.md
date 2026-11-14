@@ -133,15 +133,17 @@ The single place to resume from. Superseded resume snapshots are archived (see [
 - **User value so far:** definitions from the ABS Building Activity methodology and the BP1 housing passages are
   answerable with citations (knowledge 5/5, run 42908854992). No user can yet receive a mixed answer that joins
   ABS rows with Treasury evidence: the last official mixed score is 1/11 (run 42958997358, old combined path).
-- **Deployed to test (verified 2026-11-14 08:18 UTC):** intelligence `0f17bf7` (intelligence#27, discovery drops
-  function words from the OM OR query), api `a64b1c8`, UI `1e67aee`, semantic bundle `20261114T081559Z-87fd49f`
-  (semantics#54 defaults `building_activity` to seasonally adjusted; #55 extends its time range to 2026-Q2),
-  claims `76b5a4fb...`, data through June 2026. These three changes landed after the paired-flag trial as the
-  first fixes for next step (1) and are **not yet measured**; the trial and baseline below ran on intelligence
-  `a54a017` and bundle `20261113T082957Z-96038f5`. semantics#55 was merged while its Validate run was still
-  going (the run then reported failure with no failed step; Publish succeeded); re-run Validate on `main` to
-  confirm. Paired flags were trialled then reverted (infra#83, #84): both off, `/health` shows
-  `workflow=False route=True`.
+- **Deployed to test (verified 2026-11-14 via `/health`):** intelligence `0f17bf7` (intelligence#27, discovery
+  drops function words from the OM OR query), api `a64b1c8`, UI `1e67aee`, semantic bundle
+  `20261114T081559Z-87fd49f` (semantics#54 defaults `building_activity` to seasonally adjusted; #55 extends its
+  time range to 2026-Q2; published by the Publish re-run once Actions billing was fixed), claims `76b5a4fb...`,
+  data through June 2026. **Both mixed flags are ON for paired-flag trial 2** (infra#85: intelligence
+  `ENABLE_MIXED_WORKFLOW="true"`, api `enable_mixed_conclusion=true`; Terraform Deploy, Deploy API and an
+  intelligence VM stop/start done; `/health` shows `enable_mixed_workflow: true`). The earlier trial and the
+  baseline below ran on intelligence `a54a017` and bundle `20261113T082957Z-96038f5`; the three fixes above are
+  first measured by trial 2. Trial 2 is the first run with them, so a change cannot be attributed to any one;
+  the data suite in the same run is the regression check for the stopword change. semantics#55's Validate run
+  reported failure with no failed step; re-run Validate on `main` to confirm.
 - **Official BFF runs, MH-0004 excluded (11 cases, 3 repeats, intelligence `a54a017`):**
 
   | | flag-off (43495860904, api `ba076ec`) | paired flags (43512928825, api `a64b1c8`) |
@@ -161,19 +163,28 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   with "a validated data query could not be produced", `MH-0003` errors on every repeat (the planner finds no
   "dwellings completed" table), `MH-0002`/`MH-0007` each have one error. No 503s this time, so the baseline 503s
   were likely the VM restart window; not confirmed.
-- **Gate verdict:** budgets met for first output, conclusion call and tokens; final-answer p90 (172 s) is not
+- **Trial 1 gate verdict (run 43512928825):** budgets met for first output, conclusion call and tokens; final-answer p90 (172 s) is not
   within 90 s and no mixed case moved, so the trial fails the Phase 2 gate. The browser render check was not
-  done because the gate had already failed. Revert both flags per the plan; Phase 2 stays open.
+  done because the gate had already failed. Flags were reverted (infra#83, #84); Phase 2 stays open.
 - **Budgets (intelligence ADR-0034):** first useful output p50 <= 30 s; final answer p50 <= 60 s, p90 <= 90 s;
   conclusion call <= 25 s without retry; mixed tokens <= 2x the flag-off baseline. Missing usage is unknown,
   never zero.
-- **Next, in order:** (1) diagnose why mixed turns rarely reach the conclusion path and why SQL misses gold
-  (`MQ-0001` series choice, `MQ-0005` no valid query, `MH-0003` planner finds no completions table) before
-  another flag trial. Fixes for all three have shipped together (semantics#54, #55, intelligence#27), so the next
-  official run cannot attribute a change to any one of them; measure them with a flag-off official BFF run before
-  the next flag trial, and accept or split the change-class explicitly. (2) Phase 4a.
-- **MH-0004 retired** (evaluation#9, id never reused). The Phase 4 methodology-release item (Jun-2026
-  methodology as a new document with `supersedes`) is still due.
+- **Trial 2 in progress:** official BFF run 43577405920 (`transport=bff`, `repeats=3`), started after the
+  flip. Decision: go straight to the paired trial rather than a flag-off run first, because the three fixes
+  cannot be separated anyway and the flag-off baseline (18,002 tokens per repeat) is already recorded. Read the
+  `results` branch `runs/*.json` mixed record (not the workflow conclusion), check the gate budgets below, do the
+  browser conclusion render check, and revert both flags with an explicit `"false"` if any gate fails. No merges
+  to semantics, intelligence, api or knowledge until it finishes.
+- **Next, in order:** (1) finish trial 2. If the conclusion path still rarely fires, diagnose from traces (it
+  needs the mixed route, retrieved passages, discovery success and a valid SQL plan) before another trial.
+  (2) Phase 4b (claim drafting for a second document) only after the Phase 2 gate.
+- **MH-0004 retired** (evaluation#9, id never reused). **Phase 4a:** the June 2026 Building Activity methodology
+  is registered (knowledge#13) in the existing methodology collection; `KQ-0006` (evaluation#10, release date of
+  the June 2026 release) is its gate case, retrievability is first measured in trial 2.
+- **Open:** `semantic-drift` with `profile_all=true` failed at step 3 (apply temporal coverage), run
+  43539490997, job log unavailable, so other tables' `time_range` may be stale (only `building_activity` was
+  refreshed, locally). The baseline 503s ("no healthy upstream") are unexplained and did not recur in the first
+  trial.
 - **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
   one Budget Paper). Phase 4b addresses it.
 

@@ -136,56 +136,49 @@ The single place to resume from. Superseded resume snapshots are archived (see [
 - **Deployed to test (verified 2026-11-14 via `/health`):** intelligence `0f17bf7` (intelligence#27, discovery
   drops function words from the OM OR query), api `a64b1c8`, UI `1e67aee`, semantic bundle
   `20261114T081559Z-87fd49f` (semantics#54 defaults `building_activity` to seasonally adjusted; #55 extends its
-  time range to 2026-Q2; published by the Publish re-run once Actions billing was fixed), claims `76b5a4fb...`,
-  data through June 2026. **Both mixed flags are ON for paired-flag trial 2** (infra#85: intelligence
-  `ENABLE_MIXED_WORKFLOW="true"`, api `enable_mixed_conclusion=true`; Terraform Deploy, Deploy API and an
-  intelligence VM stop/start done; `/health` shows `enable_mixed_workflow: true`). The earlier trial and the
-  baseline below ran on intelligence `a54a017` and bundle `20261113T082957Z-96038f5`; the three fixes above are
-  first measured by trial 2. Trial 2 is the first run with them, so a change cannot be attributed to any one;
-  the data suite in the same run is the regression check for the stopword change. semantics#55's Validate run
-  reported failure with no failed step; re-run Validate on `main` to confirm.
-- **Official BFF runs, MH-0004 excluded (11 cases, 3 repeats, intelligence `a54a017`):**
+  time range to 2026-Q2), claims `76b5a4fb...`, data through June 2026. **Both mixed flags are OFF** (explicit
+  `"false"` for intelligence `ENABLE_MIXED_WORKFLOW`, api `enable_mixed_conclusion=false`; infra#86, Deploy API
+  and VM restart done; `/health` shows `workflow=False route=True`). semantics#55's Validate run reported
+  failure with no failed step; re-run Validate on `main` to confirm.
+- **Official BFF runs, MH-0004 excluded (11 mixed cases, 3 repeats):**
 
-  | | flag-off (43495860904, api `ba076ec`) | paired flags (43512928825, api `a64b1c8`) |
-  |---|---|---|
-  | data | 79/87 (1 flaky, 7 fail) | 80/87 (7 fail) |
-  | knowledge | 5/5 | 5/5 |
-  | mixed | 2 pass, 1 flaky, 7 fail, 1 invalid | 2 pass, 1 flaky, 7 fail, 1 invalid |
-  | mixed numeric / scope / citation / comparability (passed) | 0/10, 10/30, 16/23, 7/26 | 0/12, 9/28, 6/20, 4/23 |
-  | mixed latency p50 / p90 | 37 s / 240 s | 37 s / 172 s |
-  | mixed first output p50 | 20 s | 19 s |
-  | mixed tokens per repeat (mean) | 18,002 (28 known, 8 unknown) | 15,238 (26 known, 7 unknown) |
-  | conclusion calls | 0 | 3 of 33 repeats (143-235 ms, all `comparability_unknown`) |
+  | | flag-off (43495860904, int `a54a017`) | trial 1 (43512928825, int `a54a017`) | trial 2 (43577405920, int `0f17bf7`) |
+  |---|---|---|---|
+  | data | 79/87 (1 flaky, 7 fail) | 80/87 (7 fail) | 79/87 (1 flaky, 7 fail) |
+  | knowledge | 5/5 | 5/5 | 5/6 (KQ-0006 fact format, fixed in evaluation#11) |
+  | mixed | 2 pass, 1 flaky, 7 fail, 1 invalid | 2 pass, 1 flaky, 7 fail, 1 invalid | 1 pass, 9 fail, 1 invalid |
+  | mixed numeric / scope / citation / comparability (passed) | 0/10, 10/30, 16/23, 7/26 | 0/12, 9/28, 6/20, 4/23 | 0/9, 5/27, 7/23, 3/25 |
+  | mixed latency p50 / p90 | 37 s / 240 s | 37 s / 172 s | 42 s / 161 s |
+  | mixed first output p50 | 20 s | 19 s | 22 s |
+  | mixed tokens per repeat (mean) | 18,002 | 15,238 | 15,935 (24 known, 9 unknown) |
+  | conclusion calls | 0 | 3 of 33 repeats | 5 of 33 repeats |
 
-  The path works end to end where it fires (`MQ-0001`: executed rows with a comparability record and BP1 claim
-  c-0002, shown as a partial conclusion), but it fired in only 3 of 33 repeats and moved no case. Failures:
-  `MQ-0001` returns the original-series 45,930 rather than the gold 45,499 (series ambiguity), `MQ-0005` ends
-  with "a validated data query could not be produced", `MH-0003` errors on every repeat (the planner finds no
-  "dwellings completed" table), `MH-0002`/`MH-0007` each have one error. No 503s this time, so the baseline 503s
-  were likely the VM restart window; not confirmed.
-- **Trial 1 gate verdict (run 43512928825):** budgets met for first output, conclusion call and tokens; final-answer p90 (172 s) is not
-  within 90 s and no mixed case moved, so the trial fails the Phase 2 gate. The browser render check was not
-  done because the gate had already failed. Flags were reverted (infra#83, #84); Phase 2 stays open.
+- **Trial 2 verdict: gate failed.** Final-answer p90 161 s is not within 90 s, and no mixed case moved (`MQ-0004`
+  pass to fail, `MH-0002` flaky to fail); other budgets met (p50 42 s, first output 22 s, conclusion call 160 ms,
+  tokens 0.89x baseline). The data suite did not regress from the stopword change (79/87 both). Flags reverted.
+  The browser render check was not done because the gate had failed (still unverified).
+- **What trial 2 showed (causes not yet confirmed):**
+  - The conclusion path fired in 5 of 33 repeats: `MQ-0001` x2 (`comparability_unknown`) and `MQ-0004` x3 (two
+    `conclusion_unavailable` at 1 ms, so rejected locally before the HTTP call, one `missing_rows_or_evidence`).
+    Most other repeats stop earlier with "a validated data query could not be produced" (`MQ-0002`, `MQ-0005`,
+    `MH-0001`), so the data-query step bounds how often it can fire.
+  - `MQ-0001` now picks the seasonally adjusted series, but returns 44,862 (vintage published 2026-07-08) against
+    gold 45,499 (June 2026 release). Likely a data vintage difference; not confirmed.
+  - `MH-0003` still fails discovery ("data is building approvals, not dwellings completed"), so intelligence#27 did
+    not fix it; the earlier inferred cause is not confirmed.
+  - The June 2026 methodology is retrievable: `KQ-0006` answers cite the Jun-2026 document and state 7/10/2026.
 - **Budgets (intelligence ADR-0034):** first useful output p50 <= 30 s; final answer p50 <= 60 s, p90 <= 90 s;
   conclusion call <= 25 s without retry; mixed tokens <= 2x the flag-off baseline. Missing usage is unknown,
   never zero.
-- **Trial 2 in progress:** official BFF run 43577405920 (`transport=bff`, `repeats=3`), started after the
-  flip. Decision: go straight to the paired trial rather than a flag-off run first, because the three fixes
-  cannot be separated anyway and the flag-off baseline (18,002 tokens per repeat) is already recorded. Read the
-  `results` branch `runs/*.json` mixed record (not the workflow conclusion), check the gate budgets below, do the
-  browser conclusion render check, and revert both flags with an explicit `"false"` if any gate fails. No merges
-  to semantics, intelligence, api or knowledge until it finishes.
-- **Next, in order:** (1) finish trial 2. If the conclusion path still rarely fires, diagnose from traces (it
-  needs the mixed route, retrieved passages, discovery success and a valid SQL plan) before another trial.
-  (2) Phase 4b (claim drafting for a second document) only after the Phase 2 gate.
-- **MH-0004 retired** (evaluation#9, id never reused). **Phase 4a:** the June 2026 Building Activity methodology
-  is registered (knowledge#13) in the existing methodology collection; `KQ-0006` (evaluation#10, release date of
-  the June 2026 release) is its gate case, retrievability is first measured in trial 2.
+- **Next, in order:** (1) diagnose before a third trial: why the planner returns no valid query for `MQ-0002` and
+  `MQ-0005`, why discovery still misses completions for `MH-0003`, the 1 ms `conclusion_unavailable` on `MQ-0004`,
+  the `MQ-0001` vintage mismatch, and what drives the 161 s p90 tail. (2) Phase 4b (claim drafting for a second
+  document) only after the Phase 2 gate.
+- **MH-0004 retired** (evaluation#9, id never reused). **Phase 4a:** the June 2026 methodology is registered
+  (knowledge#13) and retrievable; `KQ-0006` (evaluation#10, #11) is its gate case.
 - **Open:** `semantic-drift` with `profile_all=true` failed at step 3 (apply temporal coverage), run
   43539490997, job log unavailable, so other tables' `time_range` may be stale (only `building_activity` was
-  refreshed, locally). The baseline 503s ("no healthy upstream") are unexplained and did not recur in the first
-  trial.
-- **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
+  refreshed, locally). The baseline 503s ("no healthy upstream") are unexplained and did not recur in either trial.- **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
   one Budget Paper). Phase 4b addresses it.
 
 ## Phase 1 progress

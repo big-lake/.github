@@ -200,6 +200,7 @@ The single place to resume from. Superseded resume snapshots are archived (see [
     relaxed rule would change, and only then propose an amendment; (d) phase order, gates and the vocabulary hold
     are unchanged. Also still open and the largest failure class by count: "no validated data query" repeats
     (`MQ-0002`, `MQ-0005`, `MH-0001`) and the 161 s p90 tail, both needing service logs.
+  - **Trial 2 service logs (read 2026-11-15, intelligence journal, boot -2, 09:01-09:31 UTC):** most data_query declines say the handed tables are building *approvals*, prices or stock, not completions (The available tables contain data on building approvals, not building completions), so discovery does not hand bs.building_activity to the planner in most repeats. That is the main cause of the "no validated data query" repeats and ties MQ-0002, MQ-0005, MH-0001 and MH-0003 together (OPP-043/OPP-050 class). Also in the window: 14 LLM calls hit the 20 s timeout and 2 hit ResourceExhausted, so the p90 tail has LLM stalls. Cloud Logging holds no VM logs for the window; the journal does. This is the measured failure class that would justify a Phase 3 discovery change; the vocabulary hold is unchanged. Gold alternatives for MQ-0001/MQ-0002: evaluation#12.
   - **Order of work:** commit these plan corrections; check GitHub billing and re-run semantics Validate and
     `semantic-drift`; pull service logs for the query failures; offline replay (c); implement (a) and (b); then
     trial 3, which also closes Phase 4a with the `KQ-0006` fix.

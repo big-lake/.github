@@ -175,44 +175,50 @@ The single place to resume from. Superseded resume snapshots are archived (see [
 - **Budgets (intelligence ADR-0034):** first useful output p50 <= 30 s; final answer p50 <= 60 s, p90 <= 90 s;
   conclusion call <= 25 s without retry; mixed tokens <= 2x the flag-off baseline. Missing usage is unknown,
   never zero.
-- **Next, in order:**
-  1. Diagnose before a third trial. Each item needs service-side traces or logs, which the eval record does not
-     carry (it holds only answer, citations, usage, latency and conclusion). Trial 2 ran 2026-11-14 09:01-09:31 UTC
-     (mixed suite; start times per repeat are in the `results` record `runs/20261114-090104-43577405920-mixed.json`).
-     Pull intelligence logs (the `biglake-intelligence` service on `biglake-intelligence-test`) and API logs
-     (`biglake-api-test`) for that window and correlate by `X-Request-Id` and repeat start time:
-     - `MQ-0002`, `MQ-0005`, `MH-0001` "no valid query": intelligence logs for `data_query` (the planner's
-       validation failure reason and the dataset it was handed).
-     - `MH-0003` discovery: the OM query text after the stopword change, the candidate datasets returned, and
-       whether `abs.building_activity` is in them; then run the same discovery by hand through the tunnel
-       (localhost:8001).
-     - `MQ-0004` 1 ms `conclusion_unavailable` (2 of 3 repeats): API logs from `conclude_mixed`, to see which local
-       branch returned (evidence size or non-finite value, header/token build, or an upstream status).
-     - ~~`MQ-0001` vintage~~: answered from the record (dimension mismatch, not vintage; see above).
-     - p90 tail (161 s): per-stage timings for the slowest repeats (retrieval, discovery, planning, narration).
-  2. Re-run `semantic-drift` (`profile_all=true`) and Validate on semantics `main` (both were never started, billing).
-  3. Phase 4b (claim drafting for a second document) only after the Phase 2 gate.
-  - **Course corrections approved by the user (2026-11-15, plan review):** (a) `MQ-0001`/`MQ-0002` gold accepts
-    either New / Total Residential or Total Work / all buildings, provided the answer states its scope; (b) the
-    mixed conclusion states period, series and scope in a sentence and lists only claims relevant to the question
-    (intelligence change behind the existing flag, its own change-class); (c) the ADR-0009 decision 8 rule is NOT
-    changed yet: first replay the trial 2 records through `comparability.evaluate` offline and count the repeats a
-    relaxed rule would change, and only then propose an amendment; (d) phase order, gates and the vocabulary hold
-    are unchanged. Also still open and the largest failure class by count: "no validated data query" repeats
-    (`MQ-0002`, `MQ-0005`, `MH-0001`) and the 161 s p90 tail, both needing service logs.
-  - **Trial 2 service logs (read 2026-11-15, intelligence journal, boot -2, 09:01-09:31 UTC):** most data_query declines say the handed tables are building *approvals*, prices or stock, not completions (The available tables contain data on building approvals, not building completions), so discovery does not hand bs.building_activity to the planner in most repeats. That is the main cause of the "no validated data query" repeats and ties MQ-0002, MQ-0005, MH-0001 and MH-0003 together (OPP-043/OPP-050 class). Also in the window: 14 LLM calls hit the 20 s timeout and 2 hit ResourceExhausted, so the p90 tail has LLM stalls. Cloud Logging holds no VM logs for the window; the journal does. This is the measured failure class that would justify a Phase 3 discovery change; the vocabulary hold is unchanged. Gold alternatives for MQ-0001/MQ-0002: evaluation#12.
-  - **Progress 2026-11-15 (all approved by the user):** discovery root cause found and fixed in a PR: OM 1.12's OR-joined search never matches description-only words, so `abs.building_activity` was absent from discovery for MQ-0002/0003/0005 and MH-0001/0003; a `description:`-fielded third pass puts it in every housing candidate list and the source gate picks it alone 10/10 locally (intelligence#28, OPP-050). Conclusion text (correction b): intelligence#29. Stage diagnostics in the stream: intelligence#30 + evaluation#13. Gold alternatives merged (evaluation#12). **Offline replay (correction c):** in trial 2 only 2 of 33 repeats (MQ-0001 x2) reached a claim-backed conclusion; a rule comparing only claim-stated details would turn both into a computed level comparison (44,862 vs 45,000, -138, 99.7%) but would also stop naming the claim's unknown period dates, so it is not safe as is. No ADR-0009 amendment proposed yet; revisit after run A shows how many repeats reach the conclusion. **Run order (approved):** run A = official flags-off run with intelligence#28 only (data-suite regression check; also closes Phase 4a); run B = trial 3 with #29, #30 and evaluation#13. Hold semantics#56 (drift bot PR, 133 files) until after both runs or merge it first as its own change-class: a semantics merge republishes the bundle.
-  - **Order of work:** commit these plan corrections; check GitHub billing and re-run semantics Validate and
-    `semantic-drift`; pull service logs for the query failures; offline replay (c); implement (a) and (b); then
-    trial 3, which also closes Phase 4a with the `KQ-0006` fix.
+- **Next, in order (updated 2026-11-15, second plan review; nothing below is merged or deployed yet):**
+  1. **Run A (official, both flags off):** merge and deploy intelligence#28 as the only change-class. It adds a
+     `description:`-fielded third pass to OpenMetadata dataset search (OPP-050). Gate: data suite within its
+     78-80 of 87 range, knowledge 6/6 (closes Phase 4a through `KQ-0006`).
+  2. **Run B (trial 3, paired flags):** intelligence#29 (readable conclusion, relevant claims only), intelligence#30
+     and evaluation#13 (stage time, datasets found and planner decline reason in the stream and the run record).
+     Revert both flags in the same session if any gate fails; do the browser render check if it passes.
+  3. After run B: decide whether to propose an ADR-0009 decision 8 amendment (see the replay below); merge
+     semantics#56 as its own change-class, never during an official run; Phase 4b only after the Phase 2 gate.
+- **Diagnosis done 2026-11-15:**
+  - Trial 2 intelligence journal (09:01-09:31 UTC): most `data_query` declines say the tables handed over are
+    building approvals, prices or stock, not completions. 14 LLM calls hit the 20 s timeout and 2 hit
+    ResourceExhausted in the window. Cloud Logging holds no VM logs; the journal on the VM does.
+  - Root cause (probes against test OpenMetadata 1.12): an OR-joined search never matches words found only in a
+    table description (`completed` alone returns `abs.building_activity`; `completed OR commenced` returns
+    nothing), so the table was absent from discovery for `MQ-0002`, `MQ-0003`, `MQ-0005`, `MH-0001`, `MH-0003`.
+    With intelligence#28 (local, not deployed) it is a candidate for all seven housing data questions and the
+    source gate picked it alone in 10 of 10 calls. On the data suite the gold dataset is among the candidates for
+    74 of 84 answerable cases, up from 65 (the pass only appends candidates, so none are lost).
+  - Offline replay of trial 2 through `comparability.evaluate`: only 2 of 33 repeats (`MQ-0001` x2) reached a
+    claim-backed conclusion. A rule comparing only the details a claim states would turn both into a computed
+    level comparison (44,862 against 45,000: -138, 99.7%), but would stop naming the claim's unstated period
+    dates, so it is not proposed as is.
+  - Not diagnosed: the `MQ-0004` 1 ms `conclusion_unavailable` (API logs not read) and the p90 tail by stage
+    (intelligence#30 will measure it in run B).
+- **Course corrections approved by the user (2026-11-15):** (a) `MQ-0001`/`MQ-0002` gold also accepts New / Total
+  Residential (44,862, ABS Data API) through `gold.data.alternatives` (evaluation#12, merged); (b) the mixed
+  conclusion states period, series and scope and lists only relevant claims (intelligence#29); (c) no ADR-0009
+  change until the replay and run B evidence are in; (d) the discovery fix is inside Phase 2's scope ("discovery
+  changes demonstrated necessary") and gets its own flags-off official run before trial 3; phase order, gates and
+  the vocabulary hold are unchanged.
 - **MH-0004 retired** (evaluation#9, id never reused). **Phase 4a:** the June 2026 methodology is registered
   (knowledge#13) and retrievable; `KQ-0006` (evaluation#10, #11) is its gate case.
-- **Open:** `semantic-drift` with `profile_all=true` failed at step 3 (apply temporal coverage), run
-  43539490997, job never started (GitHub billing/spending limit), so other tables' `time_range` may be stale (only `building_activity` was
-  refreshed, locally). The baseline 503s ("no healthy upstream") are unexplained and did not recur in either trial.
-  Trial 2 is the last official run; no flag-on run is pending.
-- **Biggest risk to the Why:** the compatible-answer path only works for documents with approved claims (five,
-  one Budget Paper). Phase 4b addresses it.
+- **Open:** the `semantic-drift` re-run with `profile_all=true` (43636797885) passed every step and opened
+  semantics#56 (about 130 tables' temporal coverage plus six `sdmx.yaml` availability blocks; not merged). The
+  semantics Validate re-run passed. The baseline 503s ("no healthy upstream") are unexplained and did not recur in
+  either trial. Trial 2 is still the last official run. Deployed test state verified 2026-11-15 via `/health`:
+  intelligence `0f17bf7` clean, bundle `20261114T081559Z-87fd49f`, claims `76b5a4fb...`, mixed route on, mixed
+  workflow off. The intelligence repo has no test workflow (PR checks are CodeQL only); its unit tests run locally.
+- **Biggest risk to the Why (updated 2026-11-15):** mixed turns rarely reach the conclusion (5 of 33 repeats in
+  trial 2) because discovery did not find the table; the fix is unmeasured on an official run. Behind it, the
+  ADR-0009 comparison rule blocks every level comparison against the current BP1 claims, so a compared answer is
+  not yet possible even when the conclusion runs. The earlier risk (claims exist for one document; Phase 4b) stands
+  but is third.
 
 ## Phase 1 progress
 

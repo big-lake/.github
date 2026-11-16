@@ -184,7 +184,49 @@ The single place to resume from. Superseded resume snapshots are archived (see [
      Revert both flags in the same session if any gate fails; do the browser render check if it passes.
   3. After run B: decide whether to propose an ADR-0009 decision 8 amendment (see the replay below); merge
      semantics#56 as its own change-class, never during an official run; Phase 4b only after the Phase 2 gate.
-- **Run results 2026-11-15 (supersede the "nothing merged" note above):** intelligence#28-30 and evaluation#13 merged and deployed (`d4e2ddf`). Run A (43686395644, flags off): data 79/87, knowledge 6/6 (Phase 4a gate met). Trial 3 (43690391202, both flags on, intelligence transport): data 79/87, knowledge 6/6; mixed 1/11 pass, but discovery now reaches SQL in 11 of 12 repeats on `MQ-0001`/`0002`/`0003`/`0005` (was 5 of 33), p90 61 s (was 161 s), numeric passes 5 of 11 SQL repeats. That transport returns no conclusion; BFF reruns (43692965816, concurrency 3; 43693613107, concurrency 1) hit `503 no healthy upstream` on 19 of 33 repeats each, so conclusion rates are unmeasured (14 repeats that ran: `comparability_unknown` for `MQ-0001`/`0002`/`0003`/`0005`, `comparability_different` for `MH-0001`). The Phase 2 gate is not met; both flags were reverted to explicit false (infra#88, Deploy API, VM restart). Open: the 503s are not root-caused (API journal shows no worker kills; gunicorn has 2 sync workers and the LB health check is 5 s / 3 failures), a likely API capacity or health-check problem that must be fixed before the next BFF measurement. `MQ-0001` r2 also emitted SQL with a trailing `-- ...)` comment that swallowed the closing parenthesis.
+- **Run results 2026-11-15 (supersede the "nothing merged" note above):** intelligence#28-30 and
+  evaluation#13 merged and deployed (`d4e2ddf`). Run A (43686395644, flags off): data 79/87,
+  knowledge 6/6 (Phase 4a gate met). Trial 3 (43690391202, both flags on, intelligence transport):
+  data 79/87, knowledge 6/6; mixed 1/11 pass. SQL was reached in 11 of 12 repeats on
+  `MQ-0001`/`0002`/`0003`/`0005`; this is not comparable to trial 2's 5/33 conclusion reach.
+  Direct transport returns no conclusion, so its p90 61 s does not establish BFF end-to-end latency.
+  BFF reruns 43692965816 and 43693613107 each had 19 incomparable repeats, dominated by
+  `503 no healthy upstream`; the latter also had a trailing-comment SQL parser failure. Some
+  successful repeats returned conclusions, but suite-wide rates and latency gates were not reliably
+  measured. Do not include zero-duration failed repeats in successful-request latency percentiles.
+  Both runs actually used two parallel mixed turns: the workflow ignored requested concurrency 3/1
+  until evaluation#14. Consequently the latter was not evidence that genuine serial execution failed.
+  Both flags were reverted (infra#88, API deploy, intelligence restart). Phase 2 remains unmet;
+  worker saturation is a hypothesis, not an established root cause.
+- **Reliability preparation 2026-11-16:** infra#89 enables test-only 25% LB request logging
+  (Terraform run 43827788013); workers, health checks and prod are unchanged. API#8 fixes both
+  COUNT/LIMIT wrappers by putting closing syntax on a new line; the offline regression failed before
+  and passed after the fix, deployment/Newman run 43828208212 passed, and the same trailing-comment
+  query passed through deployed `/query` on clean API `f8dd9c7`. Evaluation#14 makes the mixed job
+  honour dispatch concurrency, with a regression assertion. Serial flags-off targeted BFF run
+  43829217659 (`MQ-0001`, `MQ-0002`, `MH-0002`, one repeat each) completed all three without
+  transport errors; both numeric checks passed and the coverage-gap case passed. Product times were
+  31.396 s, 27.036 s and 22.845 s respectively. This small sample is not a full-suite gate or proof
+  of reliability under concurrent load. Semantics#56 stays held; no comparison-policy change yet.
+- **Paired serial diagnostic 2026-11-16:** targeted BFF run 43831935055 used concurrency 1 and
+  three repeats each of `MQ-0001`, `MQ-0002`, `MH-0002`, with clean `d4e2ddf` / `f8dd9c7`,
+  unchanged bundle/claims and stable identity. All nine completed, no transport errors or invalid
+  repeats. Five of six numeric-case turns reached SQL; all five returned verified, partial
+  `comparability_unknown` conclusions (call durations 0.152-4.755 s). Numeric checks passed 4/5.
+  No case passed every repeat: the coverage-gap case was flaky, both numeric cases failed.
+  Three SQL-bearing answers lost some resolved measure/period/series metadata; one returned the
+  known 24,709,822 trap value. A comparison-policy relaxation would not fix these problems.
+  Completed product latency: p50 31.158 s, nearest-rank p90/max 48.309 s; first-output p50
+  14.685 s. These are descriptive nine-turn serial measurements, not a full-suite gate. Neither
+  this sample nor the flags-off sample reproduced the old 503s; their concurrent root cause remains
+  unproven. Infra#91 restores both flags to explicit false after this window.
+- **Next after the diagnostic:** retain the LB observability, two sync workers and current health
+  checks; do not claim capacity is fixed. Before another flag-on quality run, preserve grounded
+  measure/period/series metadata through SQL projection and conclusion resolution, and address the
+  known trap-series selection. Then review comparison policy using source-backed evidence: name
+  explicit differences separately from missing facets, retain unknown-period warnings and avoid
+  treating shared stated facets as proof of overall compatibility. Do not merge semantics#56 or
+  start Phase 4b as part of this diagnostic; phase order and gates remain unchanged.
 - **Diagnosis done 2026-11-15:**
   - Trial 2 intelligence journal (09:01-09:31 UTC): most `data_query` declines say the tables handed over are
     building approvals, prices or stock, not completions. 14 LLM calls hit the 20 s timeout and 2 hit

@@ -134,8 +134,10 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   knowledge 6/6 (published run 43686395644). A reliable complete mixed answer is not demonstrated.
   The latest full BFF runs (43692965816, 43693613107) each have 19 incomparable repeats; the
   targeted serial run 43831935055 has no passing case and remains artifact-only, not published.
-- **Last verified test identity (2026-11-22, after rollback):** clean intelligence `c81c612`, API `f8dd9c7`,
-  bundle `20261114T081559Z-87fd49f`, claims `76b5a4fb...`; both mixed flags OFF, mixed route ON.
+- **Last verified test identity (2026-11-22, during trial 3):** clean intelligence `c81c612`, API
+  `d02b3f7` (deploy-workflow change only), bundle `20261114T081559Z-87fd49f`, claims `76b5a4fb...`;
+  mixed route ON; both mixed flags were ON for trial 3 and the rollback to false is **unverified**
+  (see "Rollback of trial 3"). At about 21:10 UTC the test UI, OpenMetadata and API returned 503.
   Test LB request logging is active at 25%; this does not prove concurrent availability.
 - **Correction confirmed 2026-11-22:** keep phase order, gates, budgets, comparison policy and the
   vocabulary hold. Before another broad trial, fix actual-source binding, direct facet projection
@@ -272,7 +274,40 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   bundle and claims), both mixed flags still false, and the UI redeployed (`1e67aee`). That the
   newer kernel stops the oops is supported by about 90 clean minutes so far, not yet proven.
   Production and the other test VMs were not changed.
-- **Next after the kernel mitigation:** retry the bounded paired BFF sample (`MQ-0001`,
+- **Bounded paired trial 3 result (2026-11-22, evaluation run `45016609151`):** both test flags on
+  (infra#102; intelligence `workflow=true`, API `ENABLE_MIXED_CONCLUSION=true`, same clean
+  `c81c612` / `d02b3f7`, bundle `20261114T081559Z-87fd49f`, claims `76b5a4fb...`); API deploy and the
+  full Newman suite passed; zero oopses on all four VMs beforehand. `MQ-0001`, `MQ-0002`, `MH-0002`
+  x3, concurrency 1, BFF. Official record, `identity_stable=true`, 9 of 9 turns completed, 0 transport
+  errors, 0 invalid, 0 trap violations, 0 gold errors. **0 of 3 cases pass.** Checks: numeric 6 pass
+  (3 n/a; both side-by-side cases matched the alternative gold 44,862 in all six repeats, the known
+  24,709,822 trap did not recur and metadata/trap guards held), scope 6 pass / 3 fail, citation 7 pass,
+  comparability 0 pass / 7 fail. All six SQL-bearing answers returned verified, partial
+  `comparability_unknown` conclusions (call 0.15-4.6 s); the judge scored them 0.40 because they lack
+  the current 45,499 SA / 45,848 trend figures, the 44,884 first-release figure and the
+  revision explanation. `MH-0002` (coverage gap) asked for clarification in 2 of 3 repeats and
+  answered-but-declined in 1, so coverage-gap consistency is still unmet. Product latency: side-by-side
+  19.9-52.8 s (six values: 28.3, 52.8, 19.9, 25.6, 21.6, 31.3), `MH-0002` 11.1 / 20.8 / 51.0 s; first
+  output 11-24 s; tokens 13.7k-34.0k per side-by-side turn (flags-off reference 13.0k-17.5k). This
+  is an artifact-only subset, not a release gate, and no full gate or browser check was run.
+  Conclusion: the metadata/trap correction works on the executed rows; the remaining blocker is
+  comparability policy (the claim-backed conclusion stays partial) and coverage-gap clarification.
+- **Rollback of trial 3 (2026-11-22, incomplete):** infra#103 (`27ede08`) restores both flags to
+  explicit false and Terraform applied, but the follow-up GHA intelligence reset failed ("Could not
+  fetch resource") and the API redeploy (`45070340821`) failed at IAP SSH (port 22 refused). About
+  21:10 UTC the UI, OpenMetadata and API public endpoints all returned 503. The cause is **not
+  established**: it may be another VM hang or the budget kill switch (a 100%-of-AUD-500 trigger that
+  disables billing), and nothing here confirms either. The runtime flag state is unverified
+  (Terraform state says false; intelligence's persisted `.env` and the API `.env` were not re-read).
+  Local `gcloud` login had expired, so no VM or billing state was inspected.
+- **Resume checklist (do in order):** (1) re-authenticate `gcloud auth login`; (2) check billing is
+  enabled on `big-lake-test-490405` and the budget kill-switch function logs before any VM action;
+  (3) if VMs are fine, check serial logs for ext4 oopses on `6.1.0-56` (the kernel canary
+  is unproven past about 90 minutes); (4) re-run `restart_intelligence_vm=true`, then Deploy API, and
+  verify both flags false by reading intelligence `/health` and the API `.env` key only; (5) confirm
+  all backends HEALTHY and Newman green. Only then address the comparability policy and
+  coverage-gap clarification (review with source-backed evidence), then retry the bounded sample.
+- **Next after the kernel mitigation (superseded by the resume checklist above):** retry the bounded paired BFF sample (`MQ-0001`,
   `MQ-0002`, `MH-0002`, three repeats, concurrency 1) only while all three VMs keep zero oopses.
   Roll both flags back the same session if it fails. Retain LB observability, two sync workers and
   current health checks.

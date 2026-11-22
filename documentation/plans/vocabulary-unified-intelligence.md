@@ -129,19 +129,19 @@ Mixed checks (passed of scored): numeric 0/9, scope 6/33, citation 3/27, compara
 
 The single place to resume from. Superseded resume snapshots are archived (see [Archive](#archive)).
 
-- **Phases:** 0 and 1 done; 2 in progress (about 70%); 3, 4 and R not started. Phase 4's trigger has fired.
-- **User value so far:** definitions from the ABS Building Activity methodology and the BP1 housing passages are
-  answerable with citations (knowledge 5/5, run 42908854992). No user can yet receive a mixed answer that joins
-  ABS rows with Treasury evidence: the last official mixed score is 1/11 (run 42958997358, old combined path).
-- **Deployed to test (verified 2026-11-14 via `/health`):** intelligence `0f17bf7` (intelligence#27, discovery
-  drops function words from the OM OR query), api `a64b1c8`, UI `1e67aee`, semantic bundle
-  `20261114T081559Z-87fd49f` (semantics#54 defaults `building_activity` to seasonally adjusted; #55 extends its
-  time range to 2026-Q2), claims `76b5a4fb...`, data through June 2026. **Both mixed flags are OFF** (explicit
-  `"false"` for intelligence `ENABLE_MIXED_WORKFLOW`, api `enable_mixed_conclusion=false`; infra#86, Deploy API
-  and VM restart done; `/health` shows `workflow=False route=True`). semantics#55's Validate run (43542347970)
-  never started: its annotation is GitHub's "recent account payments have failed or your spending limit needs to
-  be increased" (same for vocabulary Extract 43547278026 and semantic-drift 43539490997, 2026-11-14 01:15-02:40
-  UTC). Later runs succeeded; re-run Validate on `main` to confirm the code.
+- **Phases:** 0, 1 and 4a done; 2 in progress (about 70%); 3, 4b, 4 and R not started. Phase 4's trigger has fired.
+- **User value so far:** cited document answers, including the June methodology, are demonstrated by
+  knowledge 6/6 (published run 43686395644). A reliable complete mixed answer is not demonstrated.
+  The latest full BFF runs (43692965816, 43693613107) each have 19 incomparable repeats; the
+  targeted serial run 43831935055 has no passing case and remains artifact-only, not published.
+- **Last verified test identity (2026-11-22, after rollback):** clean intelligence `c81c612`, API `f8dd9c7`,
+  bundle `20261114T081559Z-87fd49f`, claims `76b5a4fb...`; both mixed flags OFF, mixed route ON.
+  Test LB request logging is active at 25%; this does not prove concurrent availability.
+- **Correction confirmed 2026-11-22:** keep phase order, gates, budgets, comparison policy and the
+  vocabulary hold. Before another broad trial, fix actual-source binding, direct facet projection
+  retention and known trap selection, then run the bounded BFF diagnostic. Coverage-gap consistency
+  remains a measured acceptance requirement. Full BFF gate and browser verification follow only
+  credible bounded results. Local implementation/testing is not a deployed or passed gate.
 - **Official BFF runs, MH-0004 excluded (11 mixed cases, 3 repeats):**
 
   | | flag-off (43495860904, int `a54a017`) | trial 1 (43512928825, int `a54a017`) | trial 2 (43577405920, int `0f17bf7`) |
@@ -220,13 +220,68 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   14.685 s. These are descriptive nine-turn serial measurements, not a full-suite gate. Neither
   this sample nor the flags-off sample reproduced the old 503s; their concurrent root cause remains
   unproven. Infra#91 restores both flags to explicit false after this window.
-- **Next after the diagnostic:** retain the LB observability, two sync workers and current health
-  checks; do not claim capacity is fixed. Before another flag-on quality run, preserve grounded
-  measure/period/series metadata through SQL projection and conclusion resolution, and address the
-  known trap-series selection. Then review comparison policy using source-backed evidence: name
-  explicit differences separately from missing facets, retain unknown-period warnings and avoid
-  treating shared stated facets as proof of overall compatibility. Do not merge semantics#56 or
-  start Phase 4b as part of this diagnostic; phase order and gates remain unchanged.
+- **Correction implementation and blocked activation 2026-11-22:** intelligence#31 merged and
+  deployed (`c81c612`), with 58 offline tests and CodeQL passing. Both planner paths require
+  direct, original-name facet projections for the actual SQL source after multi-candidate discovery;
+  conjunctive literal filters must rule out source-record excluded combinations within existing
+  retry limits. No inferred answer facets or policy relaxation. Flags-off BFF reference 44966848816
+  (`MQ-0001`, `MQ-0002`, `MH-0002`, concurrency 1, one repeat each) has stable identity,
+  1/3 passing cases, no invalid repeats or traps; the coverage-gap case passed and both side-by-side
+  cases declined. Product times were 22.318/23.918/24.327 s; token usage is available. This subset
+  is artifact-only, not a published release gate. Infra#92 added default-off GHA intelligence reset
+  for metadata activation, retaining disks. Infra#93 enabled the paired test flags; Terraform run
+  44967309869 succeeded. API deploy 44967463967 deployed successfully but backend readiness timed
+  out before Newman. Independent LB health was unhealthy; internal HTTP timed out, SSH failed and
+  serial output showed a systemd watchdog failure. Root cause remains unproven. No flags-on
+  evaluation ran. Infra#94 restores explicit false flags and adds default-off, test-only API host
+  reset for GHA recovery. Terraform rollback/recovery 44968588113 succeeded; API rollback deploy
+  44968756657 deployed successfully, restored a healthy LB backend and reached Newman, but the
+  "Knowledge - empty ids" check received HTTP 502 instead of 200 (missing sources array). Both
+  runtime flags are verified false; intelligence bundle/claims and both clean commits are unchanged.
+  API health reports `iceberg_scan` and running Litestream. Recovery is not a passed integration
+  gate. No flags-on evaluation, full gate or browser check ran. Semantics#56, Phase 4b and vocabulary
+  remain held; prod, workers, health checks, comparison policy and budgets are unchanged.
+- **Availability and Newman recovery (2026-11-22):** OpenMetadata and the UI returned 503 while
+  their backends were unhealthy. `/knowledge/sources` depends on OpenMetadata, consistent with
+  the Newman 502. After disk-preserving VM recovery, both sites returned and the failed-jobs
+  rerun of API run `44968756657` passed, including the empty-ids check. Six test VMs showed start
+  times clustered around 00:02 UTC; the trigger and cause of the stalls remain unproven.
+- **Second activation blocked (2026-11-22):** infra#96 and Terraform `44993905089` enabled
+  test metadata; intelligence reported workflow=true on the same clean identity. API deploy
+  `44994160185` failed at git sync (SSH 255), skipped Newman and left the API backend unhealthy.
+  The API conclusion runtime flag was not verified. Serial logs show ext4 NULL-pointer oopses on
+  API, OpenMetadata and UI on `6.1.0-55-cloud-amd64`; intelligence was on `-56` with no observed
+  oops. This does not prove that `-56` fixes the fault. No flags-on evaluation ran.
+- **Second rollback verified (2026-11-22):** infra#97 merged and Terraform run `44998465091`
+  applied with disk-preserving restarts of the test API and intelligence VMs. Intelligence health
+  reported workflow=false with unchanged commit, bundle and claims. API's persisted conclusion
+  flag was already false; `/health` returned 200 on clean `f8dd9c7` with Litestream running and
+  the backend HEALTHY. The API still runs `6.1.0-55-cloud-amd64`. This health response reported
+  Iceberg attach `none`; no post-rollback query or Newman run was done.
+- **Kernel fault diagnosed and mitigated on test (2026-11-22):** the VM hangs were repeated ext4
+  NULL-pointer oopses in `ext4_mb_load_buddy_gfp` on Debian kernel `6.1.0-55` (API, OpenMetadata,
+  UI); intelligence on `-56` had none. The oops also left dpkg half-configured and killed an API
+  deploy's `git`, leaving an empty `.git/config.lock`. Fixes: opt-in, test-only startup canary
+  (infra#98, #99, #100) that runs `dpkg --configure -a`, installs the Debian cloud kernel and
+  reboots once; API deploy now clears empty stale git locks when no `git` is running (api#9);
+  the crashing UI VM was recreated and the workflow re-registers it in its instance group
+  (infra#101). Verified 2026-11-22 10:52 UTC: API, OpenMetadata and UI all on
+  `6.1.0-56-cloud-amd64` with zero oopses since boot, all three backends HEALTHY, API deploy and
+  the full Newman suite passed (including "Knowledge - empty ids"), API on clean `d02b3f7`
+  with Iceberg `iceberg_scan` and Litestream running, intelligence unchanged (`c81c612`, same
+  bundle and claims), both mixed flags still false, and the UI redeployed (`1e67aee`). That the
+  newer kernel stops the oops is supported by about 90 clean minutes so far, not yet proven.
+  Production and the other test VMs were not changed.
+- **Next after the kernel mitigation:** retry the bounded paired BFF sample (`MQ-0001`,
+  `MQ-0002`, `MH-0002`, three repeats, concurrency 1) only while all three VMs keep zero oopses.
+  Roll both flags back the same session if it fails. Retain LB observability, two sync workers and
+  current health checks.
+  The metadata/trap guards are
+  implemented but still require deployed BFF measurement. Then review comparison policy using
+  source-backed evidence: name explicit differences separately from missing facets, retain
+  unknown-period warnings and avoid treating shared stated facets as proof of overall compatibility.
+  Do not merge semantics#56 or start Phase 4b as part of this diagnostic; phase order and gates
+  remain unchanged.
 - **Diagnosis done 2026-11-15:**
   - Trial 2 intelligence journal (09:01-09:31 UTC): most `data_query` declines say the tables handed over are
     building approvals, prices or stock, not completions. 14 LLM calls hit the 20 s timeout and 2 hit
@@ -251,17 +306,15 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   the vocabulary hold are unchanged.
 - **MH-0004 retired** (evaluation#9, id never reused). **Phase 4a:** the June 2026 methodology is registered
   (knowledge#13) and retrievable; `KQ-0006` (evaluation#10, #11) is its gate case.
-- **Open:** the `semantic-drift` re-run with `profile_all=true` (43636797885) passed every step and opened
-  semantics#56 (about 130 tables' temporal coverage plus six `sdmx.yaml` availability blocks; not merged). The
-  semantics Validate re-run passed. The baseline 503s ("no healthy upstream") are unexplained and did not recur in
-  either trial. Trial 2 is still the last official run. Deployed test state verified 2026-11-15 via `/health`:
-  intelligence `0f17bf7` clean, bundle `20261114T081559Z-87fd49f`, claims `76b5a4fb...`, mixed route on, mixed
-  workflow off. The intelligence repo has no test workflow (PR checks are CodeQL only); its unit tests run locally.
-- **Biggest risk to the Why (updated 2026-11-15):** mixed turns rarely reach the conclusion (5 of 33 repeats in
-  trial 2) because discovery did not find the table; the fix is unmeasured on an official run. Behind it, the
-  ADR-0009 comparison rule blocks every level comparison against the current BP1 claims, so a compared answer is
-  not yet possible even when the conclusion runs. The earlier risk (claims exist for one document; Phase 4b) stands
-  but is third.
+- **Open:** semantics#56 remains held (temporal coverage and availability, not a metadata-retention fix).
+  Concurrent BFF 503s remain unexplained; the serial diagnostics did not reproduce them. The latest
+  published full-suite records are from 2026-11-15; direct transport cannot establish the BFF gate.
+  Intelligence has no test workflow (PR checks are CodeQL); unit tests run locally.
+- **Biggest risk to the Why (updated 2026-11-22):** selecting the correct series and retaining grounded
+  measure, period and scope through execution into the answer. Run 43831935055 exposes both missing
+  metadata and the 24,709,822 trap. Discovery is now measured; relaxing comparison policy would not
+  repair these defects. Consistent coverage-gap answers, concurrent availability and the full BFF/browser
+  gate remain unproved. Approved claims still cover only one document; Phase 4b follows Phase 2.
 
 ## Phase 1 progress
 

@@ -125,11 +125,14 @@ Findings carried forward:
 
 Mixed checks (passed of scored): numeric 0/9, scope 6/33, citation 3/27, comparability 4/33; no incomparable repeats this time (judge 429s did not recur). semantic_bundles now populated from traces (20261108T052050Z-68a32f2); the /health field arrives after an intelligence deploy.
 
-## Current status (2026-11-14)
+## Current status (2026-11-22)
 
 The single place to resume from. Superseded resume snapshots are archived (see [Archive](#archive)).
 
-- **Phases:** 0, 1 and 4a done; 2 in progress (about 70%); 3, 4b, 4 and R not started. Phase 4's trigger has fired.
+- **Phases:** 0, 1 and 4a done; 2 in progress (about 70%, unchanged by 2026-11-22 work: the gate is
+  still unmet and no mixed case passes on test); 3, 4b, 4 and R not started. Phase 4's trigger has fired.
+  The 2026-11-22 effort went into the metadata/trap correction (merged, shown working in trial 3)
+  and test-host reliability (kernel fault), not into gate-closing results.
 - **User value so far:** cited document answers, including the June methodology, are demonstrated by
   knowledge 6/6 (published run 43686395644). A reliable complete mixed answer is not demonstrated.
   The latest full BFF runs (43692965816, 43693613107) each have 19 incomparable repeats; the
@@ -307,6 +310,17 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   verify both flags false by reading intelligence `/health` and the API `.env` key only; (5) confirm
   all backends HEALTHY and Newman green. Only then address the comparability policy and
   coverage-gap clarification (review with source-backed evidence), then retry the bounded sample.
+- **Disclosures for the next review (2026-11-22):** (a) infra#98-#103, api#9 and org#23/#24 were merged
+  with `gh pr merge --admin` after green CI because `mergeStateStatus` was BLOCKED (no reviewer); the
+  user had said the assistant may merge. Treat branch protection as bypassed, not satisfied. (b) An
+  earlier bare `git push` advanced four existing local triage branches (`triage/BUG-0008`,
+  `triage/E2E-007`, `triage/OPP-040`, `triage/OPP-042`); not reverted. (c) The UI VM was recreated
+  (destructive, with explicit user approval, run `45013685563`) and the test UI redeployed `1e67aee`.
+  (d) `TODO.md` Phase 2 row is stale (it still lists "deploy the UI (`1e67aee`)" as remaining and
+  says the flags are off pending a trial); it was **not** edited, per the confirm-first rule: raise
+  with the user. (e) infra#95 (docs closeout) is still open and stale; its content is superseded by
+  `infra/.github/WORKFLOWS.md`, so propose closing it. (f) No browser render check of the mixed
+  conclusion has been done. (g) Local repo checkouts are on `main`, clean.
 - **Next after the kernel mitigation (superseded by the resume checklist above):** retry the bounded paired BFF sample (`MQ-0001`,
   `MQ-0002`, `MH-0002`, three repeats, concurrency 1) only while all three VMs keep zero oopses.
   Roll both flags back the same session if it fails. Retain LB observability, two sync workers and

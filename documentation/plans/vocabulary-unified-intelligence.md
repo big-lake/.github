@@ -241,13 +241,29 @@ The single place to resume from. Superseded resume snapshots are archived (see [
   API health reports `iceberg_scan` and running Litestream. Recovery is not a passed integration
   gate. No flags-on evaluation, full gate or browser check ran. Semantics#56, Phase 4b and vocabulary
   remain held; prod, workers, health checks, comparison policy and budgets are unchanged.
-- **Next after the blocked activation:** diagnose the API host/readiness and knowledge 502 failures,
-  then retry the bounded paired BFF sample before any full gate. Retain the LB observability, two sync workers and current health
-  checks; do not claim capacity is fixed. The metadata/trap guards are implemented but still require
-  deployed BFF measurement. Then review comparison policy using source-backed evidence: name
-  explicit differences separately from missing facets, retain unknown-period warnings and avoid
-  treating shared stated facets as proof of overall compatibility. Do not merge semantics#56 or
-  start Phase 4b as part of this diagnostic; phase order and gates remain unchanged.
+- **Availability event and knowledge 502 root cause (2026-11-22, later same day):** the knowledge 502
+  was traced to OpenMetadata being down, not an API fault. `om.test.biglake.au` returned 503 and the
+  `biglake-openmetadata-test-bes` backend was UNHEALTHY; `GET /knowledge/sources` calls OM
+  (`catalog_client.get_knowledge_sources`) and surfaces an unreachable upstream as 502. All six test
+  VMs had restarted together at `2026-11-22T00:02 UTC`, and three (API, OM, UI) came up with the guest
+  OS hung — core systemd daemons (`systemd-journald`, `systemd-timesyncd`) failing with
+  result `watchdog`. The API VM recovered on its own; the OM and UI VMs needed manual disk-preserving
+  resets, after which OM returned 200 (MySQL + Elasticsearch healthy, server serving its healthcheck)
+  and `test.biglake.au` came back. This was host/infrastructure-level (shared-core `e2` instances),
+  not the mixed-workflow code — both flags were off and the API carrying that code stayed healthy
+  throughout. The simultaneous restart and triple hang are still unexplained; a reset clears the
+  symptom, not the cause. If it recurs, the next step is Cloud Monitoring CPU-steal / disk-latency for
+  the 00:02 UTC window. The API Newman job was re-run (failed-jobs only, run 44968756657) to re-verify
+  the knowledge check against the recovered stack.
+- **Next after the availability event:** confirm the re-run API Newman suite is green (knowledge
+  check back to 200 with an empty sources array), then retry the bounded paired BFF sample before any
+  full gate. Retain the LB observability, two sync workers and current health checks; do not claim
+  capacity is fixed, since the VM hang root cause is unproven. The metadata/trap guards are
+  implemented but still require deployed BFF measurement. Then review comparison policy using
+  source-backed evidence: name explicit differences separately from missing facets, retain
+  unknown-period warnings and avoid treating shared stated facets as proof of overall compatibility.
+  Do not merge semantics#56 or start Phase 4b as part of this diagnostic; phase order and gates
+  remain unchanged.
 - **Diagnosis done 2026-11-15:**
   - Trial 2 intelligence journal (09:01-09:31 UTC): most `data_query` declines say the tables handed over are
     building approvals, prices or stock, not completions. 14 LLM calls hit the 20 s timeout and 2 hit
